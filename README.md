@@ -5,4 +5,6 @@ This is a cleaned-up version of PIC32MemoryStatistics, released on LibStock: htt
 
 It supports PIC32 only for now. The code is compilable with TurboDelphi2006 (for now).
 
+Dependencies: https://github.com/VCC02/MiscUtils
+
 Releases: https://github.com/VCC02/MemStatisticsRel
