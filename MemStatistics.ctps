@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units>
+      <Unit>
+        <Filename Value="MemStatistics.ppr"/>
+        <FRMtype Value="0"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <CursorPos Y="24"/>
+        <UsageCount Value="26"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="MemStatisticsMain.pas"/>
+        <FRMtype Value="200"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmMemStatisticsMain"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1008"/>
+        <CursorPos X="51" Y="1017"/>
+        <UsageCount Value="26"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="SettingsForm.pas"/>
+        <FRMtype Value="200"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmSettings"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="4"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="24"/>
+        <CursorPos X="18" Y="38"/>
+        <UsageCount Value="26"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="MikroStuff.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="142"/>
+        <CursorPos X="28" Y="166"/>
+        <UsageCount Value="26"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="MemTables.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="5"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="25"/>
+        <CursorPos X="23" Y="41"/>
+        <UsageCount Value="26"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="MemStatUtils.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="20"/>
+        <CursorPos X="23" Y="35"/>
+        <UsageCount Value="26"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="MemStatCompareForm.pas"/>
+        <FRMtype Value="200"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmMemStatCompare"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="8"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="25"/>
+        <CursorPos X="37" Y="42"/>
+        <UsageCount Value="26"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="DevicesForm.pas"/>
+        <FRMtype Value="200"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmDevices"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="7"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="24"/>
+        <CursorPos X="11" Y="40"/>
+        <UsageCount Value="26"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="DefParser.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <UsageCount Value="26"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\MiscUtils\ClickerZoomPreviewForm.pas"/>
+        <FRMtype Value="200"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmClickerZoomPreview"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <CursorPos X="33" Y="23"/>
+        <UsageCount Value="26"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Common\MiniMap.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="3"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="149"/>
+        <CursorPos X="25" Y="165"/>
+        <UsageCount Value="26"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Common\DeviceInfo.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="6"/>
+        <WindowIndex Value="0"/>
+        <CursorPos X="16" Y="14"/>
+        <UsageCount Value="26"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="DevicesForm.frm"/>
+        <FRMtype Value="0"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <ExtraEditorCount Value="1"/>
+        <ExtraEditor1>
+          <EditorIndex Value="-1"/>
+          <WindowIndex Value="0"/>
+          <CursorPos X="20" Y="52"/>
+        </ExtraEditor1>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="FRM"/>
+      </Unit>
+      <Unit>
+        <Filename Value="MemStatCompareForm.frm"/>
+        <FRMtype Value="0"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="2270"/>
+        <CursorPos X="22" Y="2279"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="FRM"/>
+      </Unit>
+      <Unit>
+        <Filename Value="MemStatisticsMain.frm"/>
+        <FRMtype Value="0"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="279"/>
+        <CursorPos X="23" Y="353"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="FRM"/>
+      </Unit>
+      <Unit>
+        <Filename Value="SettingsForm.frm"/>
+        <FRMtype Value="0"/>
+        <HasResources Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="FRM"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="28">
+      <Position>
+        <Filename Value="DevicesForm.pas"/>
+        <Caret Line="234" Column="24" TopLine="197"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatisticsMain.pas"/>
+        <Caret Line="39" Column="5" TopLine="28"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatisticsMain.pas"/>
+        <Caret Line="1902" Column="24" TopLine="1865"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatisticsMain.pas"/>
+        <Caret Line="34" Column="14" TopLine="22"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatisticsMain.pas"/>
+        <Caret Line="1904" Column="24" TopLine="1887"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatisticsMain.pas"/>
+        <Caret Line="2021" Column="26" TopLine="2010"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatisticsMain.pas"/>
+        <Caret Line="754" Column="3" TopLine="740"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatisticsMain.pas"/>
+        <Caret Line="2395" Column="106" TopLine="2374"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatUtils.pas"/>
+        <Caret Line="936" Column="5" TopLine="921"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatUtils.pas"/>
+        <Caret Line="940" Column="18" TopLine="928"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatUtils.pas"/>
+        <Caret Line="996" Column="8" TopLine="971"/>
+      </Position>
+      <Position>
+        <Filename Value="Common\MiniMap.pas"/>
+        <Caret Line="184" TopLine="178"/>
+      </Position>
+      <Position>
+        <Filename Value="Common\MiniMap.pas"/>
+        <Caret Line="190" TopLine="175"/>
+      </Position>
+      <Position>
+        <Filename Value="Common\MiniMap.pas"/>
+        <Caret Line="165" Column="25" TopLine="148"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatUtils.pas"/>
+        <Caret Line="35" Column="23" TopLine="20"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="35" Column="26" TopLine="20"/>
+      </Position>
+      <Position>
+        <Filename Value="Common\DeviceInfo.pas"/>
+        <Caret Line="14" Column="16"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="38" Column="18" TopLine="24"/>
+      </Position>
+      <Position>
+        <Filename Value="MemTables.pas"/>
+        <Caret Line="42" Column="22" TopLine="20"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatCompareForm.pas"/>
+        <Caret Line="344" Column="22" TopLine="328"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatisticsMain.pas"/>
+        <Caret Line="38" Column="16" TopLine="21"/>
+      </Position>
+      <Position>
+        <Filename Value="MikroStuff.pas"/>
+        <Caret Line="39" Column="5" TopLine="24"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatCompareForm.pas"/>
+        <Caret Line="42" Column="37" TopLine="25"/>
+      </Position>
+      <Position>
+        <Filename Value="MikroStuff.pas"/>
+        <Caret Line="166" Column="28" TopLine="142"/>
+      </Position>
+      <Position>
+        <Filename Value="DevicesForm.pas"/>
+        <Caret Line="40" Column="11" TopLine="24"/>
+      </Position>
+      <Position>
+        <Filename Value="MemTables.pas"/>
+        <Caret Line="41" Column="23" TopLine="25"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatisticsMain.pas"/>
+        <Caret Line="262" Column="24" TopLine="246"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatisticsMain.pas"/>
+        <Caret Line="762" Column="33" TopLine="664"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatisticsMain.pas"/>
+        <Caret Line="1019" Column="52" TopLine="999"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+  <Debugging>
+    <BreakPoints>
+      <Item>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="MemStatCompareForm.pas"/>
+        <Line Value="176"/>
+      </Item>
+      <Item>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="MemStatisticsMain.pas"/>
+        <Line Value="75"/>
+      </Item>
+      <Item>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="MemStatisticsMain.pas"/>
+        <Line Value="102"/>
+      </Item>
+    </BreakPoints>
+  </Debugging>
+</CONFIG>

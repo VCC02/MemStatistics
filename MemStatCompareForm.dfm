@@ -2,7 +2,7 @@ object frmMemStatCompare: TfrmMemStatCompare
   Left = 0
   Top = 0
   Caption = 'Memory Statistics - Visual Compare'
-  ClientHeight = 555
+  ClientHeight = 556
   ClientWidth = 1149
   Color = clBtnFace
   Constraints.MinHeight = 500
@@ -19,7 +19,7 @@ object frmMemStatCompare: TfrmMemStatCompare
   OnDestroy = FormDestroy
   DesignSize = (
     1149
-    555)
+    556)
   PixelsPerInch = 96
   TextHeight = 13
   object lblMinimap: TLabel

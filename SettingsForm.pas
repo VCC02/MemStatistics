@@ -24,12 +24,25 @@
 
 unit SettingsForm;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}
+
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  {$IFDEF FPC}
+    LCLIntf, LCLType,
+  {$ELSE}
+    Windows, Messages,
+  {$ENDIF}
+    SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, ComCtrls, MemStatUtils, VirtualTrees, Buttons,
-  ImgList;
+  ImgList
+  {$IFDEF FPC}
+    , ColorBox
+  {$ENDIF}
+  ;
 
 type
   TfrmSettings = class(TForm)
@@ -141,7 +154,7 @@ type
     procedure btnDeleteClick(Sender: TObject);
     procedure vstMemSectionsGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-      var CellText: WideString);
+      var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
     procedure vstMemSectionsMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure vstMemSectionsKeyUp(Sender: TObject; var Key: Word;
@@ -153,7 +166,7 @@ type
       var Ghosted: Boolean; var ImageIndex: Integer);
     procedure vstMemSectionsAfterCellPaint(Sender: TBaseVirtualTree;
       TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
-      CellRect: TRect);
+      {$IFDEF FPC}const{$ENDIF} CellRect: TRect);
     procedure FormShow(Sender: TObject);
     procedure tmrUpdateTimer(Sender: TObject);
     procedure chkVisibleOnCompareKeyUp(Sender: TObject; var Key: Word;
@@ -210,7 +223,11 @@ function EditMemStatOptions(var MemStatOptions: TMemStatOptions): Boolean;
 
 implementation
 
-{$R *.dfm}
+{$IFDEF FPC}
+  {$R *.frm}
+{$ELSE}
+  {$R *.dfm}
+{$ENDIF}
 
 function EditMemStatOptions(var MemStatOptions: TMemStatOptions): Boolean;
 var
@@ -818,7 +835,7 @@ end;
 
 procedure TfrmSettings.vstMemSectionsAfterCellPaint(Sender: TBaseVirtualTree;
   TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
-  CellRect: TRect);
+  {$IFDEF FPC}const{$ENDIF} CellRect: TRect);
 begin
   case Column of
     6:
@@ -864,7 +881,7 @@ end;
 
 procedure TfrmSettings.vstMemSectionsGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: WideString);
+  var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
 const
   CAddressTranslationOperation: array[TAddressTranslationOperation] of string = ('None', 'ADD', 'OR');
   CBoolToStr: array[Boolean] of string = ('No', 'Yes');

@@ -24,10 +24,19 @@
 
 unit DevicesForm;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}  
+
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  {$IFDEF FPC}
+    LCLIntf, LCLType,
+  {$ELSE}
+    Windows, Messages,
+  {$ENDIF}
+    SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, VirtualTrees, ExtCtrls;
 
 type
@@ -42,7 +51,7 @@ type
     procedure vstDevicesKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure vstDevicesGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
     procedure edtSearchChange(Sender: TObject);
     procedure edtSearchKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -71,7 +80,11 @@ function GetNewDevice(AllDevices: string; Selected: Integer; var NewChipName: st
 
 implementation
 
-{$R *.dfm}
+{$IFDEF FPC}
+  {$R *.frm}
+{$ELSE}
+  {$R *.dfm}
+{$ENDIF}
 
 
 function GetNewDevice(AllDevices: string; Selected: Integer; var NewChipName: string): Integer;
@@ -150,8 +163,6 @@ begin
   if CurrentNode = nil then
     Exit;
     
-  vstDevices.FastNodeHideOrShow := True;
-
   repeat
     if edtSearch.Text <> '' then
       vstDevices.IsVisible[CurrentNode] := Pos(UpperCase(edtSearch.Text), UpperCase(FDevices.Strings[CurrentNode.Index])) > 0
@@ -161,7 +172,6 @@ begin
     CurrentNode := CurrentNode.NextSibling;
   until CurrentNode = nil;
 
-  vstDevices.VisibleCount := vstDevices.RootNodeCount;
   vstDevices.Visible := True;
   vstDevices.UpdateScrollBars(True);
   vstDevices.Repaint;
@@ -249,7 +259,7 @@ end;
 
 procedure TfrmDevices.vstDevicesGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: WideString);
+  var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
 begin
   try
     CellText := '';

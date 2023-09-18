@@ -1,7 +1,9 @@
 program MemStatistics;
 
+{$MODE Delphi}
+
 uses
-  Forms,
+  Forms, Interfaces,
   MemStatisticsMain in 'MemStatisticsMain.pas' {frmMemStatisticsMain},
   SettingsForm in 'SettingsForm.pas' {frmSettings},
   MikroStuff in 'MikroStuff.pas',
@@ -9,9 +11,7 @@ uses
   MemStatUtils in 'MemStatUtils.pas',
   MemStatCompareForm in 'MemStatCompareForm.pas' {frmMemStatCompare},
   DevicesForm in 'DevicesForm.pas' {frmDevices},
-  MiniMap in 'Common\MiniMap.pas',
   DefParser in 'DefParser.pas',
-  DeviceInfo in 'Common\DeviceInfo.pas',
   ClickerZoomPreviewForm in '..\MiscUtils\ClickerZoomPreviewForm.pas' {frmClickerZoomPreview};
 
 {$R *.res}

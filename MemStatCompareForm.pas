@@ -1,6 +1,6 @@
 {
     Copyright (C) 2023 VCC
-    creation date: 2016
+    creation date: 2014
     initial release date: 17 Sep 2023
 
     author: VCC
@@ -25,10 +25,19 @@
 
 unit MemStatCompareForm;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}  
+
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  {$IFDEF FPC}
+    LCLIntf, LCLType,
+  {$ELSE}
+    Windows, Messages,
+  {$ENDIF}
+    SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Menus, VirtualTrees, ImgList, ExtCtrls, StdCtrls, MemStatUtils,
   ExtDlgs, Buttons, MiniMap, DeviceInfo;
 
@@ -176,7 +185,7 @@ type
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
     procedure vstSlotCmpAfterCellPaint(Sender: TBaseVirtualTree;
       TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
-      CellRect: TRect);
+      {$IFDEF FPC}const{$ENDIF} CellRect: TRect);
     procedure vstSlotCmpBeforePaint(Sender: TBaseVirtualTree;
       TargetCanvas: TCanvas);
     procedure vstSlotCmpClick(Sender: TObject);
@@ -186,7 +195,7 @@ type
     procedure vstSlotCmpEditing(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; var Allowed: Boolean);
     procedure vstSlotCmpGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
     procedure vstSlotCmpKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure vstSlotCmpKeyUp(Sender: TObject; var Key: Word;
@@ -194,9 +203,9 @@ type
     procedure vstSlotCmpMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure vstSlotCmpNewText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; NewText: WideString);
+      Column: TColumnIndex; {$IFDEF FPC}const{$ENDIF} NewText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
     procedure vstSlotCmpBeforeItemPaint(Sender: TBaseVirtualTree;
-      TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect;
+      TargetCanvas: TCanvas; Node: PVirtualNode; {$IFDEF FPC}const{$ENDIF} ItemRect: TRect;
       var CustomDraw: Boolean);
   private
     { Private declarations }
@@ -324,10 +333,14 @@ var
 
 implementation
 
-{$R *.dfm}
+{$IFDEF FPC}
+  {$R *.frm}
+{$ELSE}
+  {$R *.dfm}
+{$ENDIF}
 
 uses
-  MikroStuff, MemTables, ClipBrd, IniFiles, DevicesForm, Math, DefParser;
+  MikroStuff, ClipBrd, IniFiles, DevicesForm, Math, DefParser;
 
 const
   CColumnIdx_Index = 0;
@@ -948,7 +961,7 @@ begin
   vstSlotCmp.TreeOptions.MiscOptions := [toAcceptOLEDrop, toEditable, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning];
   vstSlotCmp.TreeOptions.PaintOptions := [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines];
   vstSlotCmp.TreeOptions.SelectionOptions := [toFullRowSelect, toRightClickSelect];
-  vstSlotCmp.OnAfterCellPaint := vstSlotCmpAfterCellPaint;;
+  vstSlotCmp.OnAfterCellPaint := vstSlotCmpAfterCellPaint;
   vstSlotCmp.OnBeforeCellPaint := vstSlotCmpBeforeCellPaint;
   vstSlotCmp.OnBeforeItemPaint := vstSlotCmpBeforeItemPaint;
   vstSlotCmp.OnBeforePaint := vstSlotCmpBeforePaint;
@@ -1620,7 +1633,7 @@ end;
 
 procedure TfrmMemStatCompare.vstSlotCmpAfterCellPaint(Sender: TBaseVirtualTree;
   TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
-  CellRect: TRect);
+  {$IFDEF FPC}const{$ENDIF} CellRect: TRect);
 var
   Len1, Len2, Len3, Len4: Integer;
 begin
@@ -1796,7 +1809,7 @@ end;
 
 
 procedure TfrmMemStatCompare.vstSlotCmpBeforeItemPaint(Sender: TBaseVirtualTree;
-  TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect;
+  TargetCanvas: TCanvas; Node: PVirtualNode; {$IFDEF FPC}const{$ENDIF} ItemRect: TRect;
   var CustomDraw: Boolean);
 begin
   FCachedSectionIndex := GetSectionIndexByEntryIndex(FCachedSections, Node^.Index);
@@ -1851,7 +1864,7 @@ end;
 
 procedure TfrmMemStatCompare.vstSlotCmpGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: WideString);
+  var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
 var
   Len1, Len2, Len3, Len4: Integer;
   Address: DWord;
@@ -1956,7 +1969,7 @@ end;
 
 
 procedure TfrmMemStatCompare.vstSlotCmpNewText(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; NewText: WideString);
+  Node: PVirtualNode; Column: TColumnIndex; {$IFDEF FPC}const{$ENDIF} NewText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
 begin
   FEditingText := NewText;
 end;

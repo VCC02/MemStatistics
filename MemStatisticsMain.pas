@@ -24,17 +24,30 @@
 
 unit MemStatisticsMain;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}  
+
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  {$IFDEF FPC}
+    LCLIntf, LCLType,
+  {$ELSE}
+    Windows, Messages,
+  {$ENDIF}
+    SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, VirtualTrees, ComCtrls, Buttons, SettingsForm,
   MemTables, MikroStuff, MemStatUtils, IniFiles, MemStatCompareForm, Menus;
 
 type
+
+  { TfrmMemStatisticsMain }
+
   TfrmMemStatisticsMain = class(TForm)
     lblListName: TLabel;
     lblChipName: TLabel;
+    lblVstBackgroundRaw: TLabel;
     tmrStartup: TTimer;
     lblDefsFolder: TLabel;
     tmrBlinkGraphicFocus: TTimer;
@@ -74,7 +87,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure tmrStartupTimer(Sender: TObject);
     procedure vstMemTableGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
     procedure vstMemTableBeforeCellPaint(Sender: TBaseVirtualTree;
       TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
@@ -90,7 +103,7 @@ type
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
     procedure vstRawTableClick(Sender: TObject);
     procedure vstRawTableGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
     procedure vstRawTableKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure vstRawTableKeyUp(Sender: TObject; var Key: Word;
@@ -98,8 +111,8 @@ type
     procedure rdgrpChartContentClick(Sender: TObject);
     procedure vstMemTableCompareNodes(Sender: TBaseVirtualTree; Node1,
       Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
-    procedure vstMemTableHeaderClick(Sender: TVTHeader; Column: TColumnIndex;
-      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure vstMemTableHeaderClick(Sender: TVTHeader; {$IFDEF FPC} HitInfo: TVTHeaderHitInfo{$ELSE} Column: TColumnIndex;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer{$ENDIF});
     procedure vstMemTableFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
 
     procedure vstMemTablePaintText(Sender: TBaseVirtualTree;
@@ -117,8 +130,8 @@ type
     procedure vstRawTableFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstRawTableCompareNodes(Sender: TBaseVirtualTree; Node1,
       Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
-    procedure vstRawTableHeaderClick(Sender: TVTHeader; Column: TColumnIndex;
-      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure vstRawTableHeaderClick(Sender: TVTHeader; {$IFDEF FPC} HitInfo: TVTHeaderHitInfo{$ELSE} Column: TColumnIndex;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer{$ENDIF});
     procedure PageControlEntriesChange(Sender: TObject);
     procedure lstFreeMemoryKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -242,10 +255,17 @@ var
 
 implementation
 
-{$R *.dfm}
+{$IFDEF FPC}
+  {$R *.frm}
+{$ELSE}
+  {$R *.dfm}
+{$ENDIF}
 
 uses
-  FileCtrl, Math, ClipBrd, DeviceInfo, ClickerZoomPreviewForm;
+  {$IFnDEF FPC}
+    FileCtrl,
+  {$ENDIF}
+  Math, ClipBrd, DeviceInfo, ClickerZoomPreviewForm;
 
 
 {
@@ -648,7 +668,11 @@ var
   ADir: string;
 begin
   ADir := FMikroComp.DefsFolder;
-  if SelectDirectory('"Defs" Folder', '', ADir, [sdNewFolder, sdShowEdit, sdShowShares, sdNewUI, sdValidateDir], Self) then
+  {$IFDEF FPC}
+    if SelectDirectory('caption', '', ADir) then
+  {$ELSE}
+    if SelectDirectory('"Defs" Folder', '', ADir, [sdNewFolder, sdShowEdit, sdShowShares, sdNewUI, sdValidateDir], Self) then
+  {$ENDIF}
   begin
     FMikroComp.DefsFolder := ADir;
 
@@ -958,7 +982,6 @@ begin
   NewColum.Position := 5;
   NewColum.Width := 190;
   NewColum.Text := 'Name';
-
 
   vstRawTable := TVirtualStringTree.Create(Self);
   vstRawTable.Parent := TabSheetRaw;
@@ -1427,7 +1450,7 @@ end;
 
 procedure TfrmMemStatisticsMain.vstMemTableGetText(
   Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
-  TextType: TVSTTextType; var CellText: WideString);
+  TextType: TVSTTextType; var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
 var
   Data: PRoutinesRec;
   SectionIndex: Integer;
@@ -1464,28 +1487,28 @@ end;
 
 
 procedure TfrmMemStatisticsMain.vstMemTableHeaderClick(Sender: TVTHeader;
-  Column: TColumnIndex; Button: TMouseButton; Shift: TShiftState; X,
-  Y: Integer);
+  {$IFDEF FPC} HitInfo: TVTHeaderHitInfo{$ELSE} Column: TColumnIndex;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer{$ENDIF});
 begin
   try
     if ((vstMemTable.Owner) as TForm).Visible then
       if vstMemTable.Visible then
         vstMemTable.SetFocus;
 
-    if Button = mbLeft then
+    if {$IFDEF FPC} HitInfo.{$ENDIF}Button = mbLeft then
     with Sender do
     begin
-      if SortColumn <> Column then
-        SortColumn := Column
+      if SortColumn <> {$IFDEF FPC} HitInfo.{$ENDIF}Column then
+        SortColumn := {$IFDEF FPC} HitInfo.{$ENDIF}Column
       else
       begin
-        if SortDirection = sdAscending then
-          SortDirection := sdDescending
+        if SortDirection = VirtualTrees.sdAscending then
+          SortDirection := VirtualTrees.sdDescending
         else
-          SortDirection := sdAscending
+          SortDirection := VirtualTrees.sdAscending
       end;
 
-      vstMemTable.SortTree(Column, Sender.SortDirection{, False});
+      vstMemTable.SortTree({$IFDEF FPC} HitInfo.{$ENDIF}Column, Sender.SortDirection{, False});
     end;
   except
     MessageBox(Handle, 'Bug on vstMemTableHeaderClick', PChar(Application.Title), MB_ICONERROR);
@@ -1691,7 +1714,7 @@ end;
 
 procedure TfrmMemStatisticsMain.vstRawTableGetText(
   Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
-  TextType: TVSTTextType; var CellText: WideString);
+  TextType: TVSTTextType; var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
 var
   Data: PRoutinesRec;
   SectionIndex: Integer;
@@ -1726,28 +1749,28 @@ end;
 
 
 procedure TfrmMemStatisticsMain.vstRawTableHeaderClick(Sender: TVTHeader;
-  Column: TColumnIndex; Button: TMouseButton; Shift: TShiftState; X,
-  Y: Integer);
+  {$IFDEF FPC} HitInfo: TVTHeaderHitInfo{$ELSE} Column: TColumnIndex;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer{$ENDIF});
 begin
   try
     if ((vstRawTable.Owner) as TForm).Visible then
       if vstRawTable.Visible then
         vstRawTable.SetFocus;
 
-    if Button = mbLeft then
+    if {$IFDEF FPC} HitInfo.{$ENDIF}Button = mbLeft then
       with Sender do
       begin
-        if SortColumn <> Column then
-          SortColumn := Column
+        if SortColumn <> {$IFDEF FPC} HitInfo.{$ENDIF}Column then
+          SortColumn := {$IFDEF FPC} HitInfo.{$ENDIF}Column
         else
         begin
-          if SortDirection = sdAscending then
-            SortDirection := sdDescending
+          if SortDirection = VirtualTrees.sdAscending then
+            SortDirection := VirtualTrees.sdDescending
           else
-            SortDirection := sdAscending
+            SortDirection := VirtualTrees.sdAscending
         end;
 
-        vstRawTable.SortTree(Column, Sender.SortDirection{, False});
+        vstRawTable.SortTree({$IFDEF FPC} HitInfo.{$ENDIF}Column, Sender.SortDirection{, False});
       end;
   except
     MessageBox(Handle, 'Bug on vstRawTableHeaderClick', PChar(Application.Title), MB_ICONERROR);
@@ -1882,7 +1905,7 @@ begin
 
       if n mod 1000 = 0 then
       begin
-        {$IFNDEF UNIX}
+        {$IFNDEF FPC}
           if GetAsyncKeyState(VK_ESCAPE) < 0 then
             Break;
         {$ENDIF}
@@ -2003,7 +2026,7 @@ begin
       Inc(n);
       if n mod 1000 = 0 then
       begin
-        {$IFNDEF UNIX}
+        {$IFNDEF FPC}
           if GetAsyncKeyState(VK_ESCAPE) < 0 then
             Break;
         {$ENDIF}
@@ -2375,7 +2398,7 @@ begin
   for i := 0 to FMemTable.GetMemContentLength - 1 do
   begin
     Entry := FMemTable.GetMemContent(i).Address;
-    EntryEndAddress := FMemTable.GetMemContent(i).Address + FMemTable.GetMemContent(i).Size - 1;
+    EntryEndAddress := Int64(FMemTable.GetMemContent(i).Address) + Int64(FMemTable.GetMemContent(i).Size) - 1;
 
     if FMemTable.AddressIn_MemRange(1, Entry, -$20000000) then //if FMemTable.AddressIn_RAMKSEG0(Entry) then
     begin

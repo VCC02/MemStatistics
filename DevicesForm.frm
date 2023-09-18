@@ -1,58 +1,49 @@
 object frmDevices: TfrmDevices
-  Left = 0
-  Top = 0
-  BorderIcons = []
+  Left = 373
+  Height = 258
+  Top = 284
+  Width = 310
   Caption = 'Devices'
-  ClientHeight = 257
+  ClientHeight = 258
   ClientWidth = 310
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
-  Font.Style = []
-  OldCreateOrder = False
-  Position = poScreenCenter
   OnClose = FormClose
   OnCreate = FormCreate
   OnShow = FormShow
-  DesignSize = (
-    310
-    257)
-  PixelsPerInch = 96
-  TextHeight = 13
+  Position = poScreenCenter
+  LCLVersion = '7.5'
   object edtSearch: TEdit
-    Left = 0
-    Top = 232
-    Width = 193
-    Height = 21
+    Left = 1
+    Height = 23
     Hint = 'Search'
+    Top = 230
+    Width = 193
     Anchors = [akLeft, akRight, akBottom]
+    OnChange = edtSearchChange
+    OnKeyDown = edtSearchKeyDown
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
-    OnChange = edtSearchChange
-    OnKeyDown = edtSearchKeyDown
   end
   object btnCancel: TButton
-    Left = 256
-    Top = 232
-    Width = 53
+    Left = 255
     Height = 25
+    Top = 230
+    Width = 53
     Anchors = [akRight, akBottom]
     Caption = 'Cancel'
-    TabOrder = 1
     OnClick = btnCancelClick
+    TabOrder = 1
   end
   object btnOK: TButton
-    Left = 199
-    Top = 232
-    Width = 51
+    Left = 198
     Height = 25
+    Top = 230
+    Width = 51
     Anchors = [akRight, akBottom]
     Caption = 'OK'
-    TabOrder = 2
     OnClick = vstDevicesDblClick
+    TabOrder = 2
   end
   object tmrClose: TTimer
     Enabled = False

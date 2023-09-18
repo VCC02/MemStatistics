@@ -24,6 +24,10 @@
 
 unit MiniMap;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF} 
+
 interface
 
 uses
@@ -182,8 +186,8 @@ var
   y: Int64;
 begin
   y := Round(Int64(FSelectedEntryIndex) * Int64(Height) / FullHEXLen);
-  if y > Height - 1 then
-    y := Height - 1;
+  if y > Int64(Height) - 1 then
+    y := Int64(Height) - 1;
 
   Canvas.Pen.Color := FirstFileSelectedEntryChartColor;
   Line(Canvas, Start1, y, End1, y);
@@ -203,14 +207,12 @@ procedure TMiniMap.DrawMiniMap;
 const
   DrawingOffset: Integer = 6;
 var
-  Col1, Col2, Col3, Col4: TColor;
   Start1, End1: Integer;
   Start2, End2: Integer;
   Start3, End3: Integer;
   Start4, End4: Integer;
 
   Len1, Len2, Len3, Len4, FullHEXLen: Int64;
-  a: array of TColor;
   CellWidth3, CellWidth3_Mul2: Integer;
 
   i: Integer;

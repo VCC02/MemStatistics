@@ -52,10 +52,6 @@ object frmSettings: TfrmSettings
     TabOrder = 2
     object TabSheetMiscColors: TTabSheet
       Caption = 'Colors'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pagctrlColors: TPageControl
         Left = 3
         Top = 0
@@ -66,10 +62,6 @@ object frmSettings: TfrmSettings
         object TabSheetChartMemCmpColors: TTabSheet
           Caption = 'Chart (Memory compare)'
           ImageIndex = 1
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object grpEntriesColorsChartMemComp: TGroupBox
             Left = 0
             Top = 1
@@ -372,10 +364,6 @@ object frmSettings: TfrmSettings
         object TabSheetChartMiscColors: TTabSheet
           Caption = 'Chart (Miscellaneous)'
           ImageIndex = 2
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object grpTextColorsChart: TGroupBox
             Left = 0
             Top = 1
@@ -516,10 +504,6 @@ object frmSettings: TfrmSettings
     object TabSheetMiscSettings: TTabSheet
       Caption = 'Misc'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object chkDisplayDecimalAddressesCmpTable: TCheckBox
         Left = 3
         Top = 16

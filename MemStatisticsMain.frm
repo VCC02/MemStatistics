@@ -1,36 +1,25 @@
 object frmMemStatisticsMain: TfrmMemStatisticsMain
-  Left = 0
-  Top = 0
+  Left = 258
+  Height = 347
+  Top = 270
+  Width = 992
   Caption = 'Memory Statistics'
-  ClientHeight = 340
+  ClientHeight = 347
   ClientWidth = 992
   Color = clBtnFace
   Constraints.MinHeight = 347
   Constraints.MinWidth = 990
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
-  Font.Style = []
-  OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
   OnPaint = FormPaint
   OnResize = FormResize
-  DesignSize = (
-    992
-    340)
-  PixelsPerInch = 96
-  TextHeight = 13
+  LCLVersion = '7.5'
   object lblListName: TLabel
     Left = 8
+    Height = 19
     Top = 8
     Width = 942
-    Height = 19
-    Caption = 
-      'List Name: Please run from mikroPascal/mikroC/mikroBasic with pa' +
-      'rameters:  "%LIST_FILE_NAME" %CHIP_NAME'
-    Font.Charset = DEFAULT_CHARSET
+    Caption = 'List Name: Please run from mikroPascal/mikroC/mikroBasic with parameters:  "%LIST_FILE_NAME" %CHIP_NAME'
     Font.Color = clWindowText
     Font.Height = -16
     Font.Name = 'Tahoma'
@@ -41,11 +30,10 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   end
   object lblChipName: TLabel
     Left = 8
+    Height = 19
     Top = 32
     Width = 199
-    Height = 19
     Caption = 'Chip Name: not selected'
-    Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
     Font.Name = 'Tahoma'
@@ -56,11 +44,10 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   end
   object lblDefsFolder: TLabel
     Left = 8
+    Height = 19
     Top = 57
     Width = 174
-    Height = 19
     Caption = '"Defs" Folder: not set'
-    Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
     Font.Name = 'Tahoma'
@@ -71,65 +58,67 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   end
   object spdClearFilters: TSpeedButton
     Left = 468
-    Top = 280
-    Width = 76
     Height = 37
+    Top = 287
+    Width = 76
     Anchors = [akRight, akBottom]
     Caption = 'Clear Filters'
     OnClick = spdClearFiltersClick
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 321
+    Height = 23
+    Top = 324
     Width = 992
-    Height = 19
-    Panels = <
+    Panels = <    
       item
         Width = 100
-      end
+      end    
       item
         Width = 50
       end>
+    SimplePanel = False
   end
   object prbLoading: TProgressBar
     Left = 102
-    Top = 323
-    Width = 298
     Height = 17
+    Top = 330
+    Width = 298
     Anchors = [akLeft, akBottom]
     Smooth = True
     TabOrder = 0
   end
   object PageControlEntries: TPageControl
     Left = 468
+    Height = 226
     Top = 57
     Width = 516
-    Height = 219
-    ActivePage = TabSheetStatistics
+    ActivePage = TabSheetRoutines
     Anchors = [akTop, akRight, akBottom]
     Constraints.MinHeight = 219
     Constraints.MinWidth = 516
+    TabIndex = 0
     TabOrder = 2
     OnChange = PageControlEntriesChange
     object TabSheetRoutines: TTabSheet
       Caption = 'By routines'
-      DesignSize = (
-        508
-        191)
+      ClientHeight = 198
+      ClientWidth = 508
       object lblVstBackground: TLabel
         Left = 3
+        Height = 122
         Top = 0
-        Width = 502
-        Height = 143
-        Anchors = [akLeft, akTop, akRight, akBottom]
+        Width = 494
+        Anchors = [akTop, akLeft, akRight, akBottom]
         AutoSize = False
         Color = clWindow
-        ParentColor = False
-        ExplicitHeight = 182
+        Transparent = False
       end
     end
     object TabSheetRaw: TTabSheet
       Caption = 'By address'
+      ClientHeight = 198
+      ClientWidth = 508
       ImageIndex = 1
       object lblVstBackgroundRaw: TLabel
         Left = 3
@@ -144,70 +133,54 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     end
     object TabSheetStatistics: TTabSheet
       Caption = 'Statistics'
+      ClientHeight = 198
+      ClientWidth = 508
       ImageIndex = 2
-      DesignSize = (
-        508
-        191)
       object lstFreeMemory: TListBox
         Left = 3
-        Top = 2
-        Width = 502
         Height = 186
         Hint = 'Press Ctrl+C to copy this list to clipboard.'
-        Anchors = [akLeft, akTop, akRight, akBottom]
-        ItemHeight = 13
+        Top = 2
+        Width = 502
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        ItemHeight = 0
+        OnKeyDown = lstFreeMemoryKeyDown
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
         Visible = False
-        OnKeyDown = lstFreeMemoryKeyDown
       end
     end
   end
-  object rdgrpChartContent: TRadioGroup
-    Left = 796
-    Top = 0
-    Width = 188
-    Height = 75
-    Anchors = [akTop, akRight]
-    Caption = 'Chart content'
-    ItemIndex = 2
-    Items.Strings = (
-      'Display only from routines'
-      'Display only from raw addresses'
-      'Display both above')
-    TabOrder = 3
-    OnClick = rdgrpChartContentClick
-  end
   object prbUpdateSignalsListRun1: TProgressBar
     Left = 402
-    Top = 323
-    Width = 363
     Height = 17
+    Top = 330
+    Width = 363
     Anchors = [akLeft, akBottom]
     Smooth = True
     TabOrder = 4
   end
   object lbeMem: TLabeledEdit
     Left = 548
-    Top = 296
+    Height = 23
+    Top = 301
     Width = 34
-    Height = 21
     Anchors = [akRight, akBottom]
-    EditLabel.Width = 22
-    EditLabel.Height = 13
+    EditLabel.Height = 15
+    EditLabel.Width = 34
     EditLabel.Caption = 'Mem'
     TabOrder = 5
     OnChange = lbeMemChange
   end
   object lbeAddrHex: TLabeledEdit
     Left = 588
-    Top = 296
+    Height = 23
+    Top = 301
     Width = 69
-    Height = 21
     Anchors = [akRight, akBottom]
+    EditLabel.Height = 15
     EditLabel.Width = 69
-    EditLabel.Height = 13
     EditLabel.Caption = 'Address [Hex]'
     TabOrder = 6
     OnChange = lbeMemChange
@@ -215,12 +188,12 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   end
   object lbeAddrDec: TLabeledEdit
     Left = 663
-    Top = 296
+    Height = 23
+    Top = 301
     Width = 66
-    Height = 21
     Anchors = [akRight, akBottom]
-    EditLabel.Width = 68
-    EditLabel.Height = 13
+    EditLabel.Height = 15
+    EditLabel.Width = 66
     EditLabel.Caption = 'Address [Dec]'
     TabOrder = 7
     OnChange = lbeMemChange
@@ -228,12 +201,12 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   end
   object lbeSize: TLabeledEdit
     Left = 735
-    Top = 296
+    Height = 23
+    Top = 301
     Width = 58
-    Height = 21
     Anchors = [akRight, akBottom]
-    EditLabel.Width = 19
-    EditLabel.Height = 13
+    EditLabel.Height = 15
+    EditLabel.Width = 58
     EditLabel.Caption = 'Size'
     TabOrder = 8
     OnChange = lbeMemChange
@@ -241,22 +214,22 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   end
   object lbeEntryName: TLabeledEdit
     Left = 799
-    Top = 296
+    Height = 23
+    Top = 301
     Width = 178
-    Height = 21
     Anchors = [akRight, akBottom]
-    EditLabel.Width = 56
-    EditLabel.Height = 13
+    EditLabel.Height = 15
+    EditLabel.Width = 178
     EditLabel.Caption = 'Entry Name'
     TabOrder = 9
     OnChange = lbeMemChange
   end
   object pnlVisibleEntries: TPanel
     Left = 663
-    Top = 57
-    Width = 130
     Height = 17
     Hint = 'Number of entries that match your search criteria.'
+    Top = 57
+    Width = 130
     Anchors = [akTop, akRight]
     Caption = 'All visible entries'
     ParentShowHint = False
@@ -265,49 +238,77 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   end
   object btnSettings: TButton
     Left = 468
+    Height = 25
     Top = 32
     Width = 70
-    Height = 25
     Anchors = [akTop, akRight]
     Caption = 'Settings...'
-    TabOrder = 11
     OnClick = btnSettingsClick
+    TabOrder = 11
   end
   object btnNewCompareWindow: TButton
     Left = 544
+    Height = 25
     Top = 33
     Width = 160
-    Height = 25
     Anchors = [akTop, akRight]
     Caption = 'New Compare Window...'
-    TabOrder = 12
     OnClick = btnNewCompareWindowClick
+    TabOrder = 12
   end
   object pnlSplitterStatusFromVersions: TPanel
+    Cursor = crHSplit
     Left = 458
+    Height = 267
     Top = 57
     Width = 10
-    Height = 260
-    Cursor = crHSplit
     Anchors = [akTop, akBottom]
     Color = clYellow
     ParentBackground = False
+    ParentColor = False
     TabOrder = 13
     OnMouseDown = pnlSplitterStatusFromVersionsMouseDown
     OnMouseMove = pnlSplitterStatusFromVersionsMouseMove
     OnMouseUp = pnlSplitterStatusFromVersionsMouseUp
   end
   object pnlSplitterPathFromStatus: TPanel
+    Cursor = crHSplit
     Left = 422
+    Height = 271
     Top = 33
     Width = 18
-    Height = 264
-    Cursor = crHSplit
-    Anchors = [akLeft, akTop, akBottom]
+    Anchors = [akTop, akLeft, akBottom]
     Color = clYellow
     ParentBackground = False
+    ParentColor = False
     TabOrder = 14
     Visible = False
+  end
+  object rdgrpChartContent: TRadioGroup
+    Left = 796
+    Height = 75
+    Top = 0
+    Width = 188
+    Anchors = [akTop, akRight]
+    AutoFill = True
+    Caption = 'Chart content'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+    ChildSizing.EnlargeVertical = crsHomogenousChildResize
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclLeftToRightThenTopToBottom
+    ChildSizing.ControlsPerLine = 1
+    ClientHeight = 55
+    ClientWidth = 184
+    ItemIndex = 2
+    Items.Strings = (
+      'Display only from routines'
+      'Display only from raw addresses'
+      'Display both above'
+    )
+    OnClick = rdgrpChartContentClick
+    TabOrder = 3
   end
   object tmrStartup: TTimer
     Enabled = False

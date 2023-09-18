@@ -24,10 +24,19 @@
 
 unit DeviceInfo;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}
+
 interface
 
 uses
-  Windows, SysUtils, Classes, MemStatUtils;
+  {$IFDEF FPC}
+    LCLIntf, LCLType,
+  {$ELSE}
+    Windows,
+  {$ENDIF}
+    SysUtils, Classes, MemStatUtils;
 
 type
   TDevicePrefix = record

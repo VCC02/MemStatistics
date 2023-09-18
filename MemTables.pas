@@ -1,6 +1,6 @@
 {
     Copyright (C) 2023 VCC
-    creation date: 2013
+    creation date: 2014
     initial release date: 17 Sep 2023
 
     author: VCC
@@ -24,11 +24,20 @@
 
 unit MemTables;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}  
+
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, VirtualTrees, ComCtrls, MemStatUtils, DeviceInfo;
+  {$IFDEF FPC}
+    LCLIntf, LCLType,
+  {$ELSE}
+    Windows, Messages,
+  {$ENDIF}
+    SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ExtCtrls, VirtualTrees, ComCtrls, MemStatUtils, DeviceInfo;
 
 type
   TOnGetVisibleColumnCount = function: Integer of object;

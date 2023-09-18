@@ -1,6 +1,6 @@
 {
     Copyright (C) 2023 VCC
-    creation date: 2013
+    creation date: 2014
     initial release date: 17 Sep 2023
 
     author: VCC
@@ -24,10 +24,19 @@
 
 unit MemStatUtils;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF} 
+
 interface
 
 uses
-  Windows, SysUtils, Graphics, Dialogs, Classes, Forms, VirtualTrees;
+  {$IFDEF FPC}
+    LCLIntf, LCLType,
+  {$ELSE}
+    Windows, 
+  {$ENDIF}
+	SysUtils, Graphics, Dialogs, Classes, Forms, VirtualTrees;
 
 type
   TColorArr = array of TColor;
@@ -925,6 +934,12 @@ begin
   for i := 0 to Length(AAddrRanges) - 1 do
   begin
     case ATranslationOperation of
+      atoNone: //added later
+      begin
+        ADeviceSections[ASectionIndex].AddrRanges[i].MinAddr := AAddrRanges[i].MinAddr;
+        ADeviceSections[ASectionIndex].AddrRanges[i].MaxAddr := AAddrRanges[i].MaxAddr;
+      end;
+
       atoADD:
       begin
         ADeviceSections[ASectionIndex].AddrRanges[i].MinAddr := AAddrRanges[i].MinAddr + TranslationValue;

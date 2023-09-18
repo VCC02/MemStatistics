@@ -1,6 +1,6 @@
 {
     Copyright (C) 2023 VCC
-    creation date: 2013
+    creation date: 2014
     initial release date: 17 Sep 2023
 
     author: VCC
@@ -24,10 +24,19 @@
 
 unit MikroStuff;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}  
+
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, MemTables,
+  {$IFDEF FPC}
+    LCLIntf, LCLType,
+  {$ELSE}
+    Windows, Messages,
+  {$ENDIF}
+    SysUtils, Variants, Classes, Graphics, MemTables,
   MemStatUtils, DefParser;
 
 type
@@ -151,7 +160,7 @@ var
   DefType: TMCUDef;
   SectionIndex: Integer;
   AMemTranslationInfo: TMemoryTranslationInfo;
-  TempRange: TDefSectionAddrRange;
+  //TempRange: TDefSectionAddrRange;
 begin
   MlkFileName := GetDefinitionFileName(FDefsFolder, DeviceName);
 
@@ -196,7 +205,7 @@ begin
       end;
        
     for i := 0 to MemTable.DeviceInfo.GetDeviceSectionCount - 1 do
-      TempRange := MemTable.DeviceInfo.GetAddressRangesByIndex(i, 0);
+      {TempRange :=} MemTable.DeviceInfo.GetAddressRangesByIndex(i, 0);
 
     MemTable.DeviceInfo.UpdateRangeLengthsFromMemoryMinMax;
   finally
