@@ -310,6 +310,7 @@ type
 
     property CmdlineLstFile: TFileName read FCmdlineLstFile write FCmdlineLstFile;
     property DefsFolder: TFileName read FDefsFolder write FDefsFolder;
+
     property ChipName: string read FChipName write SetChipName;
     property DeviceInfo: TDeviceInfo read FDeviceInfo;
 
@@ -475,6 +476,7 @@ var
   s: string;
 
   AddrRange: TDefSectionAddrRangeArr;
+  AddressRanges: TDefSectionAddrRangeArrArr;
   DefType: TMCUDef;
   SectionIndex: Integer;
   MemTranslationInfo: TMemoryTranslationInfo;
@@ -485,7 +487,7 @@ begin
     Exit;
   end;
 
-  MlkFileName := GetDefinitionFileName(FDefsFolder, DeviceName);
+  MlkFileName := GetDefinitionFileName(FDefsFolder, DeviceName, FMemStatMiscOptions.DefsFolderPriority);
 
   if not FileExists(MlkFileName) then
   begin
@@ -496,32 +498,58 @@ begin
 
     Exit;
   end;
-  
-  AStringList := TStringList.Create;
-  try
-    AStringList.LoadFromFile(MlkFileName);
-    DefType := CBoolToMCUDef[UpperCase(ExtractFileExt(MlkFileName)) = '.JSON'];
 
-    s := '';
-    for i := 0 to AStringList.Count - 1 do
-    begin
-      s := s + AStringList.Strings[i] + #3;
-      if (DefType = mdMlk) and (Pos('<LIBRARIES>', AStringList.Strings[i]) > 0) then
-        Break; 
-    end;
+  if UpperCase(MlkFileName) = UpperCase(GetLocalDefinitionFileName) then
+  begin
+    //similar code in LoadMlk from MikroStuff.pas
+    AStringList := TStringList.Create;
+    try
+      for i := 0 to FDeviceInfo.GetDeviceSectionCount - 1 do
+        AStringList.Add(FDeviceInfo.GetDeviceDefSectionNameByIndex(i));
 
-    for i := 0 to FDeviceInfo.GetDeviceSectionCount - 1 do
-      if GetDefAddresses(DefType, s, FDeviceInfo.GetDeviceDefSectionNameByIndex(i), AddrRange) then
+      GetDeviceMemoryContentFromLocalFile(DeviceName, AStringList, AddressRanges);
+
+      for i := 0 to FDeviceInfo.GetDeviceSectionCount - 1 do      //this for loop is look like the next one, but it uses all mem ranges
       begin
-        SectionIndex := GetIndexOfDeviceSectionByDefName(FDeviceInfo.GetDeviceDefSectionNameByIndex(i));
+        SectionIndex := FDeviceInfo.GetIndexOfDeviceSectionByDefName(AStringList.Strings[i]);
         if SectionIndex <> -1 then
         begin
           MemTranslationInfo := FDeviceInfo.MemoryTranslationInfo[i];
-          SetDeviceSectionAddrRanges(SectionIndex, AddrRange, MemTranslationInfo.Value, MemTranslationInfo.Operation);
+          FDeviceInfo.SetDeviceSectionAddrRanges(SectionIndex, AddressRanges[i], MemTranslationInfo.Value, MemTranslationInfo.Operation);
         end;
       end;
-  finally
-    AStringList.Free;
+    finally
+      AStringList.Free;
+    end;
+  end
+  else
+  begin
+    AStringList := TStringList.Create;
+    try
+      AStringList.LoadFromFile(MlkFileName);
+      DefType := CBoolToMCUDef[UpperCase(ExtractFileExt(MlkFileName)) = '.JSON'];
+
+      s := '';
+      for i := 0 to AStringList.Count - 1 do
+      begin
+        s := s + AStringList.Strings[i] + #3;
+        if (DefType = mdMlk) and (Pos('<LIBRARIES>', AStringList.Strings[i]) > 0) then
+          Break;
+      end;
+
+      for i := 0 to FDeviceInfo.GetDeviceSectionCount - 1 do
+        if GetDefAddresses(DefType, s, FDeviceInfo.GetDeviceDefSectionNameByIndex(i), AddrRange) then
+        begin
+          SectionIndex := GetIndexOfDeviceSectionByDefName(FDeviceInfo.GetDeviceDefSectionNameByIndex(i));
+          if SectionIndex <> -1 then
+          begin
+            MemTranslationInfo := FDeviceInfo.MemoryTranslationInfo[i];
+            SetDeviceSectionAddrRanges(SectionIndex, AddrRange, MemTranslationInfo.Value, MemTranslationInfo.Operation);
+          end;
+        end;
+    finally
+      AStringList.Free;
+    end;
   end;
 end;
 
@@ -534,6 +562,21 @@ var
   i: Integer;
   s: string;
 begin
+  if (FMemStatMiscOptions.DefsFolderPriority = dfpLocal) and FileExists(GetLocalDefinitionFileName) then
+  begin
+    AStringList := TStringList.Create;
+    try
+      GetListOfDevicesFromLocalFile(AStringList);
+      AStringList.Sort;
+      Result := AStringList.Text;
+      SelectedItem := AStringList.IndexOf(FChipName);
+    finally
+      AStringList.Free;
+    end;
+    
+    Exit;
+  end;
+
   if FDefsFolder = '' then
   begin
     Result := '';

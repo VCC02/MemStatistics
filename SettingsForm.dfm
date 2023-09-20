@@ -47,7 +47,7 @@ object frmSettings: TfrmSettings
     Top = 0
     Width = 761
     Height = 461
-    ActivePage = TabSheetMemorySections
+    ActivePage = TabSheetMiscColors
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 2
     object TabSheetMiscColors: TTabSheet
@@ -71,35 +71,35 @@ object frmSettings: TfrmSettings
             TabOrder = 0
             object lblFirstFileEntryColor: TLabel
               Left = 8
-              Top = 32
+              Top = 36
               Width = 38
               Height = 13
               Caption = 'First file'
             end
             object lblSecondFileEntryColor: TLabel
               Left = 8
-              Top = 92
+              Top = 96
               Width = 52
               Height = 13
               Caption = 'Second file'
             end
             object lblThirdFileEntryColor: TLabel
               Left = 8
-              Top = 152
+              Top = 156
               Width = 43
               Height = 13
               Caption = 'Third File'
             end
             object lblFourthFileEntryColor: TLabel
               Left = 8
-              Top = 212
+              Top = 216
               Width = 51
               Height = 13
               Caption = 'Fourth File'
             end
             object pnlFirstFileEntryChart: TPanel
               Left = 70
-              Top = 14
+              Top = 18
               Width = 43
               Height = 43
               Hint = 'Double click to edit'
@@ -111,7 +111,7 @@ object frmSettings: TfrmSettings
             end
             object colboxFirstFileEntryChart: TColorBox
               Left = 119
-              Top = 29
+              Top = 33
               Width = 145
               Height = 22
               Selected = clRed
@@ -122,7 +122,7 @@ object frmSettings: TfrmSettings
             end
             object pnlSecondFileEntryChart: TPanel
               Left = 70
-              Top = 74
+              Top = 78
               Width = 43
               Height = 43
               Hint = 'Double click to edit'
@@ -134,7 +134,7 @@ object frmSettings: TfrmSettings
             end
             object colboxSecondFileEntryChart: TColorBox
               Left = 119
-              Top = 89
+              Top = 93
               Width = 145
               Height = 22
               Selected = clLime
@@ -145,7 +145,7 @@ object frmSettings: TfrmSettings
             end
             object pnlThirdFileEntryChart: TPanel
               Left = 70
-              Top = 134
+              Top = 138
               Width = 43
               Height = 43
               Hint = 'Double click to edit'
@@ -157,7 +157,7 @@ object frmSettings: TfrmSettings
             end
             object colboxThirdFileEntryChart: TColorBox
               Left = 119
-              Top = 149
+              Top = 153
               Width = 145
               Height = 22
               Selected = clSkyBlue
@@ -168,7 +168,7 @@ object frmSettings: TfrmSettings
             end
             object pnlFourthFileEntryChart: TPanel
               Left = 70
-              Top = 194
+              Top = 198
               Width = 43
               Height = 43
               Hint = 'Double click to edit'
@@ -180,7 +180,7 @@ object frmSettings: TfrmSettings
             end
             object colboxFourthFileEntryChart: TColorBox
               Left = 119
-              Top = 209
+              Top = 213
               Width = 145
               Height = 22
               Selected = clGreen
@@ -199,35 +199,35 @@ object frmSettings: TfrmSettings
             TabOrder = 1
             object lblFirstFileSelectedEntryColor: TLabel
               Left = 8
-              Top = 32
+              Top = 36
               Width = 38
               Height = 13
               Caption = 'First file'
             end
             object lblSecondFileSelectedEntryColor: TLabel
               Left = 8
-              Top = 92
+              Top = 96
               Width = 52
               Height = 13
               Caption = 'Second file'
             end
             object lblThirdFileSelectedEntryColor: TLabel
               Left = 8
-              Top = 152
+              Top = 156
               Width = 43
               Height = 13
               Caption = 'Third File'
             end
             object lblFourthFileSelectedEntryColor: TLabel
               Left = 8
-              Top = 212
+              Top = 216
               Width = 51
               Height = 13
               Caption = 'Fourth File'
             end
             object pnlFirstFileSelectedEntryChart: TPanel
               Left = 70
-              Top = 14
+              Top = 18
               Width = 43
               Height = 43
               Hint = 'Double click to edit'
@@ -239,7 +239,7 @@ object frmSettings: TfrmSettings
             end
             object colboxFirstFileSelectedEntryChart: TColorBox
               Left = 119
-              Top = 29
+              Top = 33
               Width = 145
               Height = 22
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
@@ -249,7 +249,7 @@ object frmSettings: TfrmSettings
             end
             object pnlSecondFileSelectedEntryChart: TPanel
               Left = 70
-              Top = 74
+              Top = 78
               Width = 43
               Height = 43
               Hint = 'Double click to edit'
@@ -261,7 +261,7 @@ object frmSettings: TfrmSettings
             end
             object colboxSecondFileSelectedEntryChart: TColorBox
               Left = 119
-              Top = 89
+              Top = 93
               Width = 145
               Height = 22
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
@@ -271,7 +271,7 @@ object frmSettings: TfrmSettings
             end
             object pnlThirdFileSelectedEntryChart: TPanel
               Left = 70
-              Top = 134
+              Top = 138
               Width = 43
               Height = 43
               Hint = 'Double click to edit'
@@ -283,7 +283,7 @@ object frmSettings: TfrmSettings
             end
             object colboxThirdFileSelectedEntryChart: TColorBox
               Left = 119
-              Top = 149
+              Top = 153
               Width = 145
               Height = 22
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
@@ -293,7 +293,7 @@ object frmSettings: TfrmSettings
             end
             object pnlFourthFileSelectedEntryChart: TPanel
               Left = 70
-              Top = 194
+              Top = 198
               Width = 43
               Height = 43
               Hint = 'Double click to edit'
@@ -305,7 +305,7 @@ object frmSettings: TfrmSettings
             end
             object colboxFourthFileSelectedEntryChart: TColorBox
               Left = 119
-              Top = 209
+              Top = 213
               Width = 145
               Height = 22
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
@@ -336,7 +336,7 @@ object frmSettings: TfrmSettings
             end
             object pnlOverlap: TPanel
               Left = 14
-              Top = 194
+              Top = 198
               Width = 43
               Height = 43
               Hint = 'Double click to edit'
@@ -349,7 +349,7 @@ object frmSettings: TfrmSettings
             end
             object colboxOverlap: TColorBox
               Left = 15
-              Top = 149
+              Top = 153
               Width = 145
               Height = 22
               Selected = clGray
@@ -373,21 +373,21 @@ object frmSettings: TfrmSettings
             TabOrder = 0
             object lblChartTextBackgroundColor: TLabel
               Left = 8
-              Top = 32
+              Top = 36
               Width = 56
               Height = 13
               Caption = 'Background'
             end
             object lblChartTextColor: TLabel
               Left = 8
-              Top = 92
+              Top = 96
               Width = 56
               Height = 13
               Caption = 'Foreground'
             end
             object pnlTextBackgroundChart: TPanel
               Left = 70
-              Top = 14
+              Top = 18
               Width = 43
               Height = 43
               Hint = 'Double click to edit'
@@ -399,7 +399,7 @@ object frmSettings: TfrmSettings
             end
             object colboxTextBackgroundChart: TColorBox
               Left = 119
-              Top = 29
+              Top = 33
               Width = 145
               Height = 22
               Selected = clCream
@@ -410,7 +410,7 @@ object frmSettings: TfrmSettings
             end
             object pnlTextColorChart: TPanel
               Left = 70
-              Top = 74
+              Top = 78
               Width = 43
               Height = 43
               Hint = 'Double click to edit'
@@ -422,7 +422,7 @@ object frmSettings: TfrmSettings
             end
             object colboxTextColorChart: TColorBox
               Left = 119
-              Top = 89
+              Top = 93
               Width = 145
               Height = 22
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
@@ -440,21 +440,21 @@ object frmSettings: TfrmSettings
             TabOrder = 1
             object lblChartBackgroundColor: TLabel
               Left = 8
-              Top = 32
+              Top = 36
               Width = 56
               Height = 13
               Caption = 'Background'
             end
             object ChartLineColor: TLabel
               Left = 8
-              Top = 92
+              Top = 96
               Width = 24
               Height = 13
               Caption = 'Lines'
             end
             object pnlBackgroundChart: TPanel
               Left = 70
-              Top = 14
+              Top = 18
               Width = 43
               Height = 43
               Hint = 'Double click to edit'
@@ -466,7 +466,7 @@ object frmSettings: TfrmSettings
             end
             object colboxBackgroundChart: TColorBox
               Left = 119
-              Top = 29
+              Top = 33
               Width = 145
               Height = 22
               Selected = clCream
@@ -477,7 +477,7 @@ object frmSettings: TfrmSettings
             end
             object pnlLineChart: TPanel
               Left = 70
-              Top = 74
+              Top = 78
               Width = 43
               Height = 43
               Hint = 'Double click to edit'
@@ -489,7 +489,7 @@ object frmSettings: TfrmSettings
             end
             object colboxLineChart: TColorBox
               Left = 119
-              Top = 89
+              Top = 93
               Width = 145
               Height = 22
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
@@ -504,6 +504,9 @@ object frmSettings: TfrmSettings
     object TabSheetMiscSettings: TTabSheet
       Caption = 'Misc'
       ImageIndex = 1
+      DesignSize = (
+        753
+        433)
       object chkDisplayDecimalAddressesCmpTable: TCheckBox
         Left = 3
         Top = 16
@@ -557,6 +560,7 @@ object frmSettings: TfrmSettings
           ParentShowHint = False
           ShowHint = True
           TabOrder = 0
+          OnKeyUp = lbeDefaultChipNameKeyUp
         end
         object lbeDefFilePrefix: TLabeledEdit
           Left = 16
@@ -570,6 +574,7 @@ object frmSettings: TfrmSettings
           ParentShowHint = False
           ShowHint = True
           TabOrder = 1
+          OnKeyUp = lbeDefFilePrefixKeyUp
         end
         object lbeExpectedPrefix: TLabeledEdit
           Left = 16
@@ -583,6 +588,7 @@ object frmSettings: TfrmSettings
           ParentShowHint = False
           ShowHint = True
           TabOrder = 2
+          OnKeyUp = lbeExpectedPrefixKeyUp
         end
         object cmbDeviceBitness: TComboBox
           Left = 16
@@ -597,10 +603,60 @@ object frmSettings: TfrmSettings
           ParentShowHint = False
           ShowHint = True
           TabOrder = 3
+          OnChange = cmbDeviceBitnessChange
           Items.Strings = (
             '8-bit'
             '16-bit'
             '32-bit')
+        end
+      end
+      object grpDeviceDefinitions: TGroupBox
+        Left = 280
+        Top = 0
+        Width = 470
+        Height = 126
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Device definitions'
+        TabOrder = 3
+        DesignSize = (
+          470
+          126)
+        object lbeDefsFolder: TLabeledEdit
+          Left = 6
+          Top = 36
+          Width = 419
+          Height = 21
+          Anchors = [akLeft, akTop, akRight]
+          EditLabel.Width = 53
+          EditLabel.Height = 13
+          EditLabel.Caption = 'Defs folder'
+          TabOrder = 0
+          OnKeyUp = lbeDefsFolderKeyUp
+        end
+        object btnBrowseDefsFolder: TButton
+          Left = 431
+          Top = 36
+          Width = 27
+          Height = 21
+          Anchors = [akTop, akRight]
+          Caption = '...'
+          TabOrder = 1
+          OnClick = btnBrowseDefsFolderClick
+        end
+        object rdgrpDefinitionFilePriority: TRadioGroup
+          Left = 6
+          Top = 63
+          Width = 185
+          Height = 56
+          Caption = 'Definition file priority'
+          ItemIndex = 0
+          Items.Strings = (
+            'Defs folder (mlk / json)'
+            'Local device list (ini)')
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 2
+          OnClick = rdgrpDefinitionFilePriorityClick
         end
       end
     end

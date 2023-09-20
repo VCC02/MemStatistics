@@ -68,6 +68,7 @@ type
   end;
 
   TDefSectionAddrRangeArr = array of TDefSectionAddrRange;
+  TDefSectionAddrRangeArrArr = array of TDefSectionAddrRangeArr;
 
   TAddressOffset = record
     S1, S2: Integer; //scheme 1, scheme 2  - mostly for PIC32, where there are two addressing schemes, like KSEG0 / KSEG1  or  KSEG2 / KSEG3 .  Other architectures might not need this.
@@ -101,6 +102,7 @@ type
 
   TAddressTranslationOperation = (atoNone, atoADD, atoOR);
   TDeviceBitness = (db8, db16, db32);
+  TDefsFolderPriority = (dfpDefFolder, dfpLocal);
 
   TMemoryTranslationInfo = record
     Operation: TAddressTranslationOperation;
@@ -164,6 +166,9 @@ type
     DefFilePrefix: string; //e.g. "P32", "P24", "P30", "P33"
     ExpectedPrefix: string;  //e.g. "PIC32", "PIC24", "PIC30", "PIC33"
     DeviceBitness: TDeviceBitness; // db8, db16, db32
+
+    DefsFolder: string;
+    DefsFolderPriority: TDefsFolderPriority;
   end;
 
   TMemStatOptions = record
@@ -193,7 +198,9 @@ function SelectNodeByIndex(ATree: TVirtualStringTree; AIndex: Cardinal): PVirtua
 procedure ScrollIntoViewNodeByIndex(vst: TVirtualStringTree; AIndex: Cardinal; SelectNode: Boolean);
 procedure AddTrailingSlash(var s: string); overload;
 procedure AddTrailingSlash(var s: TFileName); overload;
-function GetDefinitionFileName(ADefsFolder, ADeviceName: string): string;
+
+function GetLocalDefinitionFileName: string;
+function GetDefinitionFileName(ADefsFolder, ADeviceName: string; ADefsFolderPriority: TDefsFolderPriority): string;
 
 procedure GetAllSlotsLengths(AFileSlot1, AFileSlot2, AFileSlot3, AFileSlot4: TFileSlot; out Len1, Len2, Len3, Len4: Integer);
 procedure InitSlotSectionLengths(var Slot: TFileSlot);
@@ -216,18 +223,22 @@ procedure SetDevSectionAddrRanges(var ADeviceSections: TSectionArr; ASectionInde
 procedure SetRangeLengthsFromMemoryMinMax(var ADeviceSections: TSectionArr; AShiftAmout: Byte = 0);
 
 procedure UpdateDevBitness(ADeviceBitness: TDeviceBitness; out ADevShiftAmount, ADevPointerSize: Byte);
+procedure GetDeviceMemoryContentFromLocalFile(ADeviceName: string; AMemSectionNames: TStringList; var AAddressRanges: TDefSectionAddrRangeArrArr);
+procedure GetListOfDevicesFromLocalFile(AListOfDevices: TStringList);
 
 const
   CAddressOffset_Data1: DWord = 0;
   CAddressOffset_Data2: DWord = 4;
   CAddressOffset_Data3: DWord = 8;
-  CAddressOffset_Data4: DWord = 12;  
+  CAddressOffset_Data4: DWord = 12;
+
+  CLocalDefsFile = 'Defs.ini';
 
 implementation
 
 
 uses
-  Math;
+  Math, IniFiles;
 
 
 procedure Line(Cnv: TCanvas; x1, y1, x2, y2: Integer);
@@ -575,12 +586,30 @@ begin
 end;
 
 
-function GetDefinitionFileName(ADefsFolder, ADeviceName: string): string;
+function GetLocalDefinitionFileName: string;
+begin
+  Result := ExtractFilePath(ParamStr(0)) + CLocalDefsFile;
+end;
+
+
+function GetDefinitionFileName(ADefsFolder, ADeviceName: string; ADefsFolderPriority: TDefsFolderPriority): string;
 var
   DevName: string;
 begin
-  if ADefsFolder = '' then
+  if ADefsFolderPriority = dfpLocal then
   begin
+    Result := GetLocalDefinitionFileName;
+    if FileExists(Result) then
+      Exit; //do not look for other file
+    // else look for file in defs folder 
+  end;
+  
+  if (ADefsFolder = '') and (ADefsFolderPriority = dfpDefFolder) then
+  begin  //look for local file
+    Result := ExtractFilePath(ParamStr(0)) + CLocalDefsFile;
+    if FileExists(Result) then
+      Exit;
+
     Result := '';
     Exit;
   end;
@@ -595,6 +624,9 @@ begin
   begin
     DevName := ADeviceName; //do not delete 'IC' from 'PIC' on necto
     Result := ADefsFolder + DevName + '.json';
+
+    if not FileExists(Result) and (ADefsFolderPriority = dfpDefFolder) then
+      Result := ExtractFilePath(ParamStr(0)) + CLocalDefsFile;  //Even if it doesn't exist, the caller should veriy it again.
   end;
 end;
 
@@ -994,6 +1026,76 @@ begin
       ADevShiftAmount := 2;
       ADevPointerSize := 4;
     end;
+  end;
+end;
+
+
+procedure GetDeviceMemoryContentFromLocalFile(ADeviceName: string; AMemSectionNames: TStringList; var AAddressRanges: TDefSectionAddrRangeArrArr);
+var
+  Fnm, MemSectionName: string;
+  Ini: TMemIniFile;
+  i, j, RangeCount: Integer;
+  MinKey, MaxKey, Suffix: string;
+  MinAddrStr, MaxAddrStr: string;
+begin
+  Fnm := GetLocalDefinitionFileName;
+  if not FileExists(Fnm) then
+    Exit;
+
+  //This can be optimized by opening the file as TStringList and cropping the section, then working with it.
+  Ini := TMemIniFile.Create(Fnm);
+  try
+    SetLength(AAddressRanges, AMemSectionNames.Count);
+
+    for i := 0 to AMemSectionNames.Count - 1 do
+    begin
+      MemSectionName := AMemSectionNames.Strings[i];
+      RangeCount := Ini.ReadInteger(ADeviceName, MemSectionName + '_RangeCount', 1);   //the default value is 1, because it is expected that every memory section has at least one range
+
+      SetLength(AAddressRanges[i], RangeCount);
+
+      for j := 0 to RangeCount - 1 do
+      begin
+        if RangeCount = 1 then
+        begin
+          MinKey := MemSectionName + '_Min';
+          MaxKey := MemSectionName + '_Max';
+        end
+        else
+        begin
+          Suffix := IntToStr(j);
+          MinKey := MemSectionName + '_Min_' + Suffix;
+          MaxKey := MemSectionName + '_Max_' + Suffix;
+        end;
+
+        MinAddrStr := Ini.ReadString(ADeviceName, MinKey, '0');
+        MaxAddrStr := Ini.ReadString(ADeviceName, MaxKey, '0');
+
+        AAddressRanges[i][j].MinAddr := HexToInt(MinAddrStr);
+        AAddressRanges[i][j].MaxAddr := HexToInt(MaxAddrStr);
+        AAddressRanges[i][j].Len := 0; //Computed later. Not needed here.
+      end;
+    end;
+  finally
+    Ini.Free;
+  end;
+end;
+
+
+procedure GetListOfDevicesFromLocalFile(AListOfDevices: TStringList);
+var
+  Fnm: string;
+  Ini: TMemIniFile;
+begin
+  Fnm := GetLocalDefinitionFileName;
+  if not FileExists(Fnm) then
+    Exit;
+
+  Ini := TMemIniFile.Create(Fnm);
+  try
+    Ini.ReadSections(AListOfDevices);
+  finally
+    Ini.Free;
   end;
 end;
 

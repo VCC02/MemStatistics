@@ -9,7 +9,7 @@ object frmMemStatCompare: TfrmMemStatCompare
   Color = clBtnFace
   Constraints.MinHeight = 500
   Constraints.MinWidth = 1000
-  Menu = MainMenu1
+  Menu = mmCmpMain
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -233,7 +233,7 @@ object frmMemStatCompare: TfrmMemStatCompare
     TabOrder = 3
     Visible = False
   end
-  object MainMenu1: TMainMenu
+  object mmCmpMain: TMainMenu
     Left = 192
     Top = 72
     object Compare1: TMenuItem

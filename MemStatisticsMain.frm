@@ -18,8 +18,8 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Left = 8
     Height = 19
     Top = 8
-    Width = 942
-    Caption = 'List Name: Please run from mikroPascal/mikroC/mikroBasic with parameters:  "%LIST_FILE_NAME" %CHIP_NAME'
+    Width = 1008
+    Caption = 'List Name: Please run from mikroPascal/mikroC/mikroBasic with parameters:  "%LIST_FILE_NAME" %CHIP_NAME Dummy'
     Font.Color = clWindowText
     Font.Height = -16
     Font.Name = 'Tahoma'
@@ -249,7 +249,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   object btnNewCompareWindow: TButton
     Left = 544
     Height = 25
-    Top = 33
+    Top = 32
     Width = 160
     Anchors = [akTop, akRight]
     Caption = 'New Compare Window...'

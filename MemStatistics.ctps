@@ -12,7 +12,7 @@
         <EditorIndex Value="-1"/>
         <WindowIndex Value="0"/>
         <CursorPos Y="24"/>
-        <UsageCount Value="26"/>
+        <UsageCount Value="36"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
       <Unit>
@@ -25,11 +25,12 @@
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="1008"/>
-        <CursorPos X="51" Y="1017"/>
-        <UsageCount Value="26"/>
+        <TopLine Value="67"/>
+        <CursorPos X="60" Y="77"/>
+        <UsageCount Value="36"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
       <Unit>
         <Filename Value="SettingsForm.pas"/>
@@ -40,20 +41,21 @@
         <ResourceBaseClass Value="Form"/>
         <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="24"/>
-        <CursorPos X="18" Y="38"/>
-        <UsageCount Value="26"/>
+        <TopLine Value="414"/>
+        <CursorPos X="18" Y="425"/>
+        <UsageCount Value="36"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
       <Unit>
         <Filename Value="MikroStuff.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="142"/>
-        <CursorPos X="28" Y="166"/>
-        <UsageCount Value="26"/>
+        <TopLine Value="180"/>
+        <CursorPos X="45" Y="190"/>
+        <UsageCount Value="36"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
@@ -64,7 +66,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="25"/>
         <CursorPos X="23" Y="41"/>
-        <UsageCount Value="26"/>
+        <UsageCount Value="36"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
@@ -73,9 +75,9 @@
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="20"/>
-        <CursorPos X="23" Y="35"/>
-        <UsageCount Value="26"/>
+        <TopLine Value="192"/>
+        <CursorPos X="31" Y="196"/>
+        <UsageCount Value="36"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
@@ -88,11 +90,12 @@
         <ResourceBaseClass Value="Form"/>
         <EditorIndex Value="8"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="25"/>
-        <CursorPos X="37" Y="42"/>
-        <UsageCount Value="26"/>
+        <TopLine Value="1410"/>
+        <CursorPos Y="1425"/>
+        <UsageCount Value="36"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
       <Unit>
         <Filename Value="DevicesForm.pas"/>
@@ -104,17 +107,18 @@
         <EditorIndex Value="7"/>
         <WindowIndex Value="0"/>
         <TopLine Value="24"/>
-        <CursorPos X="11" Y="40"/>
-        <UsageCount Value="26"/>
+        <CursorPos X="47" Y="32"/>
+        <UsageCount Value="36"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
       <Unit>
         <Filename Value="DefParser.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
         <WindowIndex Value="0"/>
-        <UsageCount Value="26"/>
+        <UsageCount Value="36"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
       <Unit>
@@ -127,7 +131,7 @@
         <EditorIndex Value="-1"/>
         <WindowIndex Value="0"/>
         <CursorPos X="33" Y="23"/>
-        <UsageCount Value="26"/>
+        <UsageCount Value="36"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
       <Unit>
@@ -137,7 +141,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="149"/>
         <CursorPos X="25" Y="165"/>
-        <UsageCount Value="26"/>
+        <UsageCount Value="36"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
@@ -147,7 +151,7 @@
         <EditorIndex Value="6"/>
         <WindowIndex Value="0"/>
         <CursorPos X="16" Y="14"/>
-        <UsageCount Value="26"/>
+        <UsageCount Value="36"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
@@ -164,7 +168,7 @@
           <WindowIndex Value="0"/>
           <CursorPos X="20" Y="52"/>
         </ExtraEditor1>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <DefaultSyntaxHighlighter Value="FRM"/>
       </Unit>
       <Unit>
@@ -174,7 +178,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="2270"/>
         <CursorPos X="22" Y="2279"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <DefaultSyntaxHighlighter Value="FRM"/>
       </Unit>
       <Unit>
@@ -184,7 +188,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="279"/>
         <CursorPos X="23" Y="353"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <DefaultSyntaxHighlighter Value="FRM"/>
       </Unit>
       <Unit>
@@ -193,126 +197,126 @@
         <HasResources Value="True"/>
         <EditorIndex Value="-1"/>
         <WindowIndex Value="0"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <DefaultSyntaxHighlighter Value="FRM"/>
       </Unit>
     </Units>
     <JumpHistory HistoryIndex="28">
       <Position>
-        <Filename Value="DevicesForm.pas"/>
-        <Caret Line="234" Column="24" TopLine="197"/>
+        <Filename Value="MikroStuff.pas"/>
+        <Caret Line="219" Column="3" TopLine="203"/>
       </Position>
       <Position>
-        <Filename Value="MemStatisticsMain.pas"/>
-        <Caret Line="39" Column="5" TopLine="28"/>
-      </Position>
-      <Position>
-        <Filename Value="MemStatisticsMain.pas"/>
-        <Caret Line="1902" Column="24" TopLine="1865"/>
-      </Position>
-      <Position>
-        <Filename Value="MemStatisticsMain.pas"/>
-        <Caret Line="34" Column="14" TopLine="22"/>
-      </Position>
-      <Position>
-        <Filename Value="MemStatisticsMain.pas"/>
-        <Caret Line="1904" Column="24" TopLine="1887"/>
-      </Position>
-      <Position>
-        <Filename Value="MemStatisticsMain.pas"/>
-        <Caret Line="2021" Column="26" TopLine="2010"/>
-      </Position>
-      <Position>
-        <Filename Value="MemStatisticsMain.pas"/>
-        <Caret Line="754" Column="3" TopLine="740"/>
-      </Position>
-      <Position>
-        <Filename Value="MemStatisticsMain.pas"/>
-        <Caret Line="2395" Column="106" TopLine="2374"/>
+        <Filename Value="MikroStuff.pas"/>
+        <Caret Line="165" Column="35" TopLine="143"/>
       </Position>
       <Position>
         <Filename Value="MemStatUtils.pas"/>
-        <Caret Line="936" Column="5" TopLine="921"/>
+        <Caret Line="196" Column="31" TopLine="180"/>
       </Position>
       <Position>
         <Filename Value="MemStatUtils.pas"/>
-        <Caret Line="940" Column="18" TopLine="928"/>
+        <Caret Line="578" Column="31" TopLine="552"/>
       </Position>
       <Position>
         <Filename Value="MemStatUtils.pas"/>
-        <Caret Line="996" Column="8" TopLine="971"/>
-      </Position>
-      <Position>
-        <Filename Value="Common\MiniMap.pas"/>
-        <Caret Line="184" TopLine="178"/>
-      </Position>
-      <Position>
-        <Filename Value="Common\MiniMap.pas"/>
-        <Caret Line="190" TopLine="175"/>
-      </Position>
-      <Position>
-        <Filename Value="Common\MiniMap.pas"/>
-        <Caret Line="165" Column="25" TopLine="148"/>
+        <Caret Line="196" Column="31" TopLine="180"/>
       </Position>
       <Position>
         <Filename Value="MemStatUtils.pas"/>
-        <Caret Line="35" Column="23" TopLine="20"/>
+        <Caret Line="578" Column="31" TopLine="573"/>
       </Position>
       <Position>
-        <Filename Value="SettingsForm.pas"/>
-        <Caret Line="35" Column="26" TopLine="20"/>
+        <Filename Value="MemStatUtils.pas"/>
+        <Caret Line="196" Column="31" TopLine="180"/>
       </Position>
       <Position>
-        <Filename Value="Common\DeviceInfo.pas"/>
-        <Caret Line="14" Column="16"/>
+        <Filename Value="MemStatUtils.pas"/>
+        <Caret Line="578" Column="31" TopLine="570"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatUtils.pas"/>
+        <Caret Line="196" Column="31" TopLine="168"/>
+      </Position>
+      <Position>
+        <Filename Value="MemStatUtils.pas"/>
+        <Caret Line="578" Column="31" TopLine="564"/>
       </Position>
       <Position>
         <Filename Value="SettingsForm.pas"/>
         <Caret Line="38" Column="18" TopLine="24"/>
       </Position>
       <Position>
-        <Filename Value="MemTables.pas"/>
-        <Caret Line="42" Column="22" TopLine="20"/>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="236" Column="44" TopLine="235"/>
       </Position>
       <Position>
-        <Filename Value="MemStatCompareForm.pas"/>
-        <Caret Line="344" Column="22" TopLine="328"/>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="837" Column="50" TopLine="813"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="150" Column="37" TopLine="135"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="837" Column="58" TopLine="812"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="911" Column="32" TopLine="888"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="171" Column="28" TopLine="153"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="716" Column="41" TopLine="694"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="164" Column="15" TopLine="149"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="171" Column="43" TopLine="149"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="713" Column="66" TopLine="688"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="168" Column="42" TopLine="153"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="716" Column="38" TopLine="696"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="1315" Column="36" TopLine="1298"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="221" Column="51" TopLine="206"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="1140" Column="16" TopLine="1121"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="227" Column="31" TopLine="213"/>
+      </Position>
+      <Position>
+        <Filename Value="SettingsForm.pas"/>
+        <Caret Line="428" TopLine="414"/>
       </Position>
       <Position>
         <Filename Value="MemStatisticsMain.pas"/>
-        <Caret Line="38" Column="16" TopLine="21"/>
-      </Position>
-      <Position>
-        <Filename Value="MikroStuff.pas"/>
-        <Caret Line="39" Column="5" TopLine="24"/>
-      </Position>
-      <Position>
-        <Filename Value="MemStatCompareForm.pas"/>
-        <Caret Line="42" Column="37" TopLine="25"/>
-      </Position>
-      <Position>
-        <Filename Value="MikroStuff.pas"/>
-        <Caret Line="166" Column="28" TopLine="142"/>
-      </Position>
-      <Position>
-        <Filename Value="DevicesForm.pas"/>
-        <Caret Line="40" Column="11" TopLine="24"/>
-      </Position>
-      <Position>
-        <Filename Value="MemTables.pas"/>
-        <Caret Line="41" Column="23" TopLine="25"/>
-      </Position>
-      <Position>
-        <Filename Value="MemStatisticsMain.pas"/>
-        <Caret Line="262" Column="24" TopLine="246"/>
-      </Position>
-      <Position>
-        <Filename Value="MemStatisticsMain.pas"/>
-        <Caret Line="762" Column="33" TopLine="664"/>
-      </Position>
-      <Position>
-        <Filename Value="MemStatisticsMain.pas"/>
-        <Caret Line="1019" Column="52" TopLine="999"/>
+        <Caret Line="84" Column="91" TopLine="67"/>
       </Position>
     </JumpHistory>
     <RunParams>
@@ -333,15 +337,8 @@
         <Kind Value="bpkSource"/>
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
-        <Source Value="MemStatisticsMain.pas"/>
-        <Line Value="75"/>
-      </Item>
-      <Item>
-        <Kind Value="bpkSource"/>
-        <WatchScope Value="wpsLocal"/>
-        <WatchKind Value="wpkWrite"/>
-        <Source Value="MemStatisticsMain.pas"/>
-        <Line Value="102"/>
+        <Source Value="SettingsForm.pas"/>
+        <Line Value="428"/>
       </Item>
     </BreakPoints>
   </Debugging>

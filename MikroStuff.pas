@@ -50,6 +50,7 @@ type
   TMikroComp = class(TComponent)
   private
     FDefsFolder: string;
+    FDefsFolderPriority: TDefsFolderPriority;
     FAllowSearch: Boolean;
     FMemTableVisibleEntries: Cardinal;
     FRawTableVisibleEntries: Cardinal;
@@ -96,6 +97,7 @@ type
     property LstDataRaw: TStringList read FLstDataRaw write FLstDataRaw;
 
     property DefsFolder: string read FDefsFolder write FDefsFolder;
+    property DefsFolderPriority: TDefsFolderPriority read FDefsFolderPriority write FDefsFolderPriority;
     property AllowSearch: Boolean read FAllowSearch write FAllowSearch;
     property MemTableVisibleEntries: Cardinal read FMemTableVisibleEntries write FMemTableVisibleEntries;
     property RawTableVisibleEntries: Cardinal read FRawTableVisibleEntries write FRawTableVisibleEntries;
@@ -128,6 +130,8 @@ begin
   FLstAddrRaw := TStringList.Create;
   FLstAddrRawDec := TStringList.Create;
   FLstDataRaw := TStringList.Create;
+  
+  FDefsFolderPriority := dfpDefFolder;
 end;
 
 
@@ -157,12 +161,13 @@ var
   i: Integer;
   s: string;
   AddrRange: TDefSectionAddrRangeArr;
+  AddressRanges: TDefSectionAddrRangeArrArr;
   DefType: TMCUDef;
   SectionIndex: Integer;
   AMemTranslationInfo: TMemoryTranslationInfo;
   //TempRange: TDefSectionAddrRange;
 begin
-  MlkFileName := GetDefinitionFileName(FDefsFolder, DeviceName);
+  MlkFileName := GetDefinitionFileName(FDefsFolder, DeviceName, FDefsFolderPriority);
 
   if not FileExists(MlkFileName) then
   begin
@@ -177,40 +182,69 @@ begin
     Exit;
   end;
 
-  AStringList := TStringList.Create;
-  try
-    AStringList.LoadFromFile(MlkFileName);
-    DefType := CBoolToMCUDef[UpperCase(ExtractFileExt(MlkFileName)) = '.JSON'];
+  if UpperCase(MlkFileName) = UpperCase(GetLocalDefinitionFileName) then
+  begin
+    //see also LoadMlk from MemStatCompareForm.pas
+    AStringList := TStringList.Create;
+    try
+      for i := 0 to MemTable.DeviceInfo.GetDeviceSectionCount - 1 do
+        AStringList.Add(MemTable.DeviceInfo.GetDeviceDefSectionNameByIndex(i));
 
-    s := '';
-    for i := 0 to AStringList.Count - 1 do
-    begin
-      s := s + AStringList.Strings[i] + #3;
-      if (DefType = mdMlk) and (Pos('<LIBRARIES>', AStringList.Strings[i]) > 0) then
-        Break;
-    end;
+      GetDeviceMemoryContentFromLocalFile(DeviceName, AStringList, AddressRanges);
 
-    for i := 0 to MemTable.DeviceInfo.GetDeviceSectionCount - 1 do
-      if GetDefAddresses(DefType, s, MemTable.DeviceInfo.GetDeviceDefSectionNameByIndex(i), AddrRange) then
+      for i := 0 to MemTable.DeviceInfo.GetDeviceSectionCount - 1 do      //this for loop is look like the next one, but it uses all mem ranges
       begin
-        SectionIndex := MemTable.DeviceInfo.GetIndexOfDeviceSectionByDefName(MemTable.DeviceInfo.GetDeviceDefSectionNameByIndex(i));
+        SectionIndex := MemTable.DeviceInfo.GetIndexOfDeviceSectionByDefName(AStringList.Strings[i]);
         if SectionIndex <> -1 then
         begin
           AMemTranslationInfo := MemTable.DeviceInfo.MemoryTranslationInfo[i];
-          MemTable.DeviceInfo.SetDeviceSectionAddrRanges(SectionIndex, AddrRange, AMemTranslationInfo.Value, AMemTranslationInfo.Operation);
+          MemTable.DeviceInfo.SetDeviceSectionAddrRanges(SectionIndex, AddressRanges[i], AMemTranslationInfo.Value, AMemTranslationInfo.Operation);
           MemTable.DeviceInfo.SectionFoundInDefFile[i] := True;
         end
         else
           MemTable.DeviceInfo.SectionFoundInDefFile[i] := False;
       end;
-       
-    for i := 0 to MemTable.DeviceInfo.GetDeviceSectionCount - 1 do
-      {TempRange :=} MemTable.DeviceInfo.GetAddressRangesByIndex(i, 0);
+    finally
+      AStringList.Free;
+    end;
+  end
+  else
+  begin
+    AStringList := TStringList.Create;
+    try
+      AStringList.LoadFromFile(MlkFileName);
+      DefType := CBoolToMCUDef[UpperCase(ExtractFileExt(MlkFileName)) = '.JSON'];
 
-    MemTable.DeviceInfo.UpdateRangeLengthsFromMemoryMinMax;
-  finally
-    AStringList.Free;
+      s := '';
+      for i := 0 to AStringList.Count - 1 do
+      begin
+        s := s + AStringList.Strings[i] + #3;
+        if (DefType = mdMlk) and (Pos('<LIBRARIES>', AStringList.Strings[i]) > 0) then
+          Break;
+      end;
+
+      for i := 0 to MemTable.DeviceInfo.GetDeviceSectionCount - 1 do
+        if GetDefAddresses(DefType, s, MemTable.DeviceInfo.GetDeviceDefSectionNameByIndex(i), AddrRange) then
+        begin
+          SectionIndex := MemTable.DeviceInfo.GetIndexOfDeviceSectionByDefName(MemTable.DeviceInfo.GetDeviceDefSectionNameByIndex(i));
+          if SectionIndex <> -1 then
+          begin
+            AMemTranslationInfo := MemTable.DeviceInfo.MemoryTranslationInfo[i];
+            MemTable.DeviceInfo.SetDeviceSectionAddrRanges(SectionIndex, AddrRange, AMemTranslationInfo.Value, AMemTranslationInfo.Operation);
+            MemTable.DeviceInfo.SectionFoundInDefFile[i] := True;
+          end
+          else
+            MemTable.DeviceInfo.SectionFoundInDefFile[i] := False;
+        end;
+    finally
+      AStringList.Free;
+    end;
   end;
+
+  for i := 0 to MemTable.DeviceInfo.GetDeviceSectionCount - 1 do
+    {TempRange :=} MemTable.DeviceInfo.GetAddressRangesByIndex(i, 0);
+
+  MemTable.DeviceInfo.UpdateRangeLengthsFromMemoryMinMax;
 end;
 
 

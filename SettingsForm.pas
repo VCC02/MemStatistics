@@ -142,6 +142,10 @@ type
     lbeExpectedPrefix: TLabeledEdit;
     cmbDeviceBitness: TComboBox;
     lblDeviceBitness: TLabel;
+    grpDeviceDefinitions: TGroupBox;
+    lbeDefsFolder: TLabeledEdit;
+    btnBrowseDefsFolder: TButton;
+    rdgrpDefinitionFilePriority: TRadioGroup;
     procedure FormCreate(Sender: TObject);
     procedure GenericColorPanelDblClick(Sender: TObject);
     procedure colboxGenericChange(Sender: TObject);
@@ -191,6 +195,17 @@ type
       Shift: TShiftState);
     procedure chkVisibleOnTableMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure rdgrpDefinitionFilePriorityClick(Sender: TObject);
+    procedure lbeDefsFolderKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure btnBrowseDefsFolderClick(Sender: TObject);
+    procedure lbeDefaultChipNameKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure lbeDefFilePrefixKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure lbeExpectedPrefixKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure cmbDeviceBitnessChange(Sender: TObject);
   private
     { Private declarations }
     FDevInfoEditArr: TDevInfoEditArr;
@@ -229,6 +244,34 @@ implementation
   {$R *.dfm}
 {$ENDIF}
 
+{$IFnDEF FPC}
+  uses
+    FileCtrl;
+{$ENDIF}
+
+
+const
+  CDefaultColorPanelSize = 43; //px
+
+procedure SetLabelColorsFromPanels;
+var
+  i: Integer;
+  TempPanel: TPanel;
+  TempLabel: TLabel;
+begin
+  for i := 0 to frmSettings.ComponentCount - 1 do
+    if frmSettings.Components[i] is TPanel then
+    begin
+      TempPanel := frmSettings.Components[i] as TPanel;
+      if (TempPanel.Width = CDefaultColorPanelSize) and (TempPanel.Height = CDefaultColorPanelSize) then
+      begin
+        TempLabel := TLabel(TempPanel.Tag);
+        TempLabel.Color := TempPanel.Color; 
+      end;
+    end;
+end;
+  
+
 function EditMemStatOptions(var MemStatOptions: TMemStatOptions): Boolean;
 var
   i, j: Integer;
@@ -262,6 +305,8 @@ begin
   frmSettings.lbeDefFilePrefix.Text := MemStatOptions.Misc.DefFilePrefix;
   frmSettings.lbeExpectedPrefix.Text := MemStatOptions.Misc.ExpectedPrefix;
   frmSettings.cmbDeviceBitness.ItemIndex := Ord(MemStatOptions.Misc.DeviceBitness);
+  frmSettings.lbeDefsFolder.Text := MemStatOptions.Misc.DefsFolder;
+  frmSettings.rdgrpDefinitionFilePriority.ItemIndex := Ord(MemStatOptions.Misc.DefsFolderPriority);
 
   SetLength(frmSettings.FDevInfoEditArr, Length(MemStatOptions.DevInfoEditArr));
   for i := 0 to Length(MemStatOptions.DevInfoEditArr) - 1 do
@@ -288,6 +333,7 @@ begin
   frmSettings.vstMemSections.RootNodeCount := Length(frmSettings.FDevInfoEditArr);
 
   frmSettings.UpdateColorBoxesFromPanels;
+  SetLabelColorsFromPanels;
 
   frmSettings.ShowModal;
   if frmSettings.Tag = 1 then
@@ -320,6 +366,8 @@ begin
     MemStatOptions.Misc.DefFilePrefix := frmSettings.lbeDefFilePrefix.Text;
     MemStatOptions.Misc.ExpectedPrefix := frmSettings.lbeExpectedPrefix.Text;
     MemStatOptions.Misc.DeviceBitness := TDeviceBitness(frmSettings.cmbDeviceBitness.ItemIndex);
+    MemStatOptions.Misc.DefsFolder := frmSettings.lbeDefsFolder.Text;
+    MemStatOptions.Misc.DefsFolderPriority := TDefsFolderPriority(frmSettings.rdgrpDefinitionFilePriority.ItemIndex);
     
     SetLength(MemStatOptions.DevInfoEditArr, Length(frmSettings.FDevInfoEditArr));
     for i := 0 to Length(MemStatOptions.DevInfoEditArr) - 1 do
@@ -502,6 +550,23 @@ begin
 end;
 
 
+procedure TfrmSettings.btnBrowseDefsFolderClick(Sender: TObject);
+var
+  ADir: string;
+begin
+  ADir := lbeDefsFolder.Text;
+  {$IFDEF FPC}
+    if SelectDirectory('"Defs" Folder', '', ADir) then
+  {$ELSE}
+    if SelectDirectory('"Defs" Folder', '', ADir, [sdNewFolder, sdShowEdit, sdShowShares, sdNewUI, sdValidateDir], Self) then
+  {$ENDIF}
+    begin
+      lbeDefsFolder.Text := ADir;
+      Modified := True;
+    end;
+end;
+
+
 procedure TfrmSettings.btnCancelClick(Sender: TObject);
 begin
   Tag := 0;
@@ -581,6 +646,12 @@ procedure TfrmSettings.chkVisibleOnTableMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   DisplayModifiedOnUpdateButton;
+end;
+
+
+procedure TfrmSettings.cmbDeviceBitnessChange(Sender: TObject);
+begin
+  Modified := True;
 end;
 
 
@@ -735,13 +806,46 @@ end;
 procedure TfrmSettings.FormCreate(Sender: TObject);
 var
   i: Integer;
+  TempPanel: TPanel;
+  TempLabel: TLabel;
 begin
   CreateRemainingComponents;
 
   for i := 0 to ComponentCount - 1 do
     if Components[i] is TPanel then
+    begin
       if Pos('Color', (Components[i] as TPanel).Name) > 0 then
-        (Components[i] as TPanel).Hint := 'Double click to edit...';
+      begin
+        TempPanel := Components[i] as TPanel;
+        TempPanel.Hint := 'Double click to edit...';
+      end;
+
+      if ((Components[i] as TPanel).Width = 43) and ((Components[i] as TPanel).Width = 43) then  ////////////////// find a better way to identify color panels
+      begin
+        TempPanel := Components[i] as TPanel;
+        TempPanel.Hint := 'Double click to edit...';
+
+        TempLabel := TLabel.Create(Self);
+        TempLabel.Parent := TempPanel;
+        TempLabel.Name := 'ColorLabel_' + TempPanel.Name;
+        TempLabel.Left := 0;
+        TempLabel.Top := 0;
+        TempLabel.Width := TempPanel.Width;
+        TempLabel.Height := TempPanel.Height;
+        TempLabel.Transparent := False;
+        TempLabel.AutoSize := False;
+        TempLabel.Visible := True;
+        TempLabel.ParentColor := False;
+        TempLabel.Color := clGreen;
+        TempLabel.Caption := '';
+        TempLabel.OnDblClick := GenericColorPanelDblClick;
+
+        TempPanel.Tag := Int64(TempLabel);
+
+        TempPanel.Font.Color := clRed;
+        TempPanel.Caption := TempPanel.Name;
+      end;
+    end;
 
   Tag := 0;
   FModified := False;
@@ -777,6 +881,9 @@ begin
 
   lbeMemoryTranslationInfoValue.Hint := 'Start address, depending on operation.'#13#10 +
                                         'On PIC32 this can be 0x9D000000 for PFM, 0xA0000000 for RAM, 0xBFC00000 for BFM and CFG etc.';
+
+  rdgrpDefinitionFilePriority.Hint := 'Which type of file to search for: mlk/json or local device list (ini).' + #13#10 +
+                                      'When a device is not found at the first location, it is then searched on the other.';  
 end;
 
 
@@ -788,12 +895,25 @@ end;
 
 
 procedure TfrmSettings.GenericColorPanelDblClick(Sender: TObject);
+var
+  TempPanel: TPanel;
 begin
-  ColorDialog1.Color := (Sender as TPanel).Color;
+  if Sender is TPanel then
+    TempPanel := Sender as TPanel
+  else
+    if Sender is TLabel then
+      TempPanel := ((Sender as TLabel).Parent) as TPanel
+    else
+      Exit;
+
+  ColorDialog1.Color := TempPanel.Color;
+
   if not ColorDialog1.Execute then
     Exit;
 
-  (Sender as TPanel).Color := ColorDialog1.Color;
+  TempPanel.Color := ColorDialog1.Color;
+  if Sender is TLabel then
+    (Sender as TLabel).Color := ColorDialog1.Color;
 
   if pagctrlSettings.ActivePage = TabSheetMemorySections then
     DisplayModifiedOnUpdateButton
@@ -808,10 +928,48 @@ begin
 end;
 
 
+procedure TfrmSettings.lbeDefaultChipNameKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if not (Key in [VK_CONTROL, VK_SHIFT, VK_MENU]) then
+    Modified := True;
+end;
+
+
+procedure TfrmSettings.lbeDefFilePrefixKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if not (Key in [VK_CONTROL, VK_SHIFT, VK_MENU]) then
+    Modified := True;
+end;
+
+
+procedure TfrmSettings.lbeDefsFolderKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if not (Key in [VK_CONTROL, VK_SHIFT, VK_MENU]) then
+    Modified := True;
+end;
+
+
+procedure TfrmSettings.lbeExpectedPrefixKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if not (Key in [VK_CONTROL, VK_SHIFT, VK_MENU]) then
+    Modified := True;
+end;
+
+
 procedure TfrmSettings.rdgrpColorTypeClick(Sender: TObject);
 begin
   pnlOverlap.Visible := rdgrpColorType.ItemIndex = 1;     
   colboxOverlap.Visible := rdgrpColorType.ItemIndex = 1;
+  Modified := True;
+end;
+
+
+procedure TfrmSettings.rdgrpDefinitionFilePriorityClick(Sender: TObject);
+begin
   Modified := True;
 end;
 
@@ -971,6 +1129,8 @@ begin
   pnlSelectedEntryChart.Color := FDevInfoEditArr[Node^.Index].SelectedEntryColor;
   pnlEntryColorTable.Color := FDevInfoEditArr[Node^.Index].TableEntryColor;
   pnlTextColorTable.Color := FDevInfoEditArr[Node^.Index].TableTextColor;
+
+  SetLabelColorsFromPanels;
 
   chkVisibleOnTable.Checked := FDevInfoEditArr[Node^.Index].VisibleOnTable;
   chkVisibleOnCompare.Checked := FDevInfoEditArr[Node^.Index].VisibleOnCompare;

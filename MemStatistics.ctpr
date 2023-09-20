@@ -14,7 +14,6 @@
       <Title Value="MemStatistics"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
-      <UseXPManifest Value="True"/>
       <XPManifest>
         <DpiAware Value="True"/>
         <UseCompatibility Value="True"/>
@@ -120,7 +119,7 @@
     <Version Value="11"/>
     <PathDelim Value="\"/>
     <Target>
-      <Filename Value="MemStatistics"/>
+      <Filename Value="FP\MemStatistics"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>

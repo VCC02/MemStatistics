@@ -197,6 +197,7 @@ type
     procedure MemTableMouseLeave(Sender: TObject);
     procedure MemTableMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 
+    procedure DisplayDefsFolder;
     function TableColumnIsVisible(AColIdx: Integer): Boolean;
     function HandleOnGetVisibleColumnCount: Integer;
     function HandleOnGetColumnVisibility(AColumnIndex: Integer): Boolean;
@@ -261,6 +262,8 @@ implementation
   {$R *.dfm}
 {$ENDIF}
 
+{$R MemStatisticsTheme.res}
+
 uses
   {$IFnDEF FPC}
     FileCtrl,
@@ -312,21 +315,18 @@ begin
     if DirectoryExists(s) then
     begin
       FMikroComp.DefsFolder := s;
-
-      {$IFnDEF UNIX}
-        lblDefsFolder.Caption := '"Defs" Folder: ' + Copy(FMikroComp.DefsFolder, 1, 3) + '...' + Copy(FMikroComp.DefsFolder, Length(FMikroComp.DefsFolder) - 30);
-      {$ELSE}
-        lblDefsFolder.Caption := '"Defs" Folder: ' + Copy(FMikroComp.DefsFolder, 1, Pos('/', FMikroComp.DefsFolder)) + '...' + Copy(FMikroComp.DefsFolder, Length(FMikroComp.DefsFolder) - 30);
-      {$ENDIF}  
-
+      DisplayDefsFolder;
       lblDefsFolder.Hint := FMikroComp.DefsFolder;
     end
     else
     begin
-      FMikroComp.DefsFolder := '';
+      FMikroComp.DefsFolder := s; //'';   //set it to the value from ini, to allow displaying it on settings window
       lblDefsFolder.Caption := '"Defs" Folder: not set';
       lblDefsFolder.Hint := FMikroComp.DefsFolder;
     end;
+
+    FMemStatOptions.Misc.DefsFolderPriority := TDefsFolderPriority(Min(Ord(High(TDefsFolderPriority)), Ini.ReadInteger('mikro', 'DefsFolderPriority', 0)));
+    FMikroComp.DefsFolderPriority := FMemStatOptions.Misc.DefsFolderPriority;
 
     MenuItem_BlinkFocusedEntry.Checked := Ini.ReadBool('Table', 'BlinkSelected', True);
 
@@ -394,7 +394,7 @@ begin
   FMemStatOptions.Misc.DisplayChartHints := Ini.ReadBool('Misc', 'DisplayChartHints', True);
   FMemStatOptions.Misc.DisplayZoomWindow := Ini.ReadBool('Misc', 'DisplayZoomWindow', True);
   FMemStatOptions.Misc.DefaultChipName := Ini.ReadString('Misc', 'DefaultChipName', 'PIC32MX795F512L');
-  FMemStatOptions.Misc.DefFilePrefix := Ini.ReadString('Misc', 'DefaultChipName', 'P32');
+  FMemStatOptions.Misc.DefFilePrefix := Ini.ReadString('Misc', 'DefFilePrefix', 'P32');
   FMemStatOptions.Misc.ExpectedPrefix := Ini.ReadString('Misc', 'ExpectedPrefix', 'PIC32');
   FMemStatOptions.Misc.DeviceBitness := TDeviceBitness(Min(Ini.ReadInteger('Misc', 'DeviceBitness', Ord(db32)), Ord(High(TDeviceBitness))));
 end;
@@ -452,8 +452,9 @@ begin
     if Trim(FMikroComp.DefsFolder) <> '' then
       Ini.WriteString('mikro', 'DefsFolder', FMikroComp.DefsFolder);     //  'C:\Program Files\Mikroelektronika\mikroPascal PRO for PIC32\Defs'
 
-    Ini.WriteBool('Table', 'BlinkSelected', MenuItem_BlinkFocusedEntry.Checked);
+    Ini.WriteInteger('mikro', 'DefsFolderPriority', Ord(FMemStatOptions.Misc.DefsFolderPriority));
 
+    Ini.WriteBool('Table', 'BlinkSelected', MenuItem_BlinkFocusedEntry.Checked);
     Ini.WriteInteger('Table', 'ChartContentSel', rdgrpChartContent.ItemIndex);
 
     SaveMemSectionsToIni(Ini);
@@ -492,7 +493,7 @@ begin
   Ini.WriteBool('Misc', 'DisplayZoomWindow', FMemStatOptions.Misc.DisplayZoomWindow);
 
   Ini.WriteString('Misc', 'DefaultChipName', FMemStatOptions.Misc.DefaultChipName);
-  Ini.WriteString('Misc', 'DefaultChipName', FMemStatOptions.Misc.DefFilePrefix);
+  Ini.WriteString('Misc', 'DefFilePrefix', FMemStatOptions.Misc.DefFilePrefix);
   Ini.WriteString('Misc', 'ExpectedPrefix', FMemStatOptions.Misc.ExpectedPrefix);
   Ini.WriteInteger('Misc', 'DeviceBitness', Ord(FMemStatOptions.Misc.DeviceBitness));
 end;
@@ -663,28 +664,38 @@ begin
 end;
 
 
+procedure TfrmMemStatisticsMain.DisplayDefsFolder;
+var
+  ADir: string;
+begin
+  ADir := FMikroComp.DefsFolder;
+
+  if Length(ADir) <= 30 then
+    lblDefsFolder.Caption := '"Defs" Folder: ' + ADir
+  else
+  {$IFnDEF UNIX}
+    lblDefsFolder.Caption :=  '"Defs" Folder: ' + ExtractFileDrive(ADir) + '\...' + ExtractFileName(ExtractFileDir(ADir)) + '\' + ExtractFileName(ADir); //'"Defs" Folder: ' + Copy(ADir, 1, 3) + '...' + Copy(ADir, Length(ADir) - 30);
+  {$ELSE}
+    lblDefsFolder.Caption := '"Defs" Folder: ' + Copy(ADir, 1, Pos('/', Copy(ADir, 2, MaxInt))) + '/...' + Copy(ADir, Length(ADir) - 30);
+  {$ENDIF}
+end;
+
+
 procedure TfrmMemStatisticsMain.SetDefsFolder;
 var
   ADir: string;
 begin
   ADir := FMikroComp.DefsFolder;
   {$IFDEF FPC}
-    if SelectDirectory('caption', '', ADir) then
+    if SelectDirectory('"Defs" Folder', '', ADir) then
   {$ELSE}
     if SelectDirectory('"Defs" Folder', '', ADir, [sdNewFolder, sdShowEdit, sdShowShares, sdNewUI, sdValidateDir], Self) then
   {$ENDIF}
   begin
     FMikroComp.DefsFolder := ADir;
+    FMemStatOptions.Misc.DefsFolder := ADir;
+    DisplayDefsFolder;
 
-    {$IFnDEF UNIX}
-      lblDefsFolder.Caption := '"Defs" Folder: ' + Copy(ADir, 1, 3) + '...' + Copy(ADir, Length(ADir) - 30);
-    {$ELSE}
-      if Length(ADir) <= 30 then
-        lblDefsFolder.Caption := '"Defs" Folder: ' + ADir
-      else
-        lblDefsFolder.Caption := '"Defs" Folder: ' + Copy(ADir, 1, Pos('/', Copy(ADir, 2, MaxInt))) + '/...' + Copy(ADir, Length(ADir) - 30);
-    {$ENDIF}
-    
     lblDefsFolder.Hint := ADir;
     SaveSettingsToIni;
   end;
@@ -709,11 +720,20 @@ var
   AMemStatOptions: TMemStatOptions;
 begin
   AMemStatOptions := FMemStatOptions;
+  AMemStatOptions.Misc.DefsFolder := FMikroComp.DefsFolder;   // FMikroComp.DefsFolder is the main setting.   MemStatOptions.Misc.DefsFolder is used for editor only.
+
   if EditMemStatOptions(AMemStatOptions) then
   begin
     FMemStatOptions := AMemStatOptions;
     FMemTable.MemStatColorOptions := FMemStatOptions.Colors;
     FMemTable.MemStatMiscOptions := FMemStatOptions.Misc;
+
+    if FMikroComp.DefsFolder <> AMemStatOptions.Misc.DefsFolder then
+    begin
+      FMikroComp.DefsFolder := AMemStatOptions.Misc.DefsFolder;
+      DisplayDefsFolder;
+      lblDefsFolder.Hint := FMikroComp.DefsFolder;
+    end;
 
     vstMemTable.Repaint;
     vstRawTable.Repaint;
@@ -2698,7 +2718,15 @@ begin
   vstMemTable.RootNodeCount := 0;
   vstRawTable.RootNodeCount := 0;
 
-  FMikroComp.LoadLst(LstFileFnm);
+  vstMemTable.BeginUpdate;
+  vstRawTable.BeginUpdate;
+  try
+    FMikroComp.LoadLst(LstFileFnm);
+  finally
+    vstMemTable.EndUpdate;
+    vstRawTable.EndUpdate;
+  end;
+
   prbLoading.Position := 0;
   StatusBar1.Panels.Items[0].Text := 'Loaded';
 
@@ -2724,6 +2752,9 @@ procedure TfrmMemStatisticsMain.CmpFrmOnChangeDevice(Sender: TfrmMemStatCompare)
 var
   res: Integer;
 begin
+  if (FMemStatOptions.Misc.DefsFolderPriority = dfpLocal) and FileExists(GetLocalDefinitionFileName) then
+    Exit; //nothing to change
+
   SetDefsFolder;
   Sender.DefsFolder := FMikroComp.DefsFolder;
 

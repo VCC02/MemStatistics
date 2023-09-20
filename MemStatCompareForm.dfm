@@ -149,7 +149,6 @@ object frmMemStatCompare: TfrmMemStatCompare
     OnMouseDown = pnlMiniMapMouseDown
     OnMouseMove = pnlMiniMapMouseMove
     OnResize = pnlMiniMapResize
-    ExplicitHeight = 484
   end
   object cmbCmpViewOptions: TComboBox
     Left = 0
@@ -167,7 +166,6 @@ object frmMemStatCompare: TfrmMemStatCompare
       'Show all'
       'Show different'
       'Show same')
-    ExplicitTop = 508
   end
   object btnChangeDevice: TButton
     Left = 151
@@ -180,7 +178,6 @@ object frmMemStatCompare: TfrmMemStatCompare
     ShowHint = True
     TabOrder = 2
     OnClick = btnChangeDeviceClick
-    ExplicitTop = 508
   end
   object lbeSearchHexAddr: TLabeledEdit
     Left = 856
@@ -197,7 +194,6 @@ object frmMemStatCompare: TfrmMemStatCompare
     ShowHint = True
     TabOrder = 4
     OnChange = lbeSearchHexAddrChange
-    ExplicitTop = 511
   end
   object lbeSearchData: TLabeledEdit
     Left = 968
@@ -214,7 +210,6 @@ object frmMemStatCompare: TfrmMemStatCompare
     ShowHint = True
     TabOrder = 5
     OnChange = lbeSearchDataChange
-    ExplicitTop = 511
   end
   object lbeSearchNote: TLabeledEdit
     Left = 1080
@@ -231,7 +226,6 @@ object frmMemStatCompare: TfrmMemStatCompare
     ShowHint = True
     TabOrder = 6
     OnChange = lbeSearchNoteChange
-    ExplicitTop = 511
   end
   object pnlUpdatingTable: TPanel
     Left = 882
@@ -249,7 +243,6 @@ object frmMemStatCompare: TfrmMemStatCompare
     ParentFont = False
     TabOrder = 3
     Visible = False
-    ExplicitTop = 460
   end
   object mmCmpMain: TMainMenu
     Left = 192

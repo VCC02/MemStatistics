@@ -25,11 +25,11 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   object lblListName: TLabel
     Left = 8
     Top = 8
-    Width = 942
+    Width = 1008
     Height = 19
     Caption = 
       'List Name: Please run from mikroPascal/mikroC/mikroBasic with pa' +
-      'rameters:  "%LIST_FILE_NAME" %CHIP_NAME'
+      'rameters:  "%LIST_FILE_NAME" %CHIP_NAME Dummy'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
@@ -131,14 +131,18 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     object TabSheetRaw: TTabSheet
       Caption = 'By address'
       ImageIndex = 1
+      DesignSize = (
+        508
+        191)
       object lblVstBackgroundRaw: TLabel
         Left = 3
-        Height = 122
         Top = 0
         Width = 494
-        Anchors = [akTop, akLeft, akRight, akBottom]
+        Height = 122
+        Anchors = [akLeft, akTop, akRight, akBottom]
         AutoSize = False
         Color = clWindow
+        ParentColor = False
         Transparent = False
       end
     end
