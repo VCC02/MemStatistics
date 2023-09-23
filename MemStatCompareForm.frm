@@ -256,6 +256,13 @@ object frmMemStatCompare: TfrmMemStatCompare
         Enabled = False
         Visible = False
       end
+      object N5: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_ShowSimulatedMemory: TMenuItem
+        Caption = 'Show simulated memory'
+        OnClick = MenuItem_ShowSimulatedMemoryClick
+      end
     end
     object File1: TMenuItem
       Caption = 'File Slot1'

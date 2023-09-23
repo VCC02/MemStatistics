@@ -9,6 +9,8 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   Color = clBtnFace
   Constraints.MinHeight = 347
   Constraints.MinWidth = 990
+  Font.Height = -11
+  Font.Name = 'Tahoma'
   OnClose = FormClose
   OnCreate = FormCreate
   OnPaint = FormPaint
@@ -93,11 +95,11 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Height = 226
     Top = 57
     Width = 516
-    ActivePage = TabSheetRoutines
+    ActivePage = TabSheetStatistics
     Anchors = [akTop, akRight, akBottom]
     Constraints.MinHeight = 219
     Constraints.MinWidth = 516
-    TabIndex = 0
+    TabIndex = 2
     TabOrder = 2
     OnChange = PageControlEntriesChange
     object TabSheetRoutines: TTabSheet
@@ -133,12 +135,12 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     end
     object TabSheetStatistics: TTabSheet
       Caption = 'Statistics'
-      ClientHeight = 198
+      ClientHeight = 200
       ClientWidth = 508
       ImageIndex = 2
       object lstFreeMemory: TListBox
         Left = 3
-        Height = 186
+        Height = 188
         Hint = 'Press Ctrl+C to copy this list to clipboard.'
         Top = 2
         Width = 502
@@ -163,24 +165,24 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   end
   object lbeMem: TLabeledEdit
     Left = 548
-    Height = 23
-    Top = 301
-    Width = 34
+    Height = 21
+    Top = 303
+    Width = 36
     Anchors = [akRight, akBottom]
-    EditLabel.Height = 15
-    EditLabel.Width = 34
+    EditLabel.Height = 13
+    EditLabel.Width = 36
     EditLabel.Caption = 'Mem'
     TabOrder = 5
     OnChange = lbeMemChange
   end
   object lbeAddrHex: TLabeledEdit
     Left = 588
-    Height = 23
-    Top = 301
-    Width = 69
+    Height = 21
+    Top = 303
+    Width = 71
     Anchors = [akRight, akBottom]
-    EditLabel.Height = 15
-    EditLabel.Width = 69
+    EditLabel.Height = 13
+    EditLabel.Width = 71
     EditLabel.Caption = 'Address [Hex]'
     TabOrder = 6
     OnChange = lbeMemChange
@@ -188,38 +190,38 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   end
   object lbeAddrDec: TLabeledEdit
     Left = 663
-    Height = 23
-    Top = 301
-    Width = 66
+    Height = 21
+    Top = 303
+    Width = 76
     Anchors = [akRight, akBottom]
-    EditLabel.Height = 15
-    EditLabel.Width = 66
+    EditLabel.Height = 13
+    EditLabel.Width = 76
     EditLabel.Caption = 'Address [Dec]'
     TabOrder = 7
     OnChange = lbeMemChange
     OnKeyPress = lbeAddrDecKeyPress
   end
   object lbeSize: TLabeledEdit
-    Left = 735
-    Height = 23
-    Top = 301
-    Width = 58
+    Left = 744
+    Height = 21
+    Top = 303
+    Width = 60
     Anchors = [akRight, akBottom]
-    EditLabel.Height = 15
-    EditLabel.Width = 58
+    EditLabel.Height = 13
+    EditLabel.Width = 60
     EditLabel.Caption = 'Size'
     TabOrder = 8
     OnChange = lbeMemChange
     OnKeyPress = lbeSizeKeyPress
   end
   object lbeEntryName: TLabeledEdit
-    Left = 799
-    Height = 23
-    Top = 301
-    Width = 178
+    Left = 808
+    Height = 21
+    Top = 303
+    Width = 169
     Anchors = [akRight, akBottom]
-    EditLabel.Height = 15
-    EditLabel.Width = 178
+    EditLabel.Height = 13
+    EditLabel.Width = 169
     EditLabel.Caption = 'Entry Name'
     TabOrder = 9
     OnChange = lbeMemChange
@@ -256,33 +258,21 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     OnClick = btnNewCompareWindowClick
     TabOrder = 12
   end
-  object pnlSplitterStatusFromVersions: TPanel
+  object pnlSplitter: TPanel
     Cursor = crHSplit
     Left = 458
     Height = 267
     Top = 57
     Width = 10
     Anchors = [akTop, akBottom]
-    Color = clYellow
+    Color = 7864319
     ParentBackground = False
     ParentColor = False
     TabOrder = 13
-    OnMouseDown = pnlSplitterStatusFromVersionsMouseDown
-    OnMouseMove = pnlSplitterStatusFromVersionsMouseMove
-    OnMouseUp = pnlSplitterStatusFromVersionsMouseUp
-  end
-  object pnlSplitterPathFromStatus: TPanel
-    Cursor = crHSplit
-    Left = 422
-    Height = 271
-    Top = 33
-    Width = 18
-    Anchors = [akTop, akLeft, akBottom]
-    Color = clYellow
-    ParentBackground = False
-    ParentColor = False
-    TabOrder = 14
-    Visible = False
+    OnMouseDown = pnlSplitterMouseDown
+    OnMouseMove = pnlSplitterMouseMove
+    OnMouseUp = pnlSplitterMouseUp
+    OnResize = pnlSplitterResize
   end
   object rdgrpChartContent: TRadioGroup
     Left = 796
@@ -299,7 +289,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     ChildSizing.ShrinkVertical = crsScaleChilds
     ChildSizing.Layout = cclLeftToRightThenTopToBottom
     ChildSizing.ControlsPerLine = 1
-    ClientHeight = 55
+    ClientHeight = 57
     ClientWidth = 184
     ItemIndex = 2
     Items.Strings = (
@@ -309,6 +299,17 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     )
     OnClick = rdgrpChartContentClick
     TabOrder = 3
+  end
+  object pnlHorizontalResize: TPanel
+    Left = 0
+    Height = 4
+    Top = 325
+    Width = 984
+    Anchors = [akLeft, akRight, akBottom]
+    BevelOuter = bvNone
+    ParentColor = False
+    TabOrder = 14
+    OnResize = pnlHorizontalResizeResize
   end
   object tmrStartup: TTimer
     Enabled = False

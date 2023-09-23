@@ -664,6 +664,7 @@ end;
 procedure TfrmSettings.colboxGenericChange(Sender: TObject);
 var
   PanelToChange: TPanel;
+  TempLabel: TLabel;
 begin
   PanelToChange := FindPanelByName(ColorBoxName_To_PanelName((Sender as TColorBox).Name));
   PanelToChange.Color := (Sender as TColorBox).Selected;
@@ -672,6 +673,10 @@ begin
     DisplayModifiedOnUpdateButton
   else
     Modified := True;
+
+  TempLabel := TLabel(PanelToChange.Tag);
+  if TempLabel <> nil then
+    TempLabel.Color := (Sender as TColorBox).Selected;
 end;
 
 

@@ -58,6 +58,7 @@ type
   TfrmMemStatCompare = class;
 
   TChangeDeviceNotifyEvent = procedure(Sender: TfrmMemStatCompare) of object;
+  TOnCmpWindowDestroy = procedure(ACmpWindowHandle: THandle) of object;
 
   TfrmMemStatCompare = class(TForm)
     mmCmpMain: TMainMenu;
@@ -133,6 +134,8 @@ type
     tmrEditingUserNotes: TTimer;
     lbeSearchNote: TLabeledEdit;
     tmrRepaintMinimapOnSelect: TTimer;
+    N5: TMenuItem;
+    MenuItem_ShowSimulatedMemory: TMenuItem;
 
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
@@ -207,6 +210,9 @@ type
     procedure vstSlotCmpBeforeItemPaint(Sender: TBaseVirtualTree;
       TargetCanvas: TCanvas; Node: PVirtualNode; {$IFDEF FPC}const{$ENDIF} ItemRect: TRect;
       var CustomDraw: Boolean);
+    procedure MenuItem_ShowSimulatedMemoryClick(Sender: TObject);
+    procedure MenuItem_ClearSelectedUserNotesClick(Sender: TObject);
+    procedure MenuItem_ClearSimCmdsFromSelectedUserNotesClick(Sender: TObject);
   private
     { Private declarations }
     FMemStatColorOptions: TMemStatColorOptions;
@@ -216,6 +222,7 @@ type
     FSlot2: TFileSlot;
     FSlot3: TFileSlot;
     FSlot4: TFileSlot;
+    FAllSlots: PFileSlotArr;
 
     FUserNoteArr: TUserNoteArr;
     FUserNotesModified: Boolean;
@@ -244,6 +251,7 @@ type
     FChipName: string;
     
     FOnChangeDevice: TChangeDeviceNotifyEvent;
+    FOnCmpWindowDestroy: TOnCmpWindowDestroy;
 
     FCachedSections: TSectionArr;
     FCachedSectionIndex: Integer;
@@ -252,6 +260,9 @@ type
     FDeviceInfo: TDeviceInfo;
 
     vstSlotCmp: TVirtualStringTree;
+    pmVST: TPopupMenu;
+
+    procedure DoOnCmpWindowDestroy(ACmpWindowHandle: THandle);
 
     procedure CreateRemainingComponents;
     function IndexOfAddressInUserNotes(AAddress: Cardinal): Integer;
@@ -305,6 +316,15 @@ type
     procedure SetMinimapColorOptions;
   public
     { Public declarations }
+
+    function GetSlotCount: Integer;
+    procedure LoadExternalHex(ASlotIdex: Integer; AFromMainWindow: Boolean = False);
+
+    procedure EraseMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; AUserNote: string = '');  //A chunk is usually the same size as an erase page size. However, this class doesn't have to know such details.
+    procedure WriteMemory(ASlotIdex: Integer; AStartAddress: Cardinal; var AData: array of Byte; AUserNote: string = '');
+    procedure HighlightMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal);   //A chunk can be the same size as an erase page size or a write row size.
+    procedure HighlightSlotAsConnected(ASlotIdex: Integer);
+
     property MemStatColorOptions: TMemStatColorOptions read FMemStatColorOptions write SetMemStatColorOptions;
     property MemStatMiscOptions: TMemStatMiscOptions read FMemStatMiscOptions write SetMemStatMiscOptions;
 
@@ -315,6 +335,7 @@ type
     property DeviceInfo: TDeviceInfo read FDeviceInfo;
 
     property OnChangeDevice: TChangeDeviceNotifyEvent read FOnChangeDevice write FOnChangeDevice;
+    property OnCmpWindowDestroy: TOnCmpWindowDestroy write FOnCmpWindowDestroy;
   end;
 
   TfrmMemStatCompareList = class(TList)
@@ -328,6 +349,10 @@ type
 
 const
   CExt = '.memcmp';
+  CWriteWord_UserNote = 'WrWord';
+  CWriteRow_UserNote = 'WrRow';
+  CErase_UserNote = 'Erase';
+
 
 var
   ListOfFrmMemStatCompare: TfrmMemStatCompareList;
@@ -341,7 +366,7 @@ implementation
 {$ENDIF}
 
 uses
-  MikroStuff, ClipBrd, IniFiles, DevicesForm, Math, DefParser;
+  MikroStuff, ClipBrd, IniFiles, DevicesForm, Math, DefParser, SimulatedMemForm;
 
 const
   CColumnIdx_Index = 0;
@@ -509,7 +534,7 @@ begin
 
       GetDeviceMemoryContentFromLocalFile(DeviceName, AStringList, AddressRanges);
 
-      for i := 0 to FDeviceInfo.GetDeviceSectionCount - 1 do      //this for loop is look like the next one, but it uses all mem ranges
+      for i := 0 to FDeviceInfo.GetDeviceSectionCount - 1 do      //this for loop looks like the next one, but it uses all mem ranges
       begin
         SectionIndex := FDeviceInfo.GetIndexOfDeviceSectionByDefName(AStringList.Strings[i]);
         if SectionIndex <> -1 then
@@ -967,6 +992,7 @@ begin
     if ListOfFrmMemStatCompare.Items[i] = Self then
     begin
       ListOfFrmMemStatCompare.Delete(i);
+      DoOnCmpWindowDestroy(Self.Handle);
       Break;
     end;
 end;
@@ -975,6 +1001,7 @@ end;
 procedure TfrmMemStatCompare.CreateRemainingComponents;
 var
   NewColum: TVirtualTreeColumn;
+  TempMenuItem: TMenuItem;
 begin
   vstSlotCmp := TVirtualStringTree.Create(Self);
   vstSlotCmp.Parent := Self;
@@ -1003,7 +1030,7 @@ begin
   vstSlotCmp.TreeOptions.AutoOptions := [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnEdit];
   vstSlotCmp.TreeOptions.MiscOptions := [toAcceptOLEDrop, toEditable, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning];
   vstSlotCmp.TreeOptions.PaintOptions := [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines];
-  vstSlotCmp.TreeOptions.SelectionOptions := [toFullRowSelect, toRightClickSelect];
+  vstSlotCmp.TreeOptions.SelectionOptions := [toFullRowSelect, toMultiSelect];
   vstSlotCmp.OnAfterCellPaint := vstSlotCmpAfterCellPaint;
   vstSlotCmp.OnBeforeCellPaint := vstSlotCmpBeforeCellPaint;
   vstSlotCmp.OnBeforeItemPaint := vstSlotCmpBeforeItemPaint;
@@ -1082,13 +1109,27 @@ begin
   NewColum.Position := 9;
   NewColum.Width := 300;
   NewColum.Text := 'User notes';
+
+  pmVST := TPopupMenu.Create(Self);
+  vstSlotCmp.PopupMenu := pmVST;
+
+  TempMenuItem := TMenuItem.Create(Self);
+  TempMenuItem.Caption := 'Clear selected user notes';
+  TempMenuItem.OnClick := MenuItem_ClearSelectedUserNotesClick;
+  pmVST.Items.Add(TempMenuItem);
+
+  TempMenuItem := TMenuItem.Create(Self);
+  TempMenuItem.Caption := 'Clear SimMem commands from selected user notes';
+  TempMenuItem.OnClick := MenuItem_ClearSimCmdsFromSelectedUserNotesClick;
+  pmVST.Items.Add(TempMenuItem);
 end;
 
 
 procedure TfrmMemStatCompare.FormCreate(Sender: TObject);
 begin
   CreateRemainingComponents;
-  
+  Menu := mmCmpMain; //Manually set, because an IDE bug makes the window grow in height, every time the file is modified.
+
   FDeviceInfo := TDeviceInfo.Create;
 
   FSlot1.HasHex := False;
@@ -1111,6 +1152,12 @@ begin
   FSlot4.FileNameHex := '';
   FSlot4.FileNameLst := '';
 
+  SetLength(FAllSlots, 4); //hardcoded for now
+  FAllSlots[0] := @FSlot1;
+  FAllSlots[1] := @FSlot2;
+  FAllSlots[2] := @FSlot3;
+  FAllSlots[3] := @FSlot4;
+
   SetLength(FUserNoteArr, 0);
   FUserNotesModified := False;
 
@@ -1131,8 +1178,12 @@ begin
   FEditingText := '';
   SetLength(FCachedSections, 0);
 
+  FOnChangeDevice := nil;
+  FOnCmpWindowDestroy := nil;
+
   FMiniMap := nil; //will be created in startup timer
   FCachedSectionIndex := 0;
+  Caption := Caption + ' [' + IntToStr(Handle) + ']';
 end;
 
 
@@ -1190,6 +1241,87 @@ procedure TfrmMemStatCompare.imgMinimapMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
   pnlMiniMapMouseMove(Sender, Shift, X, Y);
+end;
+
+
+procedure TfrmMemStatCompare.MenuItem_ClearSelectedUserNotesClick(
+  Sender: TObject);
+var
+  Node: PVirtualNode;
+  Address: DWord;
+  CurrentNote: string;
+begin
+  Node := vstSlotCmp.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  vstSlotCmp.BeginUpdate;
+  try
+    repeat
+      if vstSlotCmp.Selected[Node] then
+      begin
+        Address := GetAddressFromAllFileSlots(FSlot1, FSlot2, FSlot3, FSlot4, Node^.Index);
+
+        CurrentNote := GetUserNoteAtAddress(Address);
+        if CurrentNote <> '' then
+        begin
+          //CurrentNote := StringReplace(CurrentNote, CWriteWord_UserNote + ' ', '', [rfReplaceAll]);
+          //CurrentNote := StringReplace(CurrentNote, CWriteRow_UserNote + ' ', '', [rfReplaceAll]);
+          //CurrentNote := StringReplace(CurrentNote, CErase_UserNote + ' ', '', [rfReplaceAll]);
+
+          UpdateUserNote(Address, '');
+          FUserNotesModified := True;
+        end;
+      end;
+
+      Node := Node^.NextSibling;
+    until Node = nil;
+  finally
+    vstSlotCmp.EndUpdate;
+  end;
+end;
+
+
+procedure TfrmMemStatCompare.MenuItem_ClearSimCmdsFromSelectedUserNotesClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+  Address: DWord;
+  CurrentNote: string;
+begin
+  Node := vstSlotCmp.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  vstSlotCmp.BeginUpdate;
+  try
+    repeat
+      if vstSlotCmp.Selected[Node] then
+      begin
+        Address := GetAddressFromAllFileSlots(FSlot1, FSlot2, FSlot3, FSlot4, Node^.Index);
+
+        CurrentNote := GetUserNoteAtAddress(Address);
+        if CurrentNote <> '' then
+        begin
+          CurrentNote := StringReplace(CurrentNote, ' ' + CWriteWord_UserNote, '', [rfReplaceAll]);
+          CurrentNote := StringReplace(CurrentNote, ' ' + CWriteRow_UserNote, '', [rfReplaceAll]);
+          CurrentNote := StringReplace(CurrentNote, ' ' + CErase_UserNote, '', [rfReplaceAll]);
+
+          UpdateUserNote(Address, CurrentNote);
+          FUserNotesModified := True;
+        end;
+      end;
+
+      Node := Node^.NextSibling;
+    until Node = nil;
+  finally
+    vstSlotCmp.EndUpdate;
+  end;
+end;
+
+
+procedure TfrmMemStatCompare.MenuItem_ShowSimulatedMemoryClick(Sender: TObject);
+begin
+  frmSimulatedMem.Show;
 end;
 
 
@@ -1291,7 +1423,7 @@ begin
 end;
 
 
-function TfrmMemStatCompare.GetLstFileNameFromCmdLine: string;
+function TfrmMemStatCompare.GetLstFileNameFromCmdLine: string;  ////////////////////////// this looks wrong
 begin
   Result := FCmdlineLstFile;
   if UpperCase(ExtractFileExt(Result)) = '.LST' then
@@ -1342,6 +1474,15 @@ end;
 procedure TfrmMemStatCompare.LoadHEXFromMainWindow4Click(Sender: TObject);
 begin
   LoadHexFromMainWindow(FSlot4, 4);
+end;
+
+
+procedure TfrmMemStatCompare.LoadExternalHex(ASlotIdex: Integer; AFromMainWindow: Boolean = False);
+begin
+  if AFromMainWindow then
+    LoadHexFromMainWindow(FAllSlots[ASlotIdex]^, ASlotIdex + 1)
+  else
+    LoadHex(mmCmpMain, FAllSlots[ASlotIdex]^, ASlotIdex + 1);
 end;
 
 
@@ -1552,7 +1693,7 @@ begin
   if ssLeft in Shift then
   begin
     SelIndex := Round(Int64(vstSlotCmp.RootNodeCount) * Int64(Y) / Int64(pnlMiniMap.Height));
-    if Cardinal(SelIndex) > vstSlotCmp.RootNodeCount - 1 then
+    if SelIndex > Int64(vstSlotCmp.RootNodeCount) - 1 then
       SelIndex := vstSlotCmp.RootNodeCount - 1;
 
     ScrollIntoViewNodeByIndex(vstSlotCmp, SelIndex, ssCtrl in Shift);
@@ -1643,14 +1784,14 @@ end;
 
 
 procedure TfrmMemStatCompare.tmrRepaintMinimapOnSelectTimer(Sender: TObject);
-var
-  SelectedNode: PVirtualNode;
+//var
+//  SelectedNode: PVirtualNode;
 begin
   tmrRepaintMinimapOnSelect.Enabled := False;
 
-  SelectedNode := vstSlotCmp.GetFirstSelected;
-  if SelectedNode = nil then
-    Exit;
+//  SelectedNode := vstSlotCmp.GetFirstSelected;
+//  if SelectedNode = nil then
+//    Exit;
 
   DrawMiniMap;
 end;
@@ -2452,7 +2593,7 @@ begin
 
   UpperCaseAddressHex := UpperCase(AAddressHex);
   UpperCaseData := UpperCase(AData);
-  UpperCaseNote := ANote;
+  UpperCaseNote := UpperCase(ANote);
 
   AddrEmpty := AAddressHex = '';
   DataEmpty := AData = '';
@@ -2484,7 +2625,7 @@ begin
       else
         CurrentData4 := '';
 
-      CurrentNote := GetUserNoteAtAddress(CurrentAddress);
+      CurrentNote := UpperCase(GetUserNoteAtAddress(CurrentAddress));
 
       VisibleFromAddrHex := AddrEmpty or (Pos(UpperCaseAddressHex, CurrentAddressStr) > 0);
       VisibleFromData := DataEmpty or (Pos(UpperCaseData, CurrentData1) > 0) or (Pos(UpperCaseData, CurrentData2) > 0) or (Pos(UpperCaseData, CurrentData3) > 0) or (Pos(UpperCaseData, CurrentData4) > 0);
@@ -2518,6 +2659,118 @@ begin
     Result := GetCmpFocusedSelectionColor
   else
     Result := GetCmpUnfocusedSelectionColor;
+end;
+
+
+function TfrmMemStatCompare.GetSlotCount: Integer;
+begin
+  Result := Length(FAllSlots);
+end;
+
+
+procedure TfrmMemStatCompare.DoOnCmpWindowDestroy(ACmpWindowHandle: THandle);
+begin
+  if not Assigned(FOnCmpWindowDestroy) then
+    raise Exception.Create('OnCmpWindowDestroy not assigned.');
+
+  FOnCmpWindowDestroy(ACmpWindowHandle);
+end;
+
+
+{Simulated memory via COM port connection}
+procedure TfrmMemStatCompare.EraseMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; AUserNote: string = '');  //A chunk is usually the same size as an erase page size. However, this class doesn't have to know such details.
+var
+  MaxAddress, EntryAddress: Int64;
+  i: Integer;
+  TempShiftAmount, TempPointerSize: Byte;
+  CurrentNote: string;
+begin
+  MaxAddress := AStartAddress + ASize;
+  UpdateDevBitness(FDeviceInfo.DeviceBitness, TempShiftAmount, TempPointerSize);
+
+  vstSlotCmp.BeginUpdate;
+  try
+    for i := 0 to Length(FAllSlots[ASlotIdex]^.FullHEX) - 1 do
+    begin
+      EntryAddress := FAllSlots[ASlotIdex]^.FullHEX[i].HAddr;
+      if (EntryAddress >= Int64(AStartAddress)) and (EntryAddress < MaxAddress) then
+      begin
+        case FDeviceInfo.DeviceBitness of
+          db8: FAllSlots[ASlotIdex]^.FullHEX[i].HData := $FF;
+          db16: FAllSlots[ASlotIdex]^.FullHEX[i].HData := $FFFF;
+          db32: FAllSlots[ASlotIdex]^.FullHEX[i].HData := $FFFFFFFF;
+        end;
+
+        FAllSlots[ASlotIdex]^.FullHEX[i].HDataStr := IntToHex(FAllSlots[ASlotIdex]^.FullHEX[i].HData, TempPointerSize shl 1);
+
+        if AUserNote > '' then
+        begin
+          CurrentNote := GetUserNoteAtAddress(EntryAddress);
+          UpdateUserNote(EntryAddress, CurrentNote + ' ' + AUserNote);
+          //FUserNoteArr[i].Note := FUserNoteArr[i].Note + ' ' + AUserNote;
+          FUserNotesModified := True;
+        end;
+      end;  //address in range
+
+    end;    
+  finally
+    vstSlotCmp.EndUpdate;
+  end;
+
+  FMiniMap.Repaint;
+end;
+
+
+procedure TfrmMemStatCompare.WriteMemory(ASlotIdex: Integer; AStartAddress: Cardinal; var AData: array of Byte; AUserNote: string = '');
+var
+  MaxAddress, EntryAddress: Int64;
+  i, ChunkOffset: Integer;
+  TempShiftAmount, TempPointerSize: Byte;
+  CurrentNote: string;
+begin
+  MaxAddress := Int64(AStartAddress) + Int64(Length(AData));
+  UpdateDevBitness(FDeviceInfo.DeviceBitness, TempShiftAmount, TempPointerSize);
+
+  vstSlotCmp.BeginUpdate;
+  try
+    ChunkOffset := 0;
+    for i := 0 to Length(FAllSlots[ASlotIdex]^.FullHEX) - 1 do
+    begin
+      EntryAddress := FAllSlots[ASlotIdex]^.FullHEX[i].HAddr;
+      if (EntryAddress >= Int64(AStartAddress)) and (EntryAddress < MaxAddress) then
+      begin
+        Move(AData[ChunkOffset], FAllSlots[ASlotIdex]^.FullHEX[i].HData, TempPointerSize);  //src, dst, cnt
+        Inc(ChunkOffset, TempPointerSize);
+
+        FAllSlots[ASlotIdex]^.FullHEX[i].HDataStr := IntToHex(FAllSlots[ASlotIdex]^.FullHEX[i].HData, TempPointerSize shl 1);
+
+        if AUserNote > '' then
+        begin
+          CurrentNote := GetUserNoteAtAddress(EntryAddress);
+          UpdateUserNote(EntryAddress, CurrentNote + ' ' + AUserNote);
+//          FUserNoteArr[i].Note := FUserNoteArr[i].Note + ' ' + AUserNote;
+          FUserNotesModified := True;
+        end;
+      end;  //address in range
+
+    end;
+  finally
+    vstSlotCmp.EndUpdate;
+  end;
+
+  FMiniMap.Repaint;
+end;
+
+
+procedure TfrmMemStatCompare.HighlightMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal);   //A chunk can be the same size as an erase page size or a write row size.
+begin
+  // show something on minimap
+end;
+
+
+procedure TfrmMemStatCompare.HighlightSlotAsConnected(ASlotIdex: Integer);
+begin
+  // display some icon on column header
 end;
 
 

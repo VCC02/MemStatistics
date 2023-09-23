@@ -192,7 +192,7 @@ begin
 
       GetDeviceMemoryContentFromLocalFile(DeviceName, AStringList, AddressRanges);
 
-      for i := 0 to MemTable.DeviceInfo.GetDeviceSectionCount - 1 do      //this for loop is look like the next one, but it uses all mem ranges
+      for i := 0 to MemTable.DeviceInfo.GetDeviceSectionCount - 1 do      //this for loop looks like the next one, but it uses all mem ranges
       begin
         SectionIndex := MemTable.DeviceInfo.GetIndexOfDeviceSectionByDefName(AStringList.Strings[i]);
         if SectionIndex <> -1 then
@@ -439,7 +439,7 @@ begin
 
   if not FileExists(FileName) then
   begin
-    MessageBox(0, PChar(FileName + ' does not exist.'), 'PIC32 Memory Statistics', MB_ICONERROR);
+    MessageBox(0, PChar(FileName + ' does not exist.'), 'Memory Statistics', MB_ICONERROR);
     Exit;
   end;
 

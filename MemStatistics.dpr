@@ -12,7 +12,9 @@ uses
   MiniMap in 'Common\MiniMap.pas',
   DefParser in 'DefParser.pas',
   DeviceInfo in 'Common\DeviceInfo.pas',
-  ClickerZoomPreviewForm in '..\MiscUtils\ClickerZoomPreviewForm.pas' {frmClickerZoomPreview};
+  ClickerZoomPreviewForm in '..\MiscUtils\ClickerZoomPreviewForm.pas' {frmClickerZoomPreview},
+  SimulatedMemForm in 'SimulatedMemForm.pas' {frmSimulatedMem},
+  PollingFIFO in '..\MiscUtils\PollingFIFO.pas';
 
 {$R *.res}
 
@@ -20,5 +22,6 @@ begin
   Application.Initialize;
   Application.CreateForm(TfrmMemStatisticsMain, frmMemStatisticsMain);
   Application.CreateForm(TfrmClickerZoomPreview, frmClickerZoomPreview);
+  Application.CreateForm(TfrmSimulatedMem, frmSimulatedMem);
   Application.Run;
 end.

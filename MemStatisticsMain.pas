@@ -71,8 +71,7 @@ type
     btnSettings: TButton;
     btnNewCompareWindow: TButton;
     SaveDialog1: TSaveDialog;
-    pnlSplitterStatusFromVersions: TPanel;
-    pnlSplitterPathFromStatus: TPanel;
+    pnlSplitter: TPanel;
     tmrDrawZoom: TTimer;
     pmEntries: TPopupMenu;
     MenuItem_VSTHints: TMenuItem;
@@ -83,6 +82,7 @@ type
     MenuItem_BlinkFocusedEntry: TMenuItem;
     MenuItem_EnableZoomWindow: TMenuItem;
     MenuItem_ChartHints: TMenuItem;
+    pnlHorizontalResize: TPanel;
 
     procedure FormCreate(Sender: TObject);
     procedure tmrStartupTimer(Sender: TObject);
@@ -137,11 +137,11 @@ type
       Shift: TShiftState);
     procedure btnSettingsClick(Sender: TObject);
     procedure btnNewCompareWindowClick(Sender: TObject);
-    procedure pnlSplitterStatusFromVersionsMouseDown(Sender: TObject;
+    procedure pnlSplitterMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure pnlSplitterStatusFromVersionsMouseMove(Sender: TObject;
+    procedure pnlSplitterMouseMove(Sender: TObject;
       Shift: TShiftState; X, Y: Integer);
-    procedure pnlSplitterStatusFromVersionsMouseUp(Sender: TObject;
+    procedure pnlSplitterMouseUp(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FormResize(Sender: TObject);
     procedure FormPaint(Sender: TObject);
@@ -152,6 +152,8 @@ type
     procedure MenuItem_SetDefsFolderClick(Sender: TObject);
     procedure MenuItem_BlinkFocusedEntryClick(Sender: TObject);
     procedure MenuItem_EnableZoomWindowClick(Sender: TObject);
+    procedure pnlSplitterResize(Sender: TObject);
+    procedure pnlHorizontalResizeResize(Sender: TObject);
   private
     { Private declarations }
     FMemTable: TMemTable;
@@ -168,6 +170,7 @@ type
     vstRawTable: TVirtualStringTree;
 
     procedure CreateRemainingComponents;
+    procedure RepositionSplitter;
 
     function FastTabReplace(s: string): string;
     procedure GenerateTextStatistics;
@@ -201,6 +204,7 @@ type
     function TableColumnIsVisible(AColIdx: Integer): Boolean;
     function HandleOnGetVisibleColumnCount: Integer;
     function HandleOnGetColumnVisibility(AColumnIndex: Integer): Boolean;
+    procedure HandleOnCmpWindowDestroy(ACmpWindowHandle: THandle);
   public
     { Public declarations }
     procedure CmpFrmOnChangeDevice(Sender: TfrmMemStatCompare);
@@ -228,11 +232,9 @@ var
 
 
 {ToDo
- - VST text colors on selected VST nodes, should be stronger
  - Find a way to hide RAM section in cmp window. It should display sections, based on VisibleOnCompare flag.
  [] - There are many GetIndexOfSectionFromDataAddress and GetIndexOfSectionFromRawIndex calls in various handlers of the two tables.
    Their results should be cached in OnBeforePaint handler and used in the others.
- - In vstMemTablePaintText and vstRawTablePaintText, there should be a different set of colors for selected and unfocused
  - Check if the compare VST can be loaded faster (on PIC32MZ), when EBI and SQI are visible
  - In TMemTable.Paint, the for loops should use the entries from TDevInfoEditArr, because the sections can be swapped. So far, only the colors are properly used.
    Maybe the old arrays have to be discarded. An alternative would be to have a DisplayPosition field, because TMemTable uses indexed sections.
@@ -243,14 +245,18 @@ var
  - Displaying split columns (S1 and S2 schemes) is PIC32 specific, because of KSEGs. This should be an option in settings window. There is no proper support for this in MemTables.
  - See  "get a concatenated range, and make sure DrawMem and DrawMemFocusedEntry will also use that"  comment in MemTables.pas.
  - The setting window should not have the "Update" button. There should be only "Add" and "Delete". "Add" should add a new empty row.
- [] - Convert project to FP and add frm files to repo.
  [] - Provide D2006 and FP32/64 on Win/Lin builds. There should also be some instructions regarding GTK libraries for Linux.
  - Bug - the displayed ranges, for non-existent columns, look wrong. See EEPROM.
  [] - verify if both def parsers support reversed tag order  (max, then min)
    vstMemTableCompareNodes and vstRawTableCompareNodes require refactoring
- - When compiling with FP, there are multiple warning on mixing DWord with Integer. The compiler suggests typecasting to In64.
- - On Cmp window, when closing or reloading a hex, the AddrRanges array should also be set to empty.
  - Finish support for multiple address ranges / section. There are many hardcoded calls with the first range (index 0).
+ [] - remove a splitter and rename the other one
+ - the table on cmp window, should display gray text on FFFFFFFF entries
+ - when writing to sim mem, make sure to properly mask bits, because Flash allows writing '0's only. This is required, to get same content as a read-back hex file.
+ - add an option to display selected command on minimap
+ - SendCmdToCompareWindowByIndex - refactoring
+ - verify if EraseMemoryChunk and WriteMemory really require calls to GetUserNoteAtAddress and UpdateUserNote
+ - when the def folder priority is set to folder (first option), the displayed list of devices (on cmp window) is empty
 }
 
 
@@ -268,7 +274,7 @@ uses
   {$IFnDEF FPC}
     FileCtrl,
   {$ENDIF}
-  Math, ClipBrd, DeviceInfo, ClickerZoomPreviewForm;
+  Math, ClipBrd, DeviceInfo, ClickerZoomPreviewForm, SimulatedMemForm;
 
 
 {
@@ -558,7 +564,15 @@ begin
 end;
 
 
-procedure TfrmMemStatisticsMain.pnlSplitterStatusFromVersionsMouseDown(
+procedure TfrmMemStatisticsMain.pnlHorizontalResizeResize(Sender: TObject);
+begin
+  {$IFDEF FPC}
+    RepositionSplitter;  //the OnResize event is not executed for main form, while resizing, so use this splitter. (FPC only)
+  {$ENDIF}
+end;
+
+
+procedure TfrmMemStatisticsMain.pnlSplitterMouseDown(
   Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if Shift <> [ssLeft] then
@@ -568,13 +582,13 @@ begin
   begin
     GetCursorPos(FSplitterMouseDownGlobalPos);
 
-    FSplitterMouseDownImagePos.X := pnlSplitterStatusFromVersions.Left;
+    FSplitterMouseDownImagePos.X := pnlSplitter.Left;
     FHold := True;
   end;
 end;
 
 
-procedure TfrmMemStatisticsMain.pnlSplitterStatusFromVersionsMouseMove(
+procedure TfrmMemStatisticsMain.pnlSplitterMouseMove(
   Sender: TObject; Shift: TShiftState; X, Y: Integer);
 var
   tp: TPoint;
@@ -589,30 +603,66 @@ begin
   GetCursorPos(tp);
   NewLeft := FSplitterMouseDownImagePos.X + tp.X - FSplitterMouseDownGlobalPos.X;
 
-  if NewLeft < pnlSplitterPathFromStatus.Left + pnlSplitterPathFromStatus.Width + 100 + 10 then
-    NewLeft := pnlSplitterPathFromStatus.Left + pnlSplitterPathFromStatus.Width + 100 + 10;
+  if NewLeft < 436 then
+    NewLeft := 436;
 
-  if NewLeft > Width - PageControlEntries.Constraints.MinWidth - pnlSplitterStatusFromVersions.Width - 25 then
-    NewLeft := Width - PageControlEntries.Constraints.MinWidth - pnlSplitterStatusFromVersions.Width - 25;
+  if NewLeft > Width - 560 then
+    NewLeft := Width - 560;
 
-  if pnlSplitterStatusFromVersions.Left <> NewLeft then
+  if pnlSplitter.Left <> NewLeft then
   begin
-    pnlSplitterStatusFromVersions.Left := NewLeft;
+    pnlSplitter.Left := NewLeft;
 
-    PageControlEntries.Left := pnlSplitterStatusFromVersions.Left + pnlSplitterStatusFromVersions.Width + 5;
+    PageControlEntries.Left := pnlSplitter.Left + pnlSplitter.Width + 5;
     PageControlEntries.Width := Width - PageControlEntries.Left - 10;
 
-    FMemTable.Width := pnlSplitterStatusFromVersions.Left - 5 - FMemTable.Left;
+    FMemTable.Width := pnlSplitter.Left - 5 - FMemTable.Left;
 
-    FMemTable.Repaint;
+    //FMemTable.Repaint;
   end;
 end;
 
 
-procedure TfrmMemStatisticsMain.pnlSplitterStatusFromVersionsMouseUp(
+procedure TfrmMemStatisticsMain.pnlSplitterMouseUp(
   Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FHold := False;
+end;
+
+
+procedure TfrmMemStatisticsMain.RepositionSplitter;
+var
+  NewLeft: Integer;
+begin
+  NewLeft := pnlSplitter.Left;
+
+  if NewLeft < 436 then
+    NewLeft := 436;
+
+  if NewLeft > Width - 560 then
+    NewLeft := Width - 560;
+
+  pnlSplitter.Left := NewLeft;
+
+  PageControlEntries.Left := pnlSplitter.Left + pnlSplitter.Width + 5;
+  PageControlEntries.Width := Width - PageControlEntries.Left - 20;
+
+  FMemTable.Width := pnlSplitter.Left - 5 - FMemTable.Left;
+end;
+
+
+procedure TfrmMemStatisticsMain.FormResize(Sender: TObject);
+begin
+  RepositionSplitter;
+end;
+
+
+procedure TfrmMemStatisticsMain.pnlSplitterResize(
+  Sender: TObject);
+begin
+  {$IFDEF FPC}
+    RepositionSplitter;  //the OnResize event is not executed for main form, while resizing, so use this splitter. (FPC only)
+  {$ENDIF}
 end;
 
 
@@ -826,6 +876,7 @@ begin
 
   frmMemStatCompare.DefsFolder := FMikroComp.DefsFolder;
   frmMemStatCompare.OnChangeDevice := CmpFrmOnChangeDevice;
+  frmMemStatCompare.OnCmpWindowDestroy := HandleOnCmpWindowDestroy;
   frmMemStatCompare.Show;
 
   ListOfFrmMemStatCompare.Add(frmMemStatCompare);
@@ -933,6 +984,10 @@ begin
   vstMemTable := TVirtualStringTree.Create(Self);
   vstMemTable.Parent := TabSheetRoutines;
 
+  vstMemTable.Font.Size := 8;
+  vstMemTable.Font.Height := -11;
+  vstMemTable.Font.Name := 'Tahoma';
+  vstMemTable.Font.Style := [];
   vstMemTable.Left := 3;
   vstMemTable.Top := 0;
   vstMemTable.Width := 501;
@@ -1006,6 +1061,10 @@ begin
   vstRawTable := TVirtualStringTree.Create(Self);
   vstRawTable.Parent := TabSheetRaw;
 
+  vstRawTable.Font.Size := 8;
+  vstRawTable.Font.Height := -11;
+  vstRawTable.Font.Name := 'Tahoma';
+  vstRawTable.Font.Style := [];
   vstRawTable.Left := 3;
   vstRawTable.Top := 0;
   vstRawTable.Width := 501;
@@ -1078,6 +1137,10 @@ begin
   
   FMemTable := TMemTable.Create(frmMemStatisticsMain);
   FMemTable.Parent := frmMemStatisticsMain;
+  FMemTable.Font.Size := 8;
+  FMemTable.Font.Height := -11;
+  FMemTable.Font.Name := 'Tahoma';
+  FMemTable.Font.Style := [];
   FMemTable.Left := 10;
   FMemTable.Top := 80;
   FMemTable.Width := 450;
@@ -1171,37 +1234,6 @@ begin
   if ParamStr(1) <> '' then
     if FileExists(ParamStr(1)) then
       SaveSettingsToIni;
-end;
-
-
-procedure TfrmMemStatisticsMain.FormResize(Sender: TObject);
-var
-  NewLeft: Integer;
-begin
-  NewLeft := pnlSplitterPathFromStatus.Left;
-
-  if NewLeft < 431 + 5 + 0 then
-    NewLeft := 431 + 5 + 0;
-
-  if NewLeft > pnlSplitterStatusFromVersions.Left - 100 - pnlSplitterPathFromStatus.Width - 10  then
-    NewLeft := pnlSplitterStatusFromVersions.Left - 100 - pnlSplitterPathFromStatus.Width - 10;
-
-  pnlSplitterPathFromStatus.Left := NewLeft;
-
-  NewLeft := pnlSplitterStatusFromVersions.Left;
-
-  if NewLeft < pnlSplitterPathFromStatus.Left + pnlSplitterPathFromStatus.Width + 100 + 10 then
-    NewLeft := pnlSplitterPathFromStatus.Left + pnlSplitterPathFromStatus.Width + 100 + 10;
-
-  if NewLeft > Width - PageControlEntries.Constraints.MinWidth - pnlSplitterStatusFromVersions.Width - 5 then
-    NewLeft := Width - PageControlEntries.Constraints.MinWidth - pnlSplitterStatusFromVersions.Width - 5;
-    
-  pnlSplitterStatusFromVersions.Left := NewLeft;
-
-  PageControlEntries.Left := pnlSplitterStatusFromVersions.Left + pnlSplitterStatusFromVersions.Width + 5;
-  PageControlEntries.Width := Width - PageControlEntries.Left - 20;
-
-  FMemTable.Width := pnlSplitterStatusFromVersions.Left - 5 - FMemTable.Left;
 end;
 
 
@@ -2140,6 +2172,16 @@ var
   Data: PRoutinesRec;
   SectionIndex: Integer;
 begin
+  if Sender.Selected[Node] then
+  begin
+    if Sender.Focused then
+      TargetCanvas.Font.Color := clWindow
+    else
+      TargetCanvas.Font.Color := clWindowText;
+
+    Exit;
+  end;
+  
   Data := vstMemTable.GetNodeData(Node);
 
   SectionIndex := GetIndexOfSectionFromDataAddress(Data.Address);
@@ -2155,6 +2197,16 @@ var
   Data: PRoutinesRec;
   SectionIndex: Integer;
 begin
+  if Sender.Selected[Node] then
+  begin
+    if Sender.Focused then
+      TargetCanvas.Font.Color := clWindow
+    else
+      TargetCanvas.Font.Color := clWindowText;
+
+    Exit;
+  end;
+
   Data := vstRawTable.GetNodeData(Node);
 
   SectionIndex := GetIndexOfSectionFromRawIndex(Data.EntryNumber);
@@ -2770,6 +2822,12 @@ end;
 
 function TfrmMemStatisticsMain.TableColumnIsVisible(AColIdx: Integer): Boolean;
 begin
+  if FMemTable.DeviceInfo.GetDeviceSectionCount = 0 then
+  begin
+    Result := False;
+    Exit;
+  end;
+    
   Result := FMemStatOptions.DevInfoEditArr[AColIdx].VisibleOnTable and
             (FMemTable.DeviceInfo.SectionFoundInDefFile[AColIdx] or FMemStatOptions.DevInfoEditArr[AColIdx].DisplayEvenIfMissingFromDefinition);
 end;
@@ -2793,6 +2851,16 @@ begin
   except
     on E: Exception do
       raise Exception.Create('Index out of bounds on gtting mem table column visibility. ' + IntToStr(AColumnIndex) + ' / ' + IntToStr(Length(FMemStatOptions.DevInfoEditArr)));
+  end;
+end;
+
+
+procedure TfrmMemStatisticsMain.HandleOnCmpWindowDestroy(ACmpWindowHandle: THandle);
+begin
+  try
+    frmSimulatedMem.UpdateAvailableCmpWindowSelection;
+  except
+    //the window or its content might not be available
   end;
 end;
 

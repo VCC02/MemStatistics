@@ -120,6 +120,7 @@ type
     procedure PaintGraphicOnly;
 
     property Canvas;
+    property Font;
     property OnMouseEnter;
     property OnMouseLeave;
     property OnMouseMove;
@@ -195,7 +196,7 @@ end;
 
 procedure TMemTable.DrawEntryByIndex(ASrc: Boolean; YOffset: Cardinal; EntryByIndex: Integer; var ARoutineIndex_Visibilities: TRoutineIndex_VisibilityArr; var AAddressOffsets: TAddressOffsetArr; var ColumnXs: TBoundArray; WidthDiv: Integer; var ColColors: TColorArr);
 var
-  j: Integer;
+  j, x1, x2: Integer;
   Addr, Size: Cardinal;
   FMemScalesGreaterThan0: Boolean;
 begin
@@ -227,10 +228,22 @@ begin
   for j := 0 to FDeviceInfo.GetDeviceSectionCount - 1 do
   begin
     if ARoutineIndex_Visibilities[j].S1 then
-      DrawEntry(FDeviceInfo.GetAddressRangesByIndex(j, 0).MinAddr, Addr, Size, YOffset, -AAddressOffsets[j].S1, FMemScales[j], ColumnXs[j] + 1, ColumnXs[j] + WidthDiv, ColColors[j]);
+    begin
+      x1 := ColumnXs[j] + 1;
+      x2 := ColumnXs[j] + WidthDiv;
+      DrawEntry(FDeviceInfo.GetAddressRangesByIndex(j, 0).MinAddr, Addr, Size, YOffset, -AAddressOffsets[j].S1, FMemScales[j], x1, x2, ColColors[j]);
+    end;
 
     if ARoutineIndex_Visibilities[j].S2 then
-      DrawEntry(FDeviceInfo.GetAddressRangesByIndex(j, 0).MinAddr, Addr, Size, YOffset, -AAddressOffsets[j].S2, FMemScales[j], ColumnXs[j] + WidthDiv + 1, ColumnXs[j] + WidthDiv shl 1, ColColors[j]);
+    begin
+      x1 := ColumnXs[j] + WidthDiv + 1;
+      x2 := ColumnXs[j] + WidthDiv shl 1;
+
+      if x2 > Width - 1 then
+        x2 := Width - 1;
+
+      DrawEntry(FDeviceInfo.GetAddressRangesByIndex(j, 0).MinAddr, Addr, Size, YOffset, -AAddressOffsets[j].S2, FMemScales[j], x1, x2, ColColors[j]);
+    end;
   end;
 end;  
 
@@ -335,6 +348,9 @@ begin
 
   VisibleCount := DoOnGetVisibleColumnCount;
 
+  if VisibleCount = 0 then
+    VisibleCount := 4;
+
   WidthDivD := Width / VisibleCount;
 
   ATextWidth := Canvas.TextWidth('0xFDFDFDFD');
@@ -414,7 +430,7 @@ begin
       Canvas.Pen.Color := FMemStatColorOptions.LineChart;
       Canvas.Brush.Color := FMemStatColorOptions.BackgroundChart;
       Canvas.Pen.Width := 1;
-      Canvas.Rectangle(0, 0, Width - 1, Height - 1);
+      Canvas.Rectangle(0, 0, Width, Height);
     end;
 
     SetLength(ColumnXs, FDeviceInfo.GetDeviceSectionCount);
@@ -438,8 +454,10 @@ begin
         Line(Canvas, CurrentDrawingXPos, 0, CurrentDrawingXPos, Height - 1);
       end;
 
-      WidthDiv := Round(Width / VisibleCount / 2);
-
+      if VisibleCount = 0 then
+        WidthDiv := 4
+      else
+        WidthDiv := Round(Width / VisibleCount / 2);
 
       YOffset := Canvas.TextHeight('W');
       Line(Canvas, 0, YOffset + 2, Width - 1, YOffset + 2);

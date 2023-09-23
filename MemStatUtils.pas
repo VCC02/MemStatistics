@@ -99,6 +99,7 @@ type
   end;
 
   PFileSlot = ^TFileSlot;
+  PFileSlotArr = array of PFileSlot;
 
   TAddressTranslationOperation = (atoNone, atoADD, atoOR);
   TDeviceBitness = (db8, db16, db32);
@@ -551,23 +552,50 @@ end;
 
 procedure ScrollIntoViewNodeByIndex(vst: TVirtualStringTree; AIndex: Cardinal; SelectNode: Boolean);
 var
-  CurrentNode: PVirtualNode;
+  CurrentNode, FirstSel, ToSel: PVirtualNode;
+  IsMultiSelect, Found: Boolean;
 begin
   CurrentNode := vst.GetFirst;
   if CurrentNode = nil then
     Exit;
 
-  repeat
-    if CurrentNode.Index = AIndex then
+  FirstSel := vst.GetFirstSelected;  
+  ToSel := nil;
+  IsMultiSelect := toMultiSelect in vst.TreeOptions.SelectionOptions;
+
+  if IsMultiSelect then
+    vst.TreeOptions.SelectionOptions := vst.TreeOptions.SelectionOptions - [toMultiSelect];
+
+  Found := False;
+  try
+    repeat
+      if CurrentNode.Index = AIndex then
+      begin
+        if SelectNode then
+        begin
+          ToSel := CurrentNode;
+          Found := True;
+        end;
+
+        vst.ScrollIntoView(CurrentNode, True, True);
+        Exit;
+      end;
+
+      CurrentNode := CurrentNode.NextSibling;
+    until CurrentNode = nil;
+  finally
+    if IsMultiSelect then
     begin
-      if SelectNode then
-        vst.Selected[CurrentNode] := True;
-      vst.ScrollIntoView(CurrentNode, True, True);
-      Exit;
+      vst.TreeOptions.SelectionOptions := vst.TreeOptions.SelectionOptions + [toMultiSelect];
+
+      if not Found then
+        if FirstSel <> nil then
+          vst.Selected[FirstSel] := True;  //restore selection
     end;
 
-    CurrentNode := CurrentNode.NextSibling;
-  until CurrentNode = nil;
+    if ToSel <> nil then
+      vst.Selected[ToSel] := True;
+  end;
 end;
 
 

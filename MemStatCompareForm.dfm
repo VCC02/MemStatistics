@@ -12,7 +12,6 @@ object frmMemStatCompare: TfrmMemStatCompare
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  Menu = mmCmpMain
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
@@ -266,6 +265,13 @@ object frmMemStatCompare: TfrmMemStatCompare
         Caption = 'Recent settings'
         Enabled = False
         Visible = False
+      end
+      object N5: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_ShowSimulatedMemory: TMenuItem
+        Caption = 'Show simulated memory'
+        OnClick = MenuItem_ShowSimulatedMemoryClick
       end
     end
     object File1: TMenuItem

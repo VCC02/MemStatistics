@@ -12,7 +12,8 @@ uses
   MemStatCompareForm in 'MemStatCompareForm.pas' {frmMemStatCompare},
   DevicesForm in 'DevicesForm.pas' {frmDevices},
   DefParser in 'DefParser.pas',
-  ClickerZoomPreviewForm in '..\MiscUtils\ClickerZoomPreviewForm.pas' {frmClickerZoomPreview};
+  ClickerZoomPreviewForm in '..\MiscUtils\ClickerZoomPreviewForm.pas' {frmClickerZoomPreview},
+  SimulatedMemForm in 'SimulatedMemForm.pas';
 
 {$R *.res}
 
@@ -20,5 +21,6 @@ begin
   Application.Initialize;
   Application.CreateForm(TfrmMemStatisticsMain, frmMemStatisticsMain);
   Application.CreateForm(TfrmClickerZoomPreview, frmClickerZoomPreview);
+  Application.CreateForm(TfrmSimulatedMem, frmSimulatedMem);
   Application.Run;
 end.

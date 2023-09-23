@@ -279,7 +279,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   end
   object btnNewCompareWindow: TButton
     Left = 544
-    Top = 33
+    Top = 32
     Width = 160
     Height = 25
     Anchors = [akTop, akRight]
@@ -287,31 +287,31 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     TabOrder = 12
     OnClick = btnNewCompareWindowClick
   end
-  object pnlSplitterStatusFromVersions: TPanel
-    Left = 458
+  object pnlSplitter: TPanel
+    Left = 459
     Top = 57
     Width = 10
     Height = 260
     Cursor = crHSplit
     Anchors = [akTop, akBottom]
-    Color = clYellow
+    Color = 7864319
     ParentBackground = False
     TabOrder = 13
-    OnMouseDown = pnlSplitterStatusFromVersionsMouseDown
-    OnMouseMove = pnlSplitterStatusFromVersionsMouseMove
-    OnMouseUp = pnlSplitterStatusFromVersionsMouseUp
+    OnMouseDown = pnlSplitterMouseDown
+    OnMouseMove = pnlSplitterMouseMove
+    OnMouseUp = pnlSplitterMouseUp
+    OnResize = pnlSplitterResize
   end
-  object pnlSplitterPathFromStatus: TPanel
-    Left = 422
-    Top = 33
-    Width = 18
-    Height = 264
-    Cursor = crHSplit
-    Anchors = [akLeft, akTop, akBottom]
-    Color = clYellow
-    ParentBackground = False
+  object pnlHorizontalResize: TPanel
+    Left = 0
+    Top = 318
+    Width = 984
+    Height = 4
+    Anchors = [akLeft, akRight, akBottom]
+    BevelOuter = bvNone
     TabOrder = 14
     Visible = False
+    OnResize = pnlHorizontalResizeResize
   end
   object tmrStartup: TTimer
     Enabled = False
