@@ -34,12 +34,12 @@ object frmMemStatCompare: TfrmMemStatCompare
     ParentFont = False
   end
   object lblChipName: TLabel
-    Left = 392
+    Left = 408
     Height = 19
     Top = 491
-    Width = 100
+    Width = 105
     Anchors = [akLeft, akBottom]
-    Caption = 'not selected'
+    Caption = 'not selected '
     Font.Color = clWindowText
     Font.Height = -16
     Font.Name = 'Tahoma'
@@ -305,6 +305,13 @@ object frmMemStatCompare: TfrmMemStatCompare
         Enabled = False
         Visible = False
       end
+      object N6: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_Erase1: TMenuItem
+        Caption = 'Erase'
+        OnClick = MenuItem_Erase1Click
+      end
     end
     object FileSlot11: TMenuItem
       Caption = 'File Slot2'
@@ -346,6 +353,13 @@ object frmMemStatCompare: TfrmMemStatCompare
         Caption = 'Reload Both'
         Enabled = False
         Visible = False
+      end
+      object N7: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_Erase2: TMenuItem
+        Caption = 'Erase'
+        OnClick = MenuItem_Erase2Click
       end
     end
     object FileSlot31: TMenuItem
@@ -389,6 +403,13 @@ object frmMemStatCompare: TfrmMemStatCompare
         Enabled = False
         Visible = False
       end
+      object N8: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_Erase3: TMenuItem
+        Caption = 'Erase'
+        OnClick = MenuItem_Erase3Click
+      end
     end
     object FileSlot41: TMenuItem
       Caption = 'File Slot4'
@@ -430,6 +451,13 @@ object frmMemStatCompare: TfrmMemStatCompare
         Caption = 'Reload Both'
         Enabled = False
         Visible = False
+      end
+      object N9: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_Erase4: TMenuItem
+        Caption = 'Erase'
+        OnClick = MenuItem_Erase4Click
       end
     end
   end

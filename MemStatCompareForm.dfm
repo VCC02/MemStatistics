@@ -1,6 +1,6 @@
 object frmMemStatCompare: TfrmMemStatCompare
-  Left = 0
-  Top = 0
+  Left = 100
+  Top = 83
   Caption = 'Memory Statistics - Visual Compare'
   ClientHeight = 556
   ClientWidth = 1149
@@ -13,6 +13,7 @@ object frmMemStatCompare: TfrmMemStatCompare
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Position = poDesigned
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -315,6 +316,13 @@ object frmMemStatCompare: TfrmMemStatCompare
         Enabled = False
         Visible = False
       end
+      object N6: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_Erase1: TMenuItem
+        Caption = 'Erase'
+        OnClick = MenuItem_Erase1Click
+      end
     end
     object FileSlot11: TMenuItem
       Caption = 'File Slot2'
@@ -356,6 +364,13 @@ object frmMemStatCompare: TfrmMemStatCompare
         Caption = 'Reload Both'
         Enabled = False
         Visible = False
+      end
+      object N7: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_Erase2: TMenuItem
+        Caption = 'Erase'
+        OnClick = MenuItem_Erase2Click
       end
     end
     object FileSlot31: TMenuItem
@@ -399,6 +414,13 @@ object frmMemStatCompare: TfrmMemStatCompare
         Enabled = False
         Visible = False
       end
+      object N8: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_Erase3: TMenuItem
+        Caption = 'Erase'
+        OnClick = MenuItem_Erase3Click
+      end
     end
     object FileSlot41: TMenuItem
       Caption = 'File Slot4'
@@ -440,6 +462,13 @@ object frmMemStatCompare: TfrmMemStatCompare
         Caption = 'Reload Both'
         Enabled = False
         Visible = False
+      end
+      object N9: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_Erase4: TMenuItem
+        Caption = 'Erase'
+        OnClick = MenuItem_Erase4Click
       end
     end
   end

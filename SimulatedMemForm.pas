@@ -31,13 +31,22 @@ unit SimulatedMemForm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, PollingFIFO, ExtCtrls, VirtualTrees;
+  {$IFDEF UNIX}
+    LCLIntf, LCLType,
+  {$ELSE}
+    Windows,
+  {$ENDIF}
+  Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, PollingFIFO, ExtCtrls, VirtualTrees, ComCtrls;
 
 type
   TComThread = class(TThread)
+  private
+    FCharsReceived: Integer;
   protected
     procedure Execute; override;
+  public
+    property CharsReceived: Integer read FCharsReceived;
   end;
 
   TDeviceFlashInfo = record
@@ -104,7 +113,8 @@ type
   private
     { Private declarations }
     FFIFO: TPollingFIFO;
-    FComNumber: Byte;
+    FConnHandle: THandle;
+    FCOMName: string;
     FAllCommands: TStringList;
     vstMemCommands: TVirtualStringTree;
 
@@ -115,14 +125,16 @@ type
     procedure SaveSettingsToIni;
     procedure CreateRemainingComponents;
 
-    procedure DetectDeviceChange(var Msg: TMessage); message WM_DEVICECHANGE;
-    procedure GetListOfCOMPorts(AllCOMs: TStringList);
+    {$IFDEF Windows}
+      procedure DetectDeviceChange(var Msg: TMessage); message WM_DEVICECHANGE;
+    {$ENDIF}
+
     procedure UpdateListOfCOMPorts;
-    function GetCurrentCOMNumber: Byte;
+    function GetCurrentCOMName: string;
     procedure ConnectToCOMPort;
     procedure DisconnectFromCOMPort;
 
-    procedure DisplayExtraErrorMessage(AMsg: string);
+    procedure DisplayExtraErrorMessage(AMsg: string; AExtraInfo: string = '');
     procedure ClearExtraErrorMessage;
 
     procedure CreateTh;
@@ -139,7 +151,10 @@ type
     procedure UpdateAvailableCmpWindowSelection;
 
     property FIFO: TPollingFIFO read FFIFO; //thread safe
-    property ComNumber: Byte read FComNumber;
+    property ConnHandle: THandle read FConnHandle;
+    property COMName: string read FCOMName;
+
+
   end;
 
 var
@@ -156,7 +171,7 @@ implementation
 
 
 uses
-  MemStatCompareForm, MemStatUtils, WinCom, Registry, IniFiles;
+  MemStatCompareForm, MemStatUtils, SimpleCOM, IniFiles;
 
 const
   CDevCmd_Pointer_Size = 'Pointer_Size';
@@ -194,16 +209,16 @@ begin
 
   repeat
     try
-      if ComIsOpen(frmSimulatedMem.ComNumber) then
+      if COMIsConnected(frmSimulatedMem.COMName) then
       begin
-        TempNrCharsReceived := NrCharsReceived(frmSimulatedMem.ComNumber);
+        TempNrCharsReceived := GetReceivedByteCount(frmSimulatedMem.ConnHandle);
 
         if TempNrCharsReceived > 0 then
         begin
           SetLength(s, TempNrCharsReceived);
           arr := @s[1];
 
-          ActualRead := ReceiveChars(frmSimulatedMem.ComNumber, arr^, TempNrCharsReceived);
+          ActualRead := ReceiveDataFromCOM(frmSimulatedMem.ConnHandle, arr^, TempNrCharsReceived);
           if ActualRead < TempNrCharsReceived then
             SetLength(s, ActualRead);
 
@@ -219,6 +234,8 @@ begin
             PosCRLF := Pos(#13#10, LongBuffer);
           end;
         end;
+
+        FCharsReceived := TempNrCharsReceived;
       end;
 
       Sleep(1);
@@ -250,10 +267,10 @@ end;
 procedure TfrmSimulatedMem.DisconnectFromCOMPort;
 begin
   TerminateTh;
-  CloseCom(FComNumber);  //set internal library info to "disconnected"
+  DisconnectFromCOM(FCOMName);  //set internal library info to "disconnected"
 
   try
-    lblCOMStatus.Hint := SysErrorMessage(GetComErrors(FComNumber));
+    lblCOMStatus.Hint := SysErrorMessage(GetCOMError(FCOMName));
   except
     //GetComErrors may throw an AV if the COM port is closed  :(
   end;
@@ -271,61 +288,17 @@ begin
 end;
 
 
-procedure TfrmSimulatedMem.DetectDeviceChange(var Msg: TMessage);
-begin
-  Sleep(100);
-  UpdateListOfCOMPorts;
-
-  if cmbCOMPort.Items.IndexOf('COM' + IntToStr(FComNumber)) = -1 then  //current com is disconnected
-    if ComIsOpen(FComNumber) then
-      DisconnectFromCOMPort;
-end;
-
-
-procedure TfrmSimulatedMem.GetListOfCOMPorts(AllCOMs: TStringList);
-var
-  AReg: TRegistry;
-  i: Integer;
-  ValueNames: TStringList;
-begin
-  if Visible and chkShowAll.Checked then
+{$IFDEF Windows}
+  procedure TfrmSimulatedMem.DetectDeviceChange(var Msg: TMessage);
   begin
-    for i := 1 to 255 do
-      AllCOMs.Add('COM' + IntToStr(i));
-  end
-  else
-  begin
-    AReg := TRegistry.Create;
-    try
-      AReg.RootKey := HKEY_LOCAL_MACHINE;
+    Sleep(100);
+    UpdateListOfCOMPorts;
 
-      if AReg.OpenKeyReadOnly('\HARDWARE\DEVICEMAP\SERIALCOMM') then
-      begin
-        try
-          ValueNames := TStringList.Create;
-          try
-            AReg.GetValueNames(ValueNames);      //a.k.a. subkeys
-            //AReg.GetKeyNames(cmbCOMNumber.Items);      //a.k.a. subfolder names
-
-            for i := 0 to ValueNames.Count - 1 do
-              AllCOMs.Add(AReg.ReadString(ValueNames[i]));
-          finally
-            ValueNames.Free;
-          end;
-        finally
-          AReg.CloseKey;
-        end;
-      end
-      else
-      begin
-        for i := 1 to 255 do
-          AllCOMs.Add('COM' + IntToStr(i));
-      end;
-    finally
-      AReg.Free;
-    end;
+    if cmbCOMPort.Items.IndexOf(FCOMName) = -1 then  //current com is disconnected
+      if COMIsConnected(FCOMName) then
+        DisconnectFromCOMPort;
   end;
-end;
+{$ENDIF}
 
 
 procedure TfrmSimulatedMem.UpdateListOfCOMPorts;
@@ -336,8 +309,8 @@ var
 begin
   AllCOMs := TStringList.Create;
   try
-    GetListOfCOMPorts(AllCOMs);
- 
+    ListExistentCOMPorts(AllCOMs, Visible and chkShowAll.Checked);
+
     if cmbCOMPort.Items.Text <> AllCOMs.Text then
     begin
       OldSelection := '';
@@ -359,26 +332,31 @@ begin
 end;
 
 
-function TfrmSimulatedMem.GetCurrentCOMNumber: Byte;
-var
-  s: string;
+function TfrmSimulatedMem.GetCurrentCOMName: string;
 begin
-  Result := 0;
-
   if cmbCOMPort.ItemIndex = -1 then
+  begin
+    Result := '';
     Exit;
+  end;
 
-  s := cmbCOMPort.Items.Strings[cmbCOMPort.ItemIndex];
-  s := Copy(s, 4, MaxInt);
-  Result := StrToIntDef(s, 0);
+  Result := cmbCOMPort.Items.Strings[cmbCOMPort.ItemIndex];
 end;
 
 
-procedure TfrmSimulatedMem.DisplayExtraErrorMessage(AMsg: string);
+procedure TfrmSimulatedMem.DisplayExtraErrorMessage(AMsg: string; AExtraInfo: string = '');
 begin
   lblStatusMsg.Caption := 'Msg: ' + AMsg;
   lblStatusMsg.Font.Color := clMaroon;
   lblStatusMsg.Font.Style := [fsBold];
+  lblStatusMsg.Hint := AExtraInfo;
+
+  {$IFDEF UNIX}
+    if AMsg = 'Permission denied' then
+      lblStatusMsg.Hint := lblStatusMsg.Hint + #13#10 +
+                           'Type this into a terminal, then relogin: ' + #13#10 +
+                           'sudo usermod -a -G dialout $USER';
+  {$ENDIF}
 end;
 
 
@@ -394,8 +372,8 @@ procedure TfrmSimulatedMem.btnConnectClick(Sender: TObject);
 var
   BaudStr: string;
 begin
-  FComNumber := GetCurrentCOMNumber;
-  if FComNumber = 0 then
+  FCOMName := GetCurrentCOMName;
+  if FCOMName = '' then
   begin
     DisplayExtraErrorMessage('No COM is selected.');
     Exit;
@@ -406,12 +384,13 @@ begin
   else
     BaudStr := cmbBaud.Items.Strings[cmbBaud.ItemIndex];
 
-  if OpenCom(FComNumber, StrToIntDef(BaudStr, 256000), Parity_none, 8, ONESTOPBIT, 4096, 4096) then
+  FConnHandle := ConnectToCOM(FCOMName, StrToIntDef(BaudStr, 256000), {Parity_none, 8, ONESTOPBIT,} 4096, 4096);
+  if FConnHandle > 0 then
     ConnectToCOMPort
   else
   begin
     try
-      DisplayExtraErrorMessage(SysErrorMessage(GetComErrors(FComNumber))); //SysErrorMessage(GetLastError);
+      DisplayExtraErrorMessage(SysErrorMessage(GetCOMError(FCOMName)), GetCOMExtraError(FCOMName)); //SysErrorMessage(GetLastError);
     except
       //GetComErrors may throw an AV if the COM port is closed  :(
     end;
@@ -799,7 +778,7 @@ procedure TfrmSimulatedMem.LoadSettingsFromIni;
 var
   Ini: TMemIniFile;
   Baud, COMIndex: Integer;
-  ComNumberStr, BaudStr: string;
+  BaudStr: string;
 begin    //opening again, the file from main window, because this window is not created when loading from main
   Ini := TMemIniFile.Create(ExtractFilePath(ParamStr(0)) + 'MemStat.ini');
   try
@@ -808,14 +787,13 @@ begin    //opening again, the file from main window, because this window is not 
     Width := Ini.ReadInteger('SimMemWindow', 'Width', Width);
     Height := Ini.ReadInteger('SimMemWindow', 'Height', Height);
 
-    FComNumber := Ini.ReadInteger('SimMemWindow', 'ComNumber', 0);
+    FComName := Ini.ReadString('SimMemWindow', 'ComName', 'COM0');
     Baud := Ini.ReadInteger('SimMemWindow', 'Baud', 256000);
   finally
     Ini.Free;
   end;
 
-  ComNumberStr := 'COM' + IntToStr(FComNumber);
-  COMIndex := cmbCOMPort.Items.IndexOf(ComNumberStr);
+  COMIndex := cmbCOMPort.Items.IndexOf(FComName);
   cmbCOMPort.ItemIndex := COMIndex;
                                                               
   BaudStr := IntToStr(Baud);
@@ -835,7 +813,7 @@ begin    //saving again, the file from main window
     Ini.WriteInteger('SimMemWindow', 'Width', Width);
     Ini.WriteInteger('SimMemWindow', 'Height', Height);
 
-    Ini.WriteInteger('SimMemWindow', 'ComNumber', GetCurrentCOMNumber);
+    Ini.WriteString('SimMemWindow', 'ComName', GetCurrentCOMName);
 
     if cmbBaud.ItemIndex = -1 then
       Baud := 0
@@ -864,7 +842,11 @@ begin
   vstMemCommands.Font.Style := [];
   vstMemCommands.Left := 8;
   vstMemCommands.Top := 108;
-  vstMemCommands.Width := 673;
+  {$IFDEF UNIX}
+    vstMemCommands.Width := 643;
+  {$ELSE}
+    vstMemCommands.Width := 673;
+  {$ENDIF}
   vstMemCommands.Height := 183;
   vstMemCommands.Anchors := [akLeft, akTop, akRight, akBottom];
   vstMemCommands.Header.AutoSizeIndex := 0;
@@ -884,9 +866,9 @@ begin
   vstMemCommands.OnGetText := vstMemCommandsGetText;
 
   NewColum := vstMemCommands.Header.Columns.Add;
-  NewColum.MinWidth := 50;
+  NewColum.MinWidth := 73;
   NewColum.Position := 0;
-  NewColum.Width := 50;
+  NewColum.Width := 73;
   NewColum.Text := 'Index';
 
   NewColum := vstMemCommands.Header.Columns.Add;
@@ -903,7 +885,7 @@ begin
 
   FFIFO := TPollingFIFO.Create;
   FAllCommands := TStringList.Create;
-  FComNumber := 0;
+  FCOMName := '';
   FTh := nil;
 
   tmrStartup.Enabled := True;
@@ -919,8 +901,8 @@ begin
   TerminateTh;
 
   try
-    if ComIsOpen(FComNumber) then
-      CloseCom(FComNumber);
+    if COMIsConnected(FComName) then
+      DisconnectFromCOM(FComName);
   except
   end;
 

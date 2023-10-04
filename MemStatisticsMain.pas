@@ -250,13 +250,20 @@ var
  [] - verify if both def parsers support reversed tag order  (max, then min)
    vstMemTableCompareNodes and vstRawTableCompareNodes require refactoring
  - Finish support for multiple address ranges / section. There are many hardcoded calls with the first range (index 0).
- [] - remove a splitter and rename the other one
  - the table on cmp window, should display gray text on FFFFFFFF entries
  - when writing to sim mem, make sure to properly mask bits, because Flash allows writing '0's only. This is required, to get same content as a read-back hex file.
  - add an option to display selected command on minimap
  - SendCmdToCompareWindowByIndex - refactoring
  - verify if EraseMemoryChunk and WriteMemory really require calls to GetUserNoteAtAddress and UpdateUserNote
- - when the def folder priority is set to folder (first option), the displayed list of devices (on cmp window) is empty
+ - bug - when the def folder priority is set to folder (first option), the displayed list of devices (on cmp window) is empty
+
+ - Bug - fix AV in CopyDataFromFileSlot  (data sync error)
+ - add option to hide defs folder path from main window
+ - Bug - there is an AV when loading a hex file from dialog, over an existing slot. Loading from main window is fine.
+ - TRTLCriticalSection under Linux has different fields. Test if they can be used in PollingFIFO.
+ - Many buttons from SimMem window are not wide enough to hold text on Linux (with GTK2).
+ [in work] - Set baud rate and other stuff (see GetReceivedByteCount and timeouts) in Linux
+ - BaudRateToConst should return an "error" value for unknown baud rates and that should end up in an error message on window (on tooltip)
 }
 
 

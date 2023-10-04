@@ -3,6 +3,12 @@ program MemStatistics;
 {$MODE Delphi}
 
 uses
+  {$IFDEF UNIX}
+  cthreads,
+  {$ENDIF}
+  {$IFDEF HASAMIGA}
+  athreads,
+  {$ENDIF}
   Forms, Interfaces,
   MemStatisticsMain in 'MemStatisticsMain.pas' {frmMemStatisticsMain},
   SettingsForm in 'SettingsForm.pas' {frmSettings},

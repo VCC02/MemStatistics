@@ -125,6 +125,10 @@
         <Filename Value="..\MiscUtils\PollingFIFO.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\MiscUtils\SimpleCOM.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

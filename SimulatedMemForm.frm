@@ -69,6 +69,8 @@ object frmSimulatedMem: TfrmSimulatedMem
     Font.Height = -11
     Font.Name = 'Tahoma'
     ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
   end
   object lblAllReceivedCommands: TLabel
     Left = 8
@@ -89,11 +91,12 @@ object frmSimulatedMem: TfrmSimulatedMem
     TabOrder = 0
   end
   object btnSendAllCmdToCompareWindow: TButton
-    Left = 689
+    Left = 697
     Height = 25
     Hint = 'Decode received commands and apply them to the simulated memory (selected slot).'
     Top = 48
-    Width = 227
+    Width = 239
+    Anchors = [akTop, akRight]
     Caption = 'Send all commands to cmp window'
     OnClick = btnSendAllCmdToCompareWindowClick
     ParentShowHint = False
@@ -123,7 +126,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Left = 384
     Height = 25
     Top = 47
-    Width = 153
+    Width = 161
     Caption = 'Load HEX from main window'
     OnClick = btnLoadHEXFromMainWindowClick
     TabOrder = 4
@@ -151,13 +154,13 @@ object frmSimulatedMem: TfrmSimulatedMem
     Left = 454
     Height = 22
     Top = 19
-    Width = 83
+    Width = 90
     ItemHeight = 16
     Style = csOwnerDrawFixed
     TabOrder = 7
   end
   object btnClearListOfCommands: TButton
-    Left = 546
+    Left = 554
     Height = 25
     Top = 16
     Width = 135
@@ -166,7 +169,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     TabOrder = 8
   end
   object btnTestFIFOAndDecoder: TButton
-    Left = 546
+    Left = 554
     Height = 25
     Hint = 'Sends some dummy data to the simulated memory, as if received from COM port.'
     Top = 47
@@ -225,15 +228,15 @@ object frmSimulatedMem: TfrmSimulatedMem
     TabOrder = 11
   end
   object grpReceivedDeviceInfo: TGroupBox
-    Left = 689
+    Left = 697
     Height = 161
     Hint = 'Info updated on sending commands to compare window'
     Top = 141
-    Width = 227
+    Width = 239
     Anchors = [akTop, akRight]
     Caption = 'Received device info'
     ClientHeight = 143
-    ClientWidth = 223
+    ClientWidth = 235
     ParentShowHint = False
     ShowHint = True
     TabOrder = 12
@@ -279,26 +282,30 @@ object frmSimulatedMem: TfrmSimulatedMem
     end
   end
   object chkAutoSendCommandsToCmpWindow: TCheckBox
-    Left = 689
+    Left = 697
     Height = 19
     Hint = 'If checked, all recent commands are sent to the simulated memory (selected slot on compare window).'
     Top = 84
-    Width = 193
+    Width = 239
+    Anchors = [akTop, akRight]
+    AutoSize = False
     Caption = 'Autosend commands to cmp window'
     ParentShowHint = False
     ShowHint = True
     TabOrder = 13
   end
   object chkAppendUserNotesOnCmpWindow: TCheckBox
-    Left = 689
+    Left = 697
     Height = 19
     Top = 108
-    Width = 187
+    Width = 239
+    Anchors = [akTop, akRight]
+    AutoSize = False
     Caption = 'Append user notes on cmp window'
     TabOrder = 14
   end
   object btnDisplayCompareWindow: TButton
-    Left = 546
+    Left = 554
     Height = 25
     Top = 78
     Width = 135
@@ -307,11 +314,12 @@ object frmSimulatedMem: TfrmSimulatedMem
     TabOrder = 15
   end
   object btnSendSelectedCommands: TButton
-    Left = 689
+    Left = 697
     Height = 25
     Hint = 'Decode received commands and apply them to the simulated memory (selected slot).'
     Top = 16
-    Width = 227
+    Width = 239
+    Anchors = [akTop, akRight]
     Caption = 'Send selected commands to cmp window'
     OnClick = btnSendSelectedCommandsClick
     ParentShowHint = False

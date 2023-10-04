@@ -104,6 +104,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Hint = 
       'Decode received commands and apply them to the simulated memory ' +
       '(selected slot).'
+    Anchors = [akTop, akRight]
     Caption = 'Send all commands to cmp window'
     ParentShowHint = False
     ShowHint = True
@@ -295,6 +296,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Hint = 
       'If checked, all recent commands are sent to the simulated memory' +
       ' (selected slot on compare window).'
+    Anchors = [akTop, akRight]
     Caption = 'Autosend commands to cmp window'
     ParentShowHint = False
     ShowHint = True
@@ -305,6 +307,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Top = 105
     Width = 227
     Height = 17
+    Anchors = [akTop, akRight]
     Caption = 'Append user notes on cmp window'
     TabOrder = 14
   end
@@ -325,6 +328,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Hint = 
       'Decode received commands and apply them to the simulated memory ' +
       '(selected slot).'
+    Anchors = [akTop, akRight]
     Caption = 'Send selected commands to cmp window'
     ParentShowHint = False
     ShowHint = True

@@ -136,6 +136,14 @@ type
     tmrRepaintMinimapOnSelect: TTimer;
     N5: TMenuItem;
     MenuItem_ShowSimulatedMemory: TMenuItem;
+    N6: TMenuItem;
+    N7: TMenuItem;
+    N8: TMenuItem;
+    N9: TMenuItem;
+    MenuItem_Erase1: TMenuItem;
+    MenuItem_Erase2: TMenuItem;
+    MenuItem_Erase3: TMenuItem;
+    MenuItem_Erase4: TMenuItem;
 
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
@@ -213,6 +221,10 @@ type
     procedure MenuItem_ShowSimulatedMemoryClick(Sender: TObject);
     procedure MenuItem_ClearSelectedUserNotesClick(Sender: TObject);
     procedure MenuItem_ClearSimCmdsFromSelectedUserNotesClick(Sender: TObject);
+    procedure MenuItem_Erase1Click(Sender: TObject);
+    procedure MenuItem_Erase2Click(Sender: TObject);
+    procedure MenuItem_Erase3Click(Sender: TObject);
+    procedure MenuItem_Erase4Click(Sender: TObject);
   private
     { Private declarations }
     FMemStatColorOptions: TMemStatColorOptions;
@@ -291,6 +303,7 @@ type
     procedure CloseAllHexFiles;
     procedure LoadHex(Sender: TObject; var AFileSlot: TFileSlot; ASlotIndex: Integer);
     procedure ReloadHex(Sender: TObject; AFileSlot: TFileSlot; ASlotIndex: Integer);
+    procedure EraseSlot(var AFileSlot: TFileSlot; ASlotIndex: Integer);
 
     procedure MinimapMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
@@ -785,6 +798,9 @@ var
 begin
   DevShiftAmount := FDeviceInfo.DevShiftAmount;
   DevPointerSize := FDeviceInfo.DevPointerSize;
+
+  if Length(ARangesOfHexContent) = 0 then  /////////////////////////////////////////////////////////// this should not be needed if GetAddressRangesCountFromSection returns the proper result
+    Exit;
              ///////////////////////////// to verify indexing: ARangesOfHexContent[j][Addr].HData
   for i := 0 to Length(FileSlot.DecodedHEX) - 1 do
     for j := 0 to FDeviceInfo.GetAddressRangesCountFromSection(ADevSectionIndex) - 1 do
@@ -795,7 +811,7 @@ begin
       begin
         Addr := (FileSlot.DecodedHEX[i].HAddr - MemRange.MinAddr) shr DevShiftAmount;
         if Addr < DWord(Length(ARangesOfHexContent[j])) + DevPointerSize then
-          ARangesOfHexContent[j][Addr].HData := FileSlot.DecodedHEX[i].HData
+          ARangesOfHexContent[j][Addr].HData := FileSlot.DecodedHEX[i].HData   /////////////////crash here if Length(ARangesOfHexContent) = 0, although GetAddressRangesCountFromSection returns something else
         else
         begin
           DisplayWarning := True;
@@ -872,7 +888,12 @@ begin
     end;
 
   for i := 0 to Length(AllFullHexContents) - 1 do   //same length as FDeviceSections
-    CopyDataFromFileSlot(FileSlot, i, AllFullHexContents[i].Ranges, DisplayWarning, DisplayAddr, DisplayLength);
+  begin
+    try
+      CopyDataFromFileSlot(FileSlot, i, AllFullHexContents[i].Ranges, DisplayWarning, DisplayAddr, DisplayLength);
+    except ////////////////////////////////////////////////////////////////// this should be fixed
+    end;
+  end;
 
   SetLength(FileSlot.Sections, FDeviceInfo.GetDeviceSectionCount);
   SetLength(FMemStatColorOptions.EntryColorTableArr, FDeviceInfo.GetDeviceSectionCount);
@@ -1316,6 +1337,83 @@ begin
   finally
     vstSlotCmp.EndUpdate;
   end;
+end;
+
+
+procedure TfrmMemStatCompare.EraseSlot(var AFileSlot: TFileSlot; ASlotIndex: Integer);
+var
+  AllSections: TSectionArr;
+  i, j: Integer;
+  s: string;
+begin
+  AFileSlot.FileNameHex := '';
+  AFileSlot.HasHex := True;
+
+  FDeviceInfo.GetDeviceSections(AllSections);
+
+  case ASlotIndex of
+    1:
+      vstSlotCmp.Header.Columns.Items[CColumnIdx_Slot1_Data].Text := 'Slot1 Data' + #13#10 + ExtractFileName(AFileSlot.FileNameHex) + #13#10 + ExtractFileName(AFileSlot.FileNameLst);
+
+    2:
+      vstSlotCmp.Header.Columns.Items[CColumnIdx_Slot2_Data].Text := 'Slot2 Data' + #13#10 + ExtractFileName(AFileSlot.FileNameHex) + #13#10 + ExtractFileName(AFileSlot.FileNameLst);
+
+    3:
+      vstSlotCmp.Header.Columns.Items[CColumnIdx_Slot3_Data].Text := 'Slot3 Data' + #13#10 + ExtractFileName(AFileSlot.FileNameHex) + #13#10 + ExtractFileName(AFileSlot.FileNameLst);
+
+    4:
+      vstSlotCmp.Header.Columns.Items[CColumnIdx_Slot4_Data].Text := 'Slot4 Data' + #13#10 + ExtractFileName(AFileSlot.FileNameHex) + #13#10 + ExtractFileName(AFileSlot.FileNameLst);
+
+    else
+      raise Exception.Create('Unsupported index when loading hex file: ' + IntToStr(ASlotIndex));
+  end;
+
+  SetLength(AFileSlot.DecodedHEX, 0);
+  for i := 0 to Length(AllSections) - 1 do
+    for j := 0 to Length(AllSections[i].AddrRanges) - 1 do
+    begin
+      SetLength(AFileSlot.DecodedHEX, Length(AFileSlot.DecodedHEX) + 1);
+      AFileSlot.DecodedHEX[Length(AFileSlot.DecodedHEX) - 1].HAddr := AllSections[i].AddrRanges[j].MinAddr;
+      AFileSlot.DecodedHEX[Length(AFileSlot.DecodedHEX) - 1].HData := $FFFFFFFF;
+    end;
+
+  //convert to KSEG
+    //if ConvertPHYToKSEG then                       /////////////////////////////// this should not be a feature of this function
+      for i := 0 to Length(AFileSlot.DecodedHEX) - 1 do
+      begin
+        s := IntToHex(AFileSlot.DecodedHEX[i].HAddr, 8);
+        PhysicalAddrToKseg(s);
+        AFileSlot.DecodedHEX[i].HAddr := HexToInt(s);
+      end;
+    
+  ConvertDecodedHexToFullMemory(AFileSlot);
+  SetVisibleEntries;
+  vstSlotCmp.Repaint;
+  DrawMiniMap;
+end;
+
+
+procedure TfrmMemStatCompare.MenuItem_Erase1Click(Sender: TObject);
+begin
+  EraseSlot(FSlot1, 1);
+end;
+
+
+procedure TfrmMemStatCompare.MenuItem_Erase2Click(Sender: TObject);
+begin
+  EraseSlot(FSlot2, 2);
+end;
+
+
+procedure TfrmMemStatCompare.MenuItem_Erase3Click(Sender: TObject);
+begin
+  EraseSlot(FSlot3, 3);
+end;
+
+
+procedure TfrmMemStatCompare.MenuItem_Erase4Click(Sender: TObject);
+begin
+  EraseSlot(FSlot4, 4);
 end;
 
 

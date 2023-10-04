@@ -14,7 +14,8 @@ uses
   DeviceInfo in 'Common\DeviceInfo.pas',
   ClickerZoomPreviewForm in '..\MiscUtils\ClickerZoomPreviewForm.pas' {frmClickerZoomPreview},
   SimulatedMemForm in 'SimulatedMemForm.pas' {frmSimulatedMem},
-  PollingFIFO in '..\MiscUtils\PollingFIFO.pas';
+  PollingFIFO in '..\MiscUtils\PollingFIFO.pas',
+  SimpleCOM in '..\MiscUtils\SimpleCOM.pas';
 
 {$R *.res}
 
