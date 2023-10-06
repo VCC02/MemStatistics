@@ -81,7 +81,10 @@ type
 
     property OnMouseDown;
     property OnMouseMove;
+    property OnMouseEnter;
+    property OnMouseLeave;
     property PopupMenu;
+    property Canvas;
 
     property SelectedEntryIndex: Integer read FSelectedEntryIndex write SetSelectedEntryIndex;
     property UseOverlapColor: Boolean read FUseOverlapColor write FUseOverlapColor;

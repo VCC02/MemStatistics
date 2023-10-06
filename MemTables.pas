@@ -43,12 +43,6 @@ type
   TOnGetVisibleColumnCount = function: Integer of object;
   TOnGetColumnVisibility = function(AColumnIndex: Integer): Boolean of object;
 
-  TMemEntry = record
-    Address: Cardinal;
-    Size: Cardinal; //in Bytes
-    EntryName: string;
-  end;
-
   TRoutineIndex_Visibility = record
     S1, S2: Boolean;
   end;
@@ -60,9 +54,10 @@ type
     FOnGetVisibleColumnCount: TOnGetVisibleColumnCount;
     FOnGetColumnVisibility: TOnGetColumnVisibility;
 
-    FMemContent: array of TMemEntry;
-    FMemContentFromRaw: array of TMemEntry;
-    FRawMemContent: array of Cardinal;
+    FMemContent: TMemEntryArr;
+    FMemContentFromRaw: TMemEntryArr;
+    FMemContentFromRawNames: TMemEntryArr;  //this should be the same content as displayed on main window (raw table)
+    FRawMemContent: array of Cardinal;    //array of addresses
 
     FMemScales: array of Double;
 
@@ -100,7 +95,8 @@ type
 
     procedure AddEntry(Address, Size: Cardinal; EntryName: string);
     procedure AddRawEntry(Address: Cardinal);
-    procedure AddEntryFromRaw(Address, Size: Cardinal; EntryName: string);
+    procedure AddEntryFromRaw(Address, Size: Cardinal; EntryName: string);      //block entry
+    procedure AddEntryFromRawNames(Address, Size: Cardinal; EntryName: string); //item entry
 
     function GetNumberOfProcessedRawEntries: Integer; //moved from private
 
@@ -111,6 +107,8 @@ type
     function GetMemContentFromRaw(Index: Integer): TMemEntry;
     function GetMemContentLength: Integer;
     function GetRawMemContentLength: Integer;
+    procedure GetEntireMemContent(var AMemContent: TMemEntryArr);
+    procedure GetEntireMemContentFromRawNames(var AMemContent: TMemEntryArr);
 
     function RawIndexIn_MemRange(ASectionIndex, ARawIndex: Integer; AddrOffset: Int64): Boolean;
     function AddressIn_MemRange(ASectionIndex: Integer; AAddress, AddrOffset: Int64): Boolean;
@@ -515,6 +513,7 @@ begin
   SetLength(FMemContent, 0);
   SetLength(FRawMemContent, 0);
   SetLength(FMemContentFromRaw, 0);
+  SetLength(FMemContentFromRawNames, 0);
 
   FDeviceInfo := TDeviceInfo.Create;
 
@@ -534,6 +533,7 @@ begin
   SetLength(FMemContent, 0);
   SetLength(FRawMemContent, 0);
   SetLength(FMemContentFromRaw, 0);
+  SetLength(FMemContentFromRawNames, 0);
 
   FDeviceInfo.Free;
 
@@ -593,11 +593,24 @@ begin
 end;
 
 
+procedure TMemTable.AddEntryFromRawNames(Address, Size: Cardinal; EntryName: string);
+var
+  n: Integer;
+begin
+  SetLength(FMemContentFromRawNames, Length(FMemContentFromRawNames) + 1);
+  n := Length(FMemContentFromRawNames) - 1;
+  FMemContentFromRawNames[n].Address := Address;
+  FMemContentFromRawNames[n].Size := Size;
+  FMemContentFromRawNames[n].EntryName := EntryName; //this field is used by cmp window
+end;
+
+
 procedure TMemTable.Clear;
 begin
-  Finalize(FMemContent);
-  Finalize(FRawMemContent);
-  Finalize(FMemContentFromRaw);
+  SetLength(FMemContent, 0);
+  SetLength(FRawMemContent, 0);
+  SetLength(FMemContentFromRaw, 0);
+
   Paint;
 end;
 
@@ -629,6 +642,26 @@ end;
 function TMemTable.GetRawMemContentLength: Integer;
 begin
   Result := Length(FRawMemContent);
+end;
+
+
+procedure TMemTable.GetEntireMemContent(var AMemContent: TMemEntryArr);
+var
+  i: Integer;
+begin
+  SetLength(AMemContent, Length(FMemContent));
+  for i := 0 to Length(FMemContent) - 1 do
+    AMemContent[i] := FMemContent[i];
+end;
+
+
+procedure TMemTable.GetEntireMemContentFromRawNames(var AMemContent: TMemEntryArr);
+var
+  i: Integer;
+begin
+  SetLength(AMemContent, Length(FMemContentFromRawNames));
+  for i := 0 to Length(FMemContentFromRawNames) - 1 do
+    AMemContent[i] := FMemContentFromRawNames[i];
 end;
 
 

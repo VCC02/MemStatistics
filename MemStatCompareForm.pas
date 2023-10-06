@@ -59,6 +59,10 @@ type
 
   TChangeDeviceNotifyEvent = procedure(Sender: TfrmMemStatCompare) of object;
   TOnCmpWindowDestroy = procedure(ACmpWindowHandle: THandle) of object;
+  TOnGetTableMemContent = procedure(var AMemEntries: TMemEntryArr) of object;
+
+
+  { TfrmMemStatCompare }
 
   TfrmMemStatCompare = class(TForm)
     mmCmpMain: TMainMenu;
@@ -144,6 +148,15 @@ type
     MenuItem_Erase2: TMenuItem;
     MenuItem_Erase3: TMenuItem;
     MenuItem_Erase4: TMenuItem;
+    N10: TMenuItem;
+    MenuItem_LoadRoutinesFromMainWindow1: TMenuItem;
+    N11: TMenuItem;
+    MenuItem_LoadRoutinesFromMainWindow2: TMenuItem;
+    N12: TMenuItem;
+    MenuItem_LoadRoutinesFromMainWindow3: TMenuItem;
+    N13: TMenuItem;
+    MenuItem_LoadRoutinesFromMainWindow4: TMenuItem;
+    tmrDrawZoom: TTimer;
 
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
@@ -225,6 +238,11 @@ type
     procedure MenuItem_Erase2Click(Sender: TObject);
     procedure MenuItem_Erase3Click(Sender: TObject);
     procedure MenuItem_Erase4Click(Sender: TObject);
+    procedure MenuItem_LoadRoutinesFromMainWindow1Click(Sender: TObject);
+    procedure MenuItem_LoadRoutinesFromMainWindow2Click(Sender: TObject);
+    procedure MenuItem_LoadRoutinesFromMainWindow3Click(Sender: TObject);
+    procedure MenuItem_LoadRoutinesFromMainWindow4Click(Sender: TObject);
+    procedure tmrDrawZoomTimer(Sender: TObject);
   private
     { Private declarations }
     FMemStatColorOptions: TMemStatColorOptions;
@@ -261,9 +279,12 @@ type
     FDefsFolder: TFileName;
 
     FChipName: string;
+    FCurrentMousePosOnPreviewImg: TPoint;
     
     FOnChangeDevice: TChangeDeviceNotifyEvent;
     FOnCmpWindowDestroy: TOnCmpWindowDestroy;
+    FOnGetTableMemContent: TOnGetTableMemContent;
+    FOnGetTableMemContentFromRaw: TOnGetTableMemContent;
 
     FCachedSections: TSectionArr;
     FCachedSectionIndex: Integer;
@@ -275,6 +296,8 @@ type
     pmVST: TPopupMenu;
 
     procedure DoOnCmpWindowDestroy(ACmpWindowHandle: THandle);
+    procedure DoOnGetTableMemContent(var AMemEntries: TMemEntryArr);
+    procedure DoOnGetTableMemContentFromRaw(var AMemEntries: TMemEntryArr);
 
     procedure CreateRemainingComponents;
     function IndexOfAddressInUserNotes(AAddress: Cardinal): Integer;
@@ -304,11 +327,15 @@ type
     procedure LoadHex(Sender: TObject; var AFileSlot: TFileSlot; ASlotIndex: Integer);
     procedure ReloadHex(Sender: TObject; AFileSlot: TFileSlot; ASlotIndex: Integer);
     procedure EraseSlot(var AFileSlot: TFileSlot; ASlotIndex: Integer);
+    procedure LoadRoutinesFromMainWindow(var AFileSlot: TFileSlot);
 
     procedure MinimapMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure MinimapMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+
+    procedure MinimapMouseEnter(Sender: TObject);
+    procedure MinimapMouseLeave(Sender: TObject);
 
     function AllSlotsAreEmpty: Boolean;
 
@@ -335,7 +362,8 @@ type
 
     procedure EraseMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; AUserNote: string = '');  //A chunk is usually the same size as an erase page size. However, this class doesn't have to know such details.
     procedure WriteMemory(ASlotIdex: Integer; AStartAddress: Cardinal; var AData: array of Byte; AUserNote: string = '');
-    procedure HighlightMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal);   //A chunk can be the same size as an erase page size or a write row size.
+    procedure ClearMemoryHighlighting;
+    procedure HighlightMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; AScrollIntoView: Boolean);   //A chunk can be the same size as an erase page size or a write row size.
     procedure HighlightSlotAsConnected(ASlotIdex: Integer);
 
     property MemStatColorOptions: TMemStatColorOptions read FMemStatColorOptions write SetMemStatColorOptions;
@@ -349,6 +377,8 @@ type
 
     property OnChangeDevice: TChangeDeviceNotifyEvent read FOnChangeDevice write FOnChangeDevice;
     property OnCmpWindowDestroy: TOnCmpWindowDestroy write FOnCmpWindowDestroy;
+    property OnGetTableMemContent: TOnGetTableMemContent write FOnGetTableMemContent;
+    property OnGetTableMemContentFromRaw: TOnGetTableMemContent write FOnGetTableMemContentFromRaw;
   end;
 
   TfrmMemStatCompareList = class(TList)
@@ -379,7 +409,8 @@ implementation
 {$ENDIF}
 
 uses
-  MikroStuff, ClipBrd, IniFiles, DevicesForm, Math, DefParser, SimulatedMemForm;
+  MikroStuff, ClipBrd, IniFiles, DevicesForm, Math, DefParser, SimulatedMemForm,
+  ClickerZoomPreviewForm;
 
 const
   CColumnIdx_Index = 0;
@@ -1027,11 +1058,19 @@ begin
   vstSlotCmp := TVirtualStringTree.Create(Self);
   vstSlotCmp.Parent := Self;
 
+  vstSlotCmp.Colors.UnfocusedSelectionColor := clGradientInactiveCaption;
   vstSlotCmp.Left := 0;
   vstSlotCmp.Top := 2;
   vstSlotCmp.Width := 1033;
   vstSlotCmp.Height := 503;
   vstSlotCmp.Anchors := [akLeft, akTop, akRight, akBottom];
+  vstSlotCmp.ParentFont := False;
+  vstSlotCmp.Font.Charset := DEFAULT_CHARSET;
+  vstSlotCmp.Font.Color := clWindowText;
+  vstSlotCmp.Font.Height := -11;
+  vstSlotCmp.Font.Name := 'Tahoma';
+  vstSlotCmp.Font.Style := [];
+  {$IFDEF FPC} vstSlotCmp.Font.Quality := fqNonAntialiased; {$ENDIF}
   vstSlotCmp.Header.AutoSizeIndex := 0;
   vstSlotCmp.Header.DefaultHeight := 46;
   vstSlotCmp.Header.Font.Charset := DEFAULT_CHARSET;
@@ -1048,6 +1087,7 @@ begin
   vstSlotCmp.ScrollBarOptions.AlwaysVisible := True;
   vstSlotCmp.ShowHint := True;
   vstSlotCmp.TabOrder := 7;
+  vstSlotCmp.TextMargin := 6;
   vstSlotCmp.TreeOptions.AutoOptions := [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnEdit];
   vstSlotCmp.TreeOptions.MiscOptions := [toAcceptOLEDrop, toEditable, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning];
   vstSlotCmp.TreeOptions.PaintOptions := [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines];
@@ -1201,8 +1241,10 @@ begin
 
   FOnChangeDevice := nil;
   FOnCmpWindowDestroy := nil;
+  FOnGetTableMemContent := nil;
+  FOnGetTableMemContentFromRaw := nil;
 
-  FMiniMap := nil; //will be created in startup timer
+  FMiniMap := nil; //will be created by SetMemStatColorOptions
   FCachedSectionIndex := 0;
   Caption := Caption + ' [' + IntToStr(Handle) + ']';
 end;
@@ -1228,6 +1270,8 @@ begin
 
   FMiniMap.OnMouseDown := MinimapMouseDown;
   FMiniMap.OnMouseMove := MinimapMouseMove;
+  FMiniMap.OnMouseEnter := MinimapMouseEnter;
+  FMiniMap.OnMouseLeave := MinimapMouseLeave;
   FMiniMap.PopupMenu := pmimgMinimap;
 
   FMiniMap.Slot1 := @FSlot1;
@@ -1349,6 +1393,7 @@ begin
   AFileSlot.FileNameHex := '';
   AFileSlot.HasHex := True;
 
+  CloseHex(AFileSlot, ASlotIndex);
   FDeviceInfo.GetDeviceSections(AllSections);
 
   case ASlotIndex of
@@ -1390,6 +1435,7 @@ begin
   SetVisibleEntries;
   vstSlotCmp.Repaint;
   DrawMiniMap;
+  ClearMemoryHighlighting;
 end;
 
 
@@ -1417,6 +1463,127 @@ begin
 end;
 
 
+//this function is efficient if ARoutines array is sorted by address
+function GetRoutineNameIndexFromRoutinesArr(AAddress: Cardinal; var ARoutines: TMemEntryArr; AStartAtIndex: Integer; AUseSize: Boolean = True): Integer;
+var
+  i: Integer;
+begin
+  Result := -1;
+
+  if AStartAtIndex > Length(ARoutines) - 1 then
+    AStartAtIndex := 0;
+
+  if AStartAtIndex < 0 then
+    AStartAtIndex := 0;
+
+  if AUseSize then
+  begin
+    for i := AStartAtIndex to Length(ARoutines) - 1 do
+      if (AAddress >= ARoutines[i].Address) and (AAddress < ARoutines[i].Address + ARoutines[i].Size) then
+      begin
+        Result := i;
+        Break;
+      end;
+
+    if Result = -1 then
+      for i := 0 to AStartAtIndex - 1 do
+        if (AAddress >= ARoutines[i].Address) and (AAddress < ARoutines[i].Address + ARoutines[i].Size) then
+        begin
+          Result := i;
+          Break;
+        end;
+  end
+  else
+  begin
+    for i := AStartAtIndex to Length(ARoutines) - 1 do
+      if AAddress = ARoutines[i].Address then
+      begin
+        Result := i;
+        Break;
+      end;
+
+    if Result = -1 then
+      for i := 0 to AStartAtIndex - 1 do
+        if AAddress = ARoutines[i].Address then
+        begin
+          Result := i;
+          Break;
+        end;
+  end;
+end;
+
+
+procedure TfrmMemStatCompare.LoadRoutinesFromMainWindow(var AFileSlot: TFileSlot);
+var
+  Routines, EntriesFromRaw: TMemEntryArr;
+  i, StartIndex, FoundAtIndex: Integer;
+  TempRoutineName: string;
+begin
+  DoOnGetTableMemContent(Routines);
+  DoOnGetTableMemContentFromRaw(EntriesFromRaw);
+
+  for i := 0 to Length(AFileSlot.FullHEX) - 1 do
+    AFileSlot.FullHEX[i].RoutineName := ''; //clear
+
+  StartIndex := 0;
+  for i := 0 to Length(AFileSlot.FullHEX) - 1 do
+  begin
+    FoundAtIndex := GetRoutineNameIndexFromRoutinesArr(AFileSlot.FullHEX[i].HAddr, Routines, StartIndex);
+    if FoundAtIndex > -1 then
+    begin
+      TempRoutineName := Routines[FoundAtIndex].EntryName;
+      StartIndex := FoundAtIndex + 1;
+    end
+    else
+      TempRoutineName := '';
+
+    AFileSlot.FullHEX[i].RoutineName := '(' + TempRoutineName + ')';
+  end;
+
+  StartIndex := 0;
+  for i := 0 to Length(AFileSlot.FullHEX) - 1 do
+  begin
+    FoundAtIndex := GetRoutineNameIndexFromRoutinesArr(AFileSlot.FullHEX[i].HAddr, EntriesFromRaw, StartIndex, False);
+    if FoundAtIndex > -1 then
+    begin
+      TempRoutineName := EntriesFromRaw[FoundAtIndex].EntryName;
+      StartIndex := FoundAtIndex + 1;
+      AFileSlot.FullHEX[i].RoutineName := AFileSlot.FullHEX[i].RoutineName + ' <' + TempRoutineName + '>';
+    end;
+  end;
+
+  vstSlotCmp.Repaint;
+end;
+
+
+procedure TfrmMemStatCompare.MenuItem_LoadRoutinesFromMainWindow1Click(
+  Sender: TObject);
+begin
+  LoadRoutinesFromMainWindow(FSlot1);
+end;
+
+
+procedure TfrmMemStatCompare.MenuItem_LoadRoutinesFromMainWindow2Click(
+  Sender: TObject);
+begin
+  LoadRoutinesFromMainWindow(FSlot2);
+end;
+
+
+procedure TfrmMemStatCompare.MenuItem_LoadRoutinesFromMainWindow3Click(
+  Sender: TObject);
+begin
+  LoadRoutinesFromMainWindow(FSlot3);
+end;
+
+
+procedure TfrmMemStatCompare.MenuItem_LoadRoutinesFromMainWindow4Click(
+  Sender: TObject);
+begin
+  LoadRoutinesFromMainWindow(FSlot4);
+end;
+
+
 procedure TfrmMemStatCompare.MenuItem_ShowSimulatedMemoryClick(Sender: TObject);
 begin
   frmSimulatedMem.Show;
@@ -1434,6 +1601,30 @@ procedure TfrmMemStatCompare.MinimapMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
   pnlMiniMapMouseMove(Sender, Shift, X, Y);
+  FCurrentMousePosOnPreviewImg.X := X;
+  FCurrentMousePosOnPreviewImg.Y := Y;
+
+  tmrDrawZoom.Enabled := True;
+end;
+
+
+procedure TfrmMemStatCompare.MinimapMouseEnter(Sender: TObject);
+var
+  tp: TPoint;
+begin
+  if not FMemStatMiscOptions.DisplayZoomWindow then
+    Exit;
+    
+  FMiniMap.ShowHint := False;
+  GetCursorPos(tp);
+  ShowZoom(tp.X + 50, tp.Y + 50);
+end;
+
+
+procedure TfrmMemStatCompare.MinimapMouseLeave(Sender: TObject);
+begin
+  Application.ProcessMessages;
+  HideZoom;
 end;
 
 
@@ -1469,6 +1660,7 @@ begin
 
   if LoadHEXFile(OpenDialogHex.FileName, True, AFileSlot.DecodedHEX, Debugmsg) then
   begin
+    CloseHex(AFileSlot, ASlotIndex);
     AFileSlot.FileNameHex := OpenDialogHex.FileName;
     AFileSlot.HasHex := True;
 
@@ -1493,6 +1685,7 @@ begin
     SetVisibleEntries;
     vstSlotCmp.Repaint;
     DrawMiniMap;
+    ClearMemoryHighlighting;
   end;
 end;  
 
@@ -1850,6 +2043,16 @@ begin
 end;
 
 
+procedure TfrmMemStatCompare.tmrDrawZoomTimer(Sender: TObject);
+var
+  tp: TPoint;
+begin
+  tmrDrawZoom.Enabled := False; 
+  GetCursorPos(tp);
+  SetZoomContent(FMiniMap.Canvas.Handle, FMiniMap.Width, FMiniMap.Height, FCurrentMousePosOnPreviewImg.X, FCurrentMousePosOnPreviewImg.Y, tp.X + 50, tp.Y + 50);
+end;
+
+
 procedure TfrmMemStatCompare.tmrEditingUserNotesTimer(Sender: TObject);
 var
   ABounds: TRect;
@@ -1916,8 +2119,12 @@ end;
 procedure TfrmMemStatCompare.vstSlotCmpAfterCellPaint(Sender: TBaseVirtualTree;
   TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
   {$IFDEF FPC}const{$ENDIF} CellRect: TRect);
+const
+  CDiffWidthPx = 7; //number of pixels on each side of a column, where the diff is displayed  
 var
   Len1, Len2, Len3, Len4: Integer;
+  SectionIndex: Integer;
+  IsHighlighted: Boolean;
 begin
   if not Assigned(Node) then
     Exit;
@@ -1941,7 +2148,7 @@ begin
             TargetCanvas.Brush.Color := FFirstSecondCmpColor;
             
           TargetCanvas.Pen.Color := TargetCanvas.Brush.Color;
-          TargetCanvas.Rectangle(CellRect.Right - 6, CellRect.Top, CellRect.Right, CellRect.Bottom);
+          TargetCanvas.Rectangle(CellRect.Right - CDiffWidthPx, CellRect.Top, CellRect.Right, CellRect.Bottom);
         end;
       end;
     end; //0
@@ -1958,7 +2165,7 @@ begin
             TargetCanvas.Brush.Color := FFirstSecondCmpColor;
 
           TargetCanvas.Pen.Color := TargetCanvas.Brush.Color;
-          TargetCanvas.Rectangle(CellRect.Left, CellRect.Top, CellRect.Left + 6, CellRect.Bottom);
+          TargetCanvas.Rectangle(CellRect.Left, CellRect.Top, CellRect.Left + CDiffWidthPx, CellRect.Bottom);
         end;
       end;
       
@@ -1972,7 +2179,7 @@ begin
             TargetCanvas.Brush.Color := FSecondThirdCmpColor;
 
           TargetCanvas.Pen.Color := TargetCanvas.Brush.Color;
-          TargetCanvas.Rectangle(CellRect.Right - 6, CellRect.Top, CellRect.Right, CellRect.Bottom);
+          TargetCanvas.Rectangle(CellRect.Right - CDiffWidthPx, CellRect.Top, CellRect.Right, CellRect.Bottom);
         end;
       end;
     end; //1
@@ -1989,7 +2196,7 @@ begin
             TargetCanvas.Brush.Color := FSecondThirdCmpColor;
 
           TargetCanvas.Pen.Color := TargetCanvas.Brush.Color;
-          TargetCanvas.Rectangle(CellRect.Left, CellRect.Top, CellRect.Left + 6, CellRect.Bottom);
+          TargetCanvas.Rectangle(CellRect.Left, CellRect.Top, CellRect.Left + CDiffWidthPx, CellRect.Bottom);
         end;
       end;
       
@@ -2003,7 +2210,7 @@ begin
             TargetCanvas.Brush.Color := FThirdFourthCmpColor;
 
           TargetCanvas.Pen.Color := TargetCanvas.Brush.Color;
-          TargetCanvas.Rectangle(CellRect.Right - 6, CellRect.Top, CellRect.Right, CellRect.Bottom);
+          TargetCanvas.Rectangle(CellRect.Right - CDiffWidthPx, CellRect.Top, CellRect.Right, CellRect.Bottom);
         end;
       end;
     end; //2
@@ -2020,11 +2227,42 @@ begin
             TargetCanvas.Brush.Color := FThirdFourthCmpColor;
 
           TargetCanvas.Pen.Color := TargetCanvas.Brush.Color;
-          TargetCanvas.Rectangle(CellRect.Left, CellRect.Top, CellRect.Left + 6, CellRect.Bottom);
+          TargetCanvas.Rectangle(CellRect.Left, CellRect.Top, CellRect.Left + CDiffWidthPx, CellRect.Bottom);
         end;
       end;
     end; //3
   end; //case
+
+  SectionIndex := FCachedSectionIndex;
+
+  if SectionIndex > - 1 then
+  begin
+    IsHighlighted := False;
+    case Column of
+      CColumnIdx_Slot1_Data:
+        if (Integer(Node.Index) < Len1) and FSlot1.FullHEX[Node.Index].Highlighted then
+          IsHighlighted := True;
+
+      CColumnIdx_Slot2_Data:
+        if (Integer(Node.Index) < Len2) and FSlot2.FullHEX[Node.Index].Highlighted then
+          IsHighlighted := True;
+
+      CColumnIdx_Slot3_Data:
+        if (Integer(Node.Index) < Len3) and FSlot3.FullHEX[Node.Index].Highlighted then
+          IsHighlighted := True;
+
+      CColumnIdx_Slot4_Data:
+        if (Integer(Node.Index) < Len4) and FSlot4.FullHEX[Node.Index].Highlighted then
+          IsHighlighted := True;
+    end; //case
+
+    if IsHighlighted then
+    begin
+      TargetCanvas.Pen.Color := clBlack;
+      TargetCanvas.Brush.Style := bsClear;
+      TargetCanvas.Rectangle(CellRect.Left - 1, CellRect.Top - 1, CellRect.Right + 1, CellRect.Bottom + 1);
+    end;
+  end;
 end;
 
 
@@ -2034,10 +2272,11 @@ procedure TfrmMemStatCompare.vstSlotCmpBeforeCellPaint(Sender: TBaseVirtualTree;
 var
   Len1, Len2, Len3, Len4: Integer;
   SectionIndex: Integer;
+  CackedBkCol: TColor;
 begin
   if CellPaintMode <> cpmPaint then
     Exit;
-    
+
   if not Assigned(Node) then
     Exit;
 
@@ -2061,30 +2300,50 @@ begin
           CColumnIdx_Slot1_Data:
           begin
             TargetCanvas.Pen.Color := FMemStatColorOptions.FirstFileEntryChart;
-            TargetCanvas.Brush.Color := FCachedSlotEntryColorTableArr[SectionIndex].Slot1;
+            CackedBkCol := FCachedSlotEntryColorTableArr[SectionIndex].Slot1;
+
+            if (Integer(Node.Index) < Len1) and FSlot1.FullHEX[Node.Index].Highlighted then
+              CackedBkCol := WeightedAverage2Colors(CackedBkCol, clAqua, 0.8);
+
+            TargetCanvas.Brush.Color := CackedBkCol;
           end;
 
           CColumnIdx_Slot2_Data:
           begin
             TargetCanvas.Pen.Color := FMemStatColorOptions.SecondFileEntryChart;
-            TargetCanvas.Brush.Color := FCachedSlotEntryColorTableArr[SectionIndex].Slot2;
+            CackedBkCol := FCachedSlotEntryColorTableArr[SectionIndex].Slot2;
+
+            if (Integer(Node.Index) < Len2) and FSlot2.FullHEX[Node.Index].Highlighted then
+              CackedBkCol := WeightedAverage2Colors(CackedBkCol, clAqua, 0.8);
+
+            TargetCanvas.Brush.Color := CackedBkCol;
           end;
 
           CColumnIdx_Slot3_Data:
           begin
             TargetCanvas.Pen.Color := FMemStatColorOptions.ThirdFileEntryChart;
-            TargetCanvas.Brush.Color := FCachedSlotEntryColorTableArr[SectionIndex].Slot3;
+            CackedBkCol := FCachedSlotEntryColorTableArr[SectionIndex].Slot3;
+
+            if (Integer(Node.Index) < Len3) and FSlot3.FullHEX[Node.Index].Highlighted then
+              CackedBkCol := WeightedAverage2Colors(CackedBkCol, clAqua, 0.8);
+
+            TargetCanvas.Brush.Color := CackedBkCol;
           end;
 
           CColumnIdx_Slot4_Data:
           begin
             TargetCanvas.Pen.Color := FMemStatColorOptions.FourthFileEntryChart;
-            TargetCanvas.Brush.Color := FCachedSlotEntryColorTableArr[SectionIndex].Slot4;
+            CackedBkCol := FCachedSlotEntryColorTableArr[SectionIndex].Slot4;
+
+            if (Integer(Node.Index) < Len4) and FSlot4.FullHEX[Node.Index].Highlighted then
+              CackedBkCol := WeightedAverage2Colors(CackedBkCol, clAqua, 0.8);
+
+            TargetCanvas.Brush.Color := CackedBkCol;
           end;
         end; //case
 
         TargetCanvas.Rectangle(CellRect);
-      end;
+      end; //SectionIndex > - 1
     end;  //0
   end; //case
 end;
@@ -2180,25 +2439,45 @@ begin
 
     CColumnIdx_Slot1_Data:
       if Node.Index < DWord(Len1) then
-        CellText := '0x' + IntToHex(FSlot1.FullHEX[Node.Index].HData, 8)
+      begin
+        CellText := '0x' + IntToHex(FSlot1.FullHEX[Node.Index].HData, 8);
+
+        if FSlot1.FullHEX[Node.Index].RoutineName > '' then
+          CellText := CellText + '  ' + FSlot1.FullHEX[Node.Index].RoutineName;
+      end
       else
-        CellText := '';  
+        CellText := '';
 
     CColumnIdx_Slot2_Data:
       if Node.Index < DWord(Len2) then
-        CellText := '0x' + IntToHex(FSlot2.FullHEX[Node.Index].HData, 8)
+      begin
+        CellText := '0x' + IntToHex(FSlot2.FullHEX[Node.Index].HData, 8);
+
+        if FSlot2.FullHEX[Node.Index].RoutineName > '' then
+          CellText := CellText + '  ' + FSlot2.FullHEX[Node.Index].RoutineName;
+      end
       else
         CellText := '';
 
     CColumnIdx_Slot3_Data:
       if Node.Index < DWord(Len3) then
-        CellText := '0x' + IntToHex(FSlot3.FullHEX[Node.Index].HData, 8)
+      begin
+        CellText := '0x' + IntToHex(FSlot3.FullHEX[Node.Index].HData, 8);
+
+        if FSlot3.FullHEX[Node.Index].RoutineName > '' then
+          CellText := CellText + '  ' + FSlot3.FullHEX[Node.Index].RoutineName;
+      end
       else
         CellText := '';
 
     CColumnIdx_Slot4_Data:
       if Node.Index < DWord(Len4) then
-        CellText := '0x' + IntToHex(FSlot4.FullHEX[Node.Index].HData, 8)
+      begin
+        CellText := '0x' + IntToHex(FSlot4.FullHEX[Node.Index].HData, 8);
+
+        if FSlot4.FullHEX[Node.Index].RoutineName > '' then
+          CellText := CellText + '  ' + FSlot4.FullHEX[Node.Index].RoutineName;
+      end
       else
         CellText := '';
 
@@ -2357,6 +2636,7 @@ begin
   FourthFileEntryChartSelectedColor := AverageColor(a);
 
   SetLength(FCachedSlotEntryColorTableArr, Length(FMemStatColorOptions.EntryColorTableArr));
+  
   for i := 0 to Length(FMemStatColorOptions.EntryColorTableArr) - 1 do
   begin
     FCachedSlotEntryColorTableArr[i].Slot1 := WeightedAverage2Colors(FMemStatColorOptions.EntryColorTableArr[i], FMemStatColorOptions.FirstFileEntryChart, 0.9);
@@ -2425,7 +2705,10 @@ var
 begin
   CurrentNode := vstSlotCmp.GetFirst;
   if CurrentNode = nil then
+  begin
+    Result := '';
     Exit;
+  end;
 
   if CopyWithHeader then
   begin
@@ -2775,6 +3058,24 @@ begin
 end;
 
 
+procedure TfrmMemStatCompare.DoOnGetTableMemContent(var AMemEntries: TMemEntryArr);
+begin
+  if not Assigned(FOnGetTableMemContent) then
+    raise Exception.Create('OnGetTableMemContent not assigned.');
+
+  FOnGetTableMemContent(AMemEntries);
+end;
+
+
+procedure TfrmMemStatCompare.DoOnGetTableMemContentFromRaw(var AMemEntries: TMemEntryArr);
+begin
+  if not Assigned(FOnGetTableMemContentFromRaw) then
+    raise Exception.Create('OnGetTableMemContentFromRaw not assigned.');
+
+  FOnGetTableMemContentFromRaw(AMemEntries);
+end;
+
+
 {Simulated memory via COM port connection}
 procedure TfrmMemStatCompare.EraseMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; AUserNote: string = '');  //A chunk is usually the same size as an erase page size. However, this class doesn't have to know such details.
 var
@@ -2783,7 +3084,7 @@ var
   TempShiftAmount, TempPointerSize: Byte;
   CurrentNote: string;
 begin
-  MaxAddress := AStartAddress + ASize;
+  MaxAddress := Int64(AStartAddress) + Int64(ASize);
   UpdateDevBitness(FDeviceInfo.DeviceBitness, TempShiftAmount, TempPointerSize);
 
   vstSlotCmp.BeginUpdate;
@@ -2860,8 +3161,52 @@ begin
 end;
 
 
-procedure TfrmMemStatCompare.HighlightMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal);   //A chunk can be the same size as an erase page size or a write row size.
+procedure TfrmMemStatCompare.ClearMemoryHighlighting;
+var
+  i, j: Integer;
 begin
+  vstSlotCmp.BeginUpdate;
+  try
+    for j := 0 to Length(FAllSlots) - 1 do
+      for i := 0 to Length(FAllSlots[j]^.FullHEX) - 1 do
+        FAllSlots[j]^.FullHEX[i].Highlighted := False;
+  finally
+    vstSlotCmp.EndUpdate;
+  end;
+  
+  FMiniMap.Repaint;
+end;
+
+
+procedure TfrmMemStatCompare.HighlightMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; AScrollIntoView: Boolean);   //A chunk can be the same size as an erase page size or a write row size.
+var
+  MaxAddress, EntryAddress: Int64;
+  i, FirstHighlightedIndex: Integer;
+begin
+  MaxAddress := Int64(AStartAddress) + Int64(ASize);
+  FirstHighlightedIndex := -1; 
+
+  vstSlotCmp.BeginUpdate;
+  try
+    for i := 0 to Length(FAllSlots[ASlotIdex]^.FullHEX) - 1 do
+    begin
+      EntryAddress := FAllSlots[ASlotIdex]^.FullHEX[i].HAddr;
+      if (EntryAddress >= Int64(AStartAddress)) and (EntryAddress < MaxAddress) then
+      begin
+        FAllSlots[ASlotIdex]^.FullHEX[i].Highlighted := True;
+
+        if FirstHighlightedIndex = -1 then //first only
+          FirstHighlightedIndex := i;
+      end;
+    end;
+  finally
+    vstSlotCmp.EndUpdate;
+  end;
+
+  if AScrollIntoView then
+    if FirstHighlightedIndex > -1 then
+      ScrollIntoViewNodeByIndex(vstSlotCmp, FirstHighlightedIndex, False);
+      
   // show something on minimap
 end;
 

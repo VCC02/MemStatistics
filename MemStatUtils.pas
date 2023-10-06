@@ -43,7 +43,15 @@ type
   
   TAllSlotsColorArr = array of record
     Slot1, Slot2, Slot3, Slot4: TColor;
-  end;  
+  end;
+
+  TMemEntry = record
+    Address: Cardinal;
+    Size: Cardinal; //in Bytes
+    EntryName: string;
+  end;
+
+  TMemEntryArr = array of TMemEntry;
   
   PRoutinesRec = ^TRoutinesRec;
   TRoutinesRec = record
@@ -58,6 +66,8 @@ type
     HData: DWord;
     HAddrStr: string;
     HDataStr: string;
+    Highlighted: Boolean;
+    RoutineName: string;
   end;
 
   THexContent = array of THexEntry;
@@ -339,13 +349,9 @@ begin
   G2 := (Color2 shr 8) and $000000FF;
   B2 := (Color2 shr 16) and $000000FF;
 
-  {R := Round((R1 * Weight1 + R2 * Weight2) / 2);
-  G := Round((G1 * Weight1 + G2 * Weight2) / 2);
-  B := Round((B1 * Weight1 + B2 * Weight2) / 2); }
-
-  R := Min(Round(R1 + R2 * Weight2), 255);
-  G := Min(Round(G1 + G2 * Weight2), 255);
-  B := Min(Round(B1 + B2 * Weight2), 255);
+  R := Min(Round(Extended(R1 * Weight1) + Extended(R2 * Weight2)), 255);
+  G := Min(Round(Extended(G1 * Weight1) + Extended(G2 * Weight2)), 255);
+  B := Min(Round(Extended(B1 * Weight1) + Extended(B2 * Weight2)), 255);
 
   Result := B and $000000FF;
   Result := Result shl 8;

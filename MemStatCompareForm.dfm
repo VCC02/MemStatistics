@@ -323,6 +323,13 @@ object frmMemStatCompare: TfrmMemStatCompare
         Caption = 'Erase'
         OnClick = MenuItem_Erase1Click
       end
+      object N10: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_LoadRoutinesFromMainWindow1: TMenuItem
+        Caption = 'Load Routines From Main Window'
+        OnClick = MenuItem_LoadRoutinesFromMainWindow1Click
+      end
     end
     object FileSlot11: TMenuItem
       Caption = 'File Slot2'
@@ -371,6 +378,13 @@ object frmMemStatCompare: TfrmMemStatCompare
       object MenuItem_Erase2: TMenuItem
         Caption = 'Erase'
         OnClick = MenuItem_Erase2Click
+      end
+      object N11: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_LoadRoutinesFromMainWindow2: TMenuItem
+        Caption = 'Load Routines From Main Window'
+        OnClick = MenuItem_LoadRoutinesFromMainWindow2Click
       end
     end
     object FileSlot31: TMenuItem
@@ -421,6 +435,13 @@ object frmMemStatCompare: TfrmMemStatCompare
         Caption = 'Erase'
         OnClick = MenuItem_Erase3Click
       end
+      object N12: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_LoadRoutinesFromMainWindow3: TMenuItem
+        Caption = 'Load Routines From Main Window'
+        OnClick = MenuItem_LoadRoutinesFromMainWindow3Click
+      end
     end
     object FileSlot41: TMenuItem
       Caption = 'File Slot4'
@@ -469,6 +490,13 @@ object frmMemStatCompare: TfrmMemStatCompare
       object MenuItem_Erase4: TMenuItem
         Caption = 'Erase'
         OnClick = MenuItem_Erase4Click
+      end
+      object N13: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_LoadRoutinesFromMainWindow4: TMenuItem
+        Caption = 'Load Routines From Main Window'
+        OnClick = MenuItem_LoadRoutinesFromMainWindow4Click
       end
     end
   end
@@ -2344,5 +2372,12 @@ object frmMemStatCompare: TfrmMemStatCompare
     OnTimer = tmrRepaintMinimapOnSelectTimer
     Left = 448
     Top = 216
+  end
+  object tmrDrawZoom: TTimer
+    Enabled = False
+    Interval = 50
+    OnTimer = tmrDrawZoomTimer
+    Left = 152
+    Top = 192
   end
 end

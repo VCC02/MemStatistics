@@ -37,7 +37,7 @@ uses
     Windows,
   {$ENDIF}
   Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, PollingFIFO, ExtCtrls, VirtualTrees, ComCtrls;
+  Dialogs, StdCtrls, PollingFIFO, ExtCtrls, VirtualTrees, ComCtrls, ImgList;
 
 type
   TComThread = class(TThread)
@@ -91,6 +91,8 @@ type
     tmrStartup: TTimer;
     btnDisplayCompareWindow: TButton;
     btnSendSelectedCommands: TButton;
+    imglstCmds: TImageList;
+    chkAutoScrollToSelectedCommands: TCheckBox;
     procedure tmrReadFIFOTimer(Sender: TObject);
     procedure btnLoadHEXClick(Sender: TObject);
     procedure btnLoadHEXFromMainWindowClick(Sender: TObject);
@@ -99,6 +101,11 @@ type
     procedure vstMemCommandsGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
+    procedure vstMemCommandsGetImageIndex(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
+      var Ghosted: Boolean; var ImageIndex: Integer);
+    procedure vstMemCommandsMouseUp(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnClearListOfCommandsClick(Sender: TObject);
@@ -143,7 +150,9 @@ type
     procedure FillInListOfAvailableSlots;
     procedure FillInListOfAvailableCmpWindows;
 
+    procedure ReadFromFIFO;
     procedure SendCmdToCompareWindowByIndex(ACommandsToSend: TStringList; ACmdIdx, ACmpWinIdx, ASlotIdx: Integer; AAppendUserNotes: Boolean);
+    procedure HighlightCmdToCompareWindowByIndex(ACommandsToHighlight: TStringList; ACmdIdx, ACmpWinIdx, ASlotIdx: Integer);
     procedure SendAllCmdsToCompareWindow;
     procedure SendSelectedCmdsToCompareWindow;
   public
@@ -223,15 +232,20 @@ begin
             SetLength(s, ActualRead);
 
           LongBuffer := LongBuffer + s;  //keep adding to it
-          PosCRLF := Pos(#13#10, LongBuffer);
+          PosCRLF := Pos({$IFDEF UNIX} #10 {$ELSE} #13#10 {$ENDIF}, LongBuffer); //maybe the config is wrong, so that #13 doesn't make it
 
           while PosCRLF > 0 do
           begin
             TempCmd := Copy(LongBuffer, 1, PosCRLF - 1);
             frmSimulatedMem.FIFO.Put(TempCmd);
 
-            Delete(LongBuffer, 1, PosCRLF + 1); //deletes TempCmd and the CRLF after it
-            PosCRLF := Pos(#13#10, LongBuffer);
+            {$IFDEF UNIX}
+              Delete(LongBuffer, 1, PosCRLF + 0); //deletes TempCmd and the CRLF after it
+              PosCRLF := Pos(#10, LongBuffer);
+            {$ELSE}
+              Delete(LongBuffer, 1, PosCRLF + 1); //deletes TempCmd and the CRLF after it
+              PosCRLF := Pos(#13#10, LongBuffer);
+            {$ENDIF}
           end;
         end;
 
@@ -582,6 +596,63 @@ begin
 end;
 
 
+procedure TfrmSimulatedMem.HighlightCmdToCompareWindowByIndex(ACommandsToHighlight: TStringList; ACmdIdx, ACmpWinIdx, ASlotIdx: Integer);
+var
+  TempData, s, AddressStr: string;
+  Address: DWord;
+  ScrollHighlightedNodesIntoView: Boolean;
+begin
+  s := ACommandsToHighlight.Strings[ACmdIdx];
+
+  if (ACmpWinIdx > -1) and (ASlotIdx > -1) then
+  begin
+    ScrollHighlightedNodesIntoView := chkAutoScrollToSelectedCommands.Checked;
+
+    if Pos(CDevCmd_Write_Word_EQ, s) = 1 then
+    begin
+      TempData := Copy(s, Length(CDevCmd_Write_Word_EQ) + 1, MaxInt);
+      AddressStr := Copy(TempData, 1, 8);
+
+      if ListOfFrmMemStatCompare[ACmpWinIdx].DeviceInfo.DeviceBitness = db32 then
+        PhysicalAddrToKseg(AddressStr);
+
+      Address := HexToInt(AddressStr);
+
+      ListOfFrmMemStatCompare[ACmpWinIdx].HighlightMemoryChunk(ASlotIdx, Address, FDeviceFlashInfo.Pointer_Size, ScrollHighlightedNodesIntoView);
+      Exit;
+    end;
+
+    if Pos(CDevCmd_Write_Row_EQ, s) = 1 then
+    begin
+      TempData := Copy(s, Length(CDevCmd_Write_Row_EQ) + 1, MaxInt);
+      AddressStr := Copy(TempData, 1, 8);
+
+      if ListOfFrmMemStatCompare[ACmpWinIdx].DeviceInfo.DeviceBitness = db32 then
+        PhysicalAddrToKseg(AddressStr);
+
+      Address := HexToInt(AddressStr);
+
+      ListOfFrmMemStatCompare[ACmpWinIdx].HighlightMemoryChunk(ASlotIdx, Address, FDeviceFlashInfo.Write_Size, ScrollHighlightedNodesIntoView);
+      Exit;
+    end;
+
+    if Pos(CDevCmd_Erase_EQ, s) = 1 then
+    begin
+      TempData := Copy(s, Length(CDevCmd_Erase_EQ) + 1, MaxInt);
+      AddressStr := Copy(TempData, 1, 8);
+
+      if ListOfFrmMemStatCompare[ACmpWinIdx].DeviceInfo.DeviceBitness = db32 then
+        PhysicalAddrToKseg(AddressStr);
+
+      Address := HexToInt(AddressStr);
+
+      ListOfFrmMemStatCompare[ACmpWinIdx].HighlightMemoryChunk(ASlotIdx, Address, FDeviceFlashInfo.Erase_Size, ScrollHighlightedNodesIntoView);
+      Exit;
+    end;
+  end;
+end;
+
+
 procedure TfrmSimulatedMem.SendAllCmdsToCompareWindow;
 var
   i: Integer;
@@ -668,6 +739,9 @@ begin
   FFIFO.Put(CDevCmd_Write_Word + '=1D000018EE887733');
   FFIFO.Put(CDevCmd_Write_Row + '=1D000030' + s);
   FFIFO.Put(CDevCmd_Erase + '=1D000420');
+
+  if not tmrReadFIFO.Enabled then  //since the timer is unavailable, read the FIFO here
+    ReadFromFIFO;
 end;
 
 
@@ -789,6 +863,10 @@ begin    //opening again, the file from main window, because this window is not 
 
     FComName := Ini.ReadString('SimMemWindow', 'ComName', 'COM0');
     Baud := Ini.ReadInteger('SimMemWindow', 'Baud', 256000);
+
+    chkAutoScrollToSelectedCommands.Checked := Ini.ReadBool('SimMemWindow', 'AutoScrollToSelectedCommands', chkAutoScrollToSelectedCommands.Checked);
+    chkAutoSendCommandsToCmpWindow.Checked := Ini.ReadBool('SimMemWindow', 'AutoSendCommandsToCmpWindow', chkAutoSendCommandsToCmpWindow.Checked);
+    chkAppendUserNotesOnCmpWindow.Checked := Ini.ReadBool('SimMemWindow', 'AppendUserNotesOnCmpWindow', chkAppendUserNotesOnCmpWindow.Checked);
   finally
     Ini.Free;
   end;
@@ -822,6 +900,10 @@ begin    //saving again, the file from main window
 
     Ini.WriteInteger('SimMemWindow', 'Baud', Baud);
 
+    Ini.WriteBool('SimMemWindow', 'AutoScrollToSelectedCommands', chkAutoScrollToSelectedCommands.Checked);
+    Ini.WriteBool('SimMemWindow', 'AutoSendCommandsToCmpWindow', chkAutoSendCommandsToCmpWindow.Checked);
+    Ini.WriteBool('SimMemWindow', 'AppendUserNotesOnCmpWindow', chkAppendUserNotesOnCmpWindow.Checked);
+
     Ini.UpdateFile;
   finally
     Ini.Free;
@@ -836,6 +918,7 @@ begin
   vstMemCommands := TVirtualStringTree.Create(Self);
   vstMemCommands.Parent := Self;
 
+  vstMemCommands.Colors.UnfocusedSelectionColor := clGradientInactiveCaption;
   vstMemCommands.Font.Size := 8;
   vstMemCommands.Font.Height := -11;
   vstMemCommands.Font.Name := 'Tahoma';
@@ -859,11 +942,14 @@ begin
   vstMemCommands.Header.Options := vstMemCommands.Header.Options + [hoVisible];
   vstMemCommands.ParentShowHint := False;
   vstMemCommands.ShowHint := True;
+  vstMemCommands.StateImages := imglstCmds;
   vstMemCommands.TabOrder := 8;
   vstMemCommands.TreeOptions.PaintOptions := [toShowButtons, toShowDropmark, toShowRoot, toThemeAware, toUseBlendedImages];
   vstMemCommands.TreeOptions.SelectionOptions := [toFullRowSelect, toRightClickSelect, toMultiSelect];
   vstMemCommands.TreeOptions.AutoOptions := [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnFocus];
   vstMemCommands.OnGetText := vstMemCommandsGetText;
+  vstMemCommands.OnGetImageIndex := vstMemCommandsGetImageIndex;
+  vstMemCommands.OnMouseUp := vstMemCommandsMouseUp;
 
   NewColum := vstMemCommands.Header.Columns.Add;
   NewColum.MinWidth := 73;
@@ -937,7 +1023,54 @@ begin
 end;
 
 
-procedure TfrmSimulatedMem.tmrReadFIFOTimer(Sender: TObject);
+procedure TfrmSimulatedMem.vstMemCommandsGetImageIndex(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
+  var Ghosted: Boolean; var ImageIndex: Integer);
+var
+  s: string;
+begin
+  if Column = 1 then
+  begin
+    ImageIndex := 0;
+    s := FAllCommands.Strings[Node^.Index];
+
+    if Pos(CDevCmd_Erase + '=', s) = 1 then
+      ImageIndex := 1
+    else
+      if Pos(CDevCmd_Write_Word + '=', s) = 1 then
+        ImageIndex := 2
+      else
+        if Pos(CDevCmd_Write_Row + '=', s) = 1 then
+          ImageIndex := 3;
+  end;
+end;
+
+
+procedure TfrmSimulatedMem.vstMemCommandsMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Node: PVirtualNode;
+  CmpWinIdx, SlotIdx: Integer;
+begin
+  Node := vstMemCommands.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  CmpWinIdx := cmbCompareWindow.ItemIndex;
+  SlotIdx := cmbSlots.ItemIndex;
+  
+  ListOfFrmMemStatCompare[CmpWinIdx].ClearMemoryHighlighting;
+  repeat
+    if vstMemCommands.Selected[Node] then
+      HighlightCmdToCompareWindowByIndex(FAllCommands, Node^.Index, CmpWinIdx, SlotIdx);
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+end;
+
+
+
+procedure TfrmSimulatedMem.ReadFromFIFO;
 var
   FIFOContent: TStringList;
   i: Integer;
@@ -970,6 +1103,12 @@ begin
   finally
     FIFOContent.Free;
   end;
+end;
+
+
+procedure TfrmSimulatedMem.tmrReadFIFOTimer(Sender: TObject);
+begin
+  ReadFromFIFO;
 end;
 
 

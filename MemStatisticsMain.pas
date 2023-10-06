@@ -205,6 +205,8 @@ type
     function HandleOnGetVisibleColumnCount: Integer;
     function HandleOnGetColumnVisibility(AColumnIndex: Integer): Boolean;
     procedure HandleOnCmpWindowDestroy(ACmpWindowHandle: THandle);
+    procedure HandleOnGetTableMemContent(var AMemEntries: TMemEntryArr);
+    procedure HandleOnGetTableMemContentFromRaw(var AMemEntries: TMemEntryArr);
   public
     { Public declarations }
     procedure CmpFrmOnChangeDevice(Sender: TfrmMemStatCompare);
@@ -256,13 +258,15 @@ var
  - SendCmdToCompareWindowByIndex - refactoring
  - verify if EraseMemoryChunk and WriteMemory really require calls to GetUserNoteAtAddress and UpdateUserNote
  - bug - when the def folder priority is set to folder (first option), the displayed list of devices (on cmp window) is empty
+ - the VST on SimMem window, should have colored background, depending on target addresses, like all the other tables. On PIC32, there should be a memory translation.
+ - verify if LoadRoutinesFromMainWindow can be further optimized by sorting Routines and EntriesFromRaw arrays, at least in FP, since it is slower than Delphi  (see SortAlgs unit)
 
+ - repainting the minimap from SimMem window should be done by a debounce timer. This should prevent the current amount of flickering.
  - Bug - fix AV in CopyDataFromFileSlot  (data sync error)
  - add option to hide defs folder path from main window
- - Bug - there is an AV when loading a hex file from dialog, over an existing slot. Loading from main window is fine.
- - TRTLCriticalSection under Linux has different fields. Test if they can be used in PollingFIFO.
+ - TRTLCriticalSection under Linux has different fields. See if they can be used in PollingFIFO.
  - Many buttons from SimMem window are not wide enough to hold text on Linux (with GTK2).
- [in work] - Set baud rate and other stuff (see GetReceivedByteCount and timeouts) in Linux
+ [in work] - Set timeouts in Linux (if required/possible)
  - BaudRateToConst should return an "error" value for unknown baud rates and that should end up in an error message on window (on tooltip)
 }
 
@@ -884,6 +888,8 @@ begin
   frmMemStatCompare.DefsFolder := FMikroComp.DefsFolder;
   frmMemStatCompare.OnChangeDevice := CmpFrmOnChangeDevice;
   frmMemStatCompare.OnCmpWindowDestroy := HandleOnCmpWindowDestroy;
+  frmMemStatCompare.OnGetTableMemContent := HandleOnGetTableMemContent;
+  frmMemStatCompare.OnGetTableMemContentFromRaw := HandleOnGetTableMemContentFromRaw;
   frmMemStatCompare.Show;
 
   ListOfFrmMemStatCompare.Add(frmMemStatCompare);
@@ -906,6 +912,7 @@ end;
 procedure TfrmMemStatisticsMain.MemTableMouseLeave(Sender: TObject);
 begin
   FMemTable.ShowHint := True and MenuItem_ChartHints.Checked;
+  Application.ProcessMessages;
   HideZoom;
 end;
 
@@ -991,6 +998,7 @@ begin
   vstMemTable := TVirtualStringTree.Create(Self);
   vstMemTable.Parent := TabSheetRoutines;
 
+  vstMemTable.Colors.UnfocusedSelectionColor := clGradientInactiveCaption;
   vstMemTable.Font.Size := 8;
   vstMemTable.Font.Height := -11;
   vstMemTable.Font.Name := 'Tahoma';
@@ -1068,6 +1076,7 @@ begin
   vstRawTable := TVirtualStringTree.Create(Self);
   vstRawTable.Parent := TabSheetRaw;
 
+  vstRawTable.Colors.UnfocusedSelectionColor := clGradientInactiveCaption;
   vstRawTable.Font.Size := 8;
   vstRawTable.Font.Height := -11;
   vstRawTable.Font.Name := 'Tahoma';
@@ -1286,6 +1295,7 @@ procedure TfrmMemStatisticsMain.tmrDrawZoomTimer(Sender: TObject);
 var
   tp: TPoint;
 begin
+  tmrDrawZoom.Enabled := False;
   GetCursorPos(tp);
   SetZoomContent(FMemTable.Canvas.Handle, FMemTable.Width, FMemTable.Height, FCurrentMousePosOnPreviewImg.X, FCurrentMousePosOnPreviewImg.Y, tp.X + 50, tp.Y + 50);
 end;
@@ -1612,7 +1622,10 @@ var
 begin
   CurrentNode := vstMemTable.GetFirst;
   if CurrentNode = nil then
+  begin
+    Result := '';
     Exit;
+  end;
 
   if CopyWithHeader then
     s := VstMemTable.Header.Columns.Items[0].Text + #9 +
@@ -1871,9 +1884,12 @@ var
   CurrentNode: PVirtualNode;
   s: string;
 begin
-   CurrentNode := vstRawTable.GetFirst;
+  CurrentNode := vstRawTable.GetFirst;
   if CurrentNode = nil then
+  begin
+    Result := '';
     Exit;
+  end;
 
   if CopyWithHeader then
     s := vstRawTable.Header.Columns.Items[0].Text + #9 +
@@ -2869,6 +2885,18 @@ begin
   except
     //the window or its content might not be available
   end;
+end;
+
+
+procedure TfrmMemStatisticsMain.HandleOnGetTableMemContent(var AMemEntries: TMemEntryArr);
+begin
+  FMikroComp.MemTable.GetEntireMemContent(AMemEntries);
+end;
+
+
+procedure TfrmMemStatisticsMain.HandleOnGetTableMemContentFromRaw(var AMemEntries: TMemEntryArr);
+begin
+  FMikroComp.MemTable.GetEntireMemContentFromRawNames(AMemEntries);
 end;
 
 end.

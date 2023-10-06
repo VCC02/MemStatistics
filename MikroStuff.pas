@@ -359,11 +359,12 @@ begin
         Address := HexToInt(AddrStr);
 
         MemTable.AddRawEntry(Address);
+        MemTable.AddEntryFromRawNames(Address, 4, DataStr);  ///////////////////////////////////////// 4 is the entry size. It is 4 on PIC32 only. It is not used for now.
 
         if Assigned(OnAddRawTableEntry) then
         begin
           vstData.EntryNumber := lstAddrRaw.Count - 1;
-          vstData.Address := HexToInt(AddrStr);
+          vstData.Address := Address;
           vstData.Size := 4;
           vstData.Name := DataStr;
           OnAddRawTableEntry(@vstData);
