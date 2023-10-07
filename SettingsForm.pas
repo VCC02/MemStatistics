@@ -42,13 +42,17 @@ uses
   {$IFDEF FPC}
     , ColorBox
   {$ENDIF}
-  ;
+  , Types;
 
 type
+
+  { TfrmSettings }
+
   TfrmSettings = class(TForm)
     ColorDialog1: TColorDialog;
     btnOK: TButton;
     btnCancel: TButton;
+    lblDevWarning: TLabel;
     pagctrlSettings: TPageControl;
     TabSheetMiscColors: TTabSheet;
     pagctrlColors: TPageControl;
@@ -146,6 +150,7 @@ type
     lbeDefsFolder: TLabeledEdit;
     btnBrowseDefsFolder: TButton;
     rdgrpDefinitionFilePriority: TRadioGroup;
+    chkShowDefsFolderOnMainWindow: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure GenericColorPanelDblClick(Sender: TObject);
     procedure colboxGenericChange(Sender: TObject);
@@ -206,6 +211,10 @@ type
     procedure lbeExpectedPrefixKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure cmbDeviceBitnessChange(Sender: TObject);
+    procedure chkShowDefsFolderOnMainWindowKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure chkShowDefsFolderOnMainWindowMouseUp(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     { Private declarations }
     FDevInfoEditArr: TDevInfoEditArr;
@@ -300,6 +309,7 @@ begin
 
   frmSettings.chkDisplayDecimalAddressesCmpTable.Checked := MemStatOptions.Misc.DisplayDecimalAddressesCmpTable;
   frmSettings.chkDisplayTableHints.Checked := MemStatOptions.Misc.DisplayTableHints;
+  frmSettings.chkShowDefsFolderOnMainWindow.Checked := MemStatOptions.Misc.ShowDefsFolderOnMainWindow;
 
   frmSettings.lbeDefaultChipName.Text := MemStatOptions.Misc.DefaultChipName;
   frmSettings.lbeDefFilePrefix.Text := MemStatOptions.Misc.DefFilePrefix;
@@ -361,6 +371,7 @@ begin
 
     MemStatOptions.Misc.DisplayDecimalAddressesCmpTable := frmSettings.chkDisplayDecimalAddressesCmpTable.Checked;
     MemStatOptions.Misc.DisplayTableHints := frmSettings.chkDisplayTableHints.Checked;
+    MemStatOptions.Misc.ShowDefsFolderOnMainWindow := frmSettings.chkShowDefsFolderOnMainWindow.Checked;
 
     MemStatOptions.Misc.DefaultChipName := frmSettings.lbeDefaultChipName.Text;
     MemStatOptions.Misc.DefFilePrefix := frmSettings.lbeDefFilePrefix.Text;
@@ -619,6 +630,21 @@ begin
 end;
 
 
+procedure TfrmSettings.chkShowDefsFolderOnMainWindowKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_SPACE then
+    DisplayModifiedOnUpdateButton;
+end;
+
+
+procedure TfrmSettings.chkShowDefsFolderOnMainWindowMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  DisplayModifiedOnUpdateButton;
+end;
+
+
 procedure TfrmSettings.chkVisibleOnCompareKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
@@ -693,10 +719,15 @@ begin
   vstMemSections := TVirtualStringTree.Create(Self);
   vstMemSections.Parent := TabSheetMemorySections;
 
-  vstMemSections.Left := 3;
-  vstMemSections.Top := 0;
-  vstMemSections.Width := 750;
-  vstMemSections.Height := 273;
+  vstMemSections.Font.Charset := DEFAULT_CHARSET;
+  vstMemSections.Font.Color := clWindowText;
+  vstMemSections.Font.Height := -11;
+  vstMemSections.Font.Name := 'Tahoma';
+  vstMemSections.Font.Style := [];
+  vstMemSections.Left := lbeDisplayName.Left;
+  vstMemSections.Top := 4;
+  vstMemSections.Width := grpTable.Left + grpTable.Width - 3;
+  vstMemSections.Height := lbeDisplayName.Top - 36;
   vstMemSections.Anchors := [akLeft, akTop, akRight, akBottom];
   vstMemSections.Colors.UnfocusedSelectionColor := clInactiveCaption;
   vstMemSections.DefaultNodeHeight := 36;
@@ -737,30 +768,30 @@ begin
   NewColum.Hint := 'Displayed in table entries';
 
   NewColum := vstMemSections.Header.Columns.Add;
-  NewColum.MinWidth := 100;
+  NewColum.MinWidth := 108;
   NewColum.Position := 2;
-  NewColum.Width := 100;
+  NewColum.Width := 108;
   NewColum.Text := 'Definition Name';
   NewColum.Hint := 'Section name as used by tags in definition files';
 
   NewColum := vstMemSections.Header.Columns.Add;
-  NewColum.MinWidth := 120;
+  NewColum.MinWidth := 136;
   NewColum.Position := 3;
-  NewColum.Width := 120;
+  NewColum.Width := 136;
   NewColum.Text := 'Mem Translation Info';
   NewColum.Hint := 'Operation and constant value, used to identify memory section';
 
   NewColum := vstMemSections.Header.Columns.Add;
-  NewColum.MinWidth := 100;
+  NewColum.MinWidth := 108;
   NewColum.Position := 4;
-  NewColum.Width := 100;
+  NewColum.Width := 108;
   NewColum.Text := 'Address Offsets';
   NewColum.Hint := 'Section specific address offsets';
 
   NewColum := vstMemSections.Header.Columns.Add;
-  NewColum.MinWidth := 120;
+  NewColum.MinWidth := 128;
   NewColum.Position := 5;
-  NewColum.Width := 120;
+  NewColum.Width := 128;
   NewColum.Text := 'Default Addr Range';
   NewColum.Hint := 'Default address range, used when a section is not found in definition file';
 
@@ -772,9 +803,9 @@ begin
   NewColum.Hint := 'Displayed in table entries';
 
   NewColum := vstMemSections.Header.Columns.Add;
-  NewColum.MinWidth := 150;
+  NewColum.MinWidth := 174;
   NewColum.Position := 7;
-  NewColum.Width := 150;
+  NewColum.Width := 174;
   NewColum.Text := 'Selected Entry Color (chart)';
   NewColum.Hint := '';
 
@@ -793,16 +824,16 @@ begin
   NewColum.Hint := '';
 
   NewColum := vstMemSections.Header.Columns.Add;
-  NewColum.MinWidth := 150;
+  NewColum.MinWidth := 166;
   NewColum.Position := 10;
-  NewColum.Width := 150;
+  NewColum.Width := 166;
   NewColum.Text := 'Visible on table / compare';
   NewColum.Hint := '';
 
   NewColum := vstMemSections.Header.Columns.Add;
-  NewColum.MinWidth := 200;
+  NewColum.MinWidth := 250;
   NewColum.Position := 11;
-  NewColum.Width := 200;
+  NewColum.Width := 250;
   NewColum.Text := 'Display even if missing from definition';
   NewColum.Hint := '';
 end;

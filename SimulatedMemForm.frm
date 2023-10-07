@@ -38,7 +38,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Caption = 'Slot'
   end
   object lblCOMStatus: TLabel
-    Left = 92
+    Left = 88
     Height = 13
     Hint = 'Status is updated on connect/disconnect.'
     Top = 48
@@ -83,8 +83,10 @@ object frmSimulatedMem: TfrmSimulatedMem
   object cmbCOMPort: TComboBox
     Left = 8
     Height = 22
-    Top = 19
+    Top = 16
     Width = 89
+    AutoSize = False
+    DropDownCount = 10
     ItemHeight = 16
     OnDropDown = cmbCOMPortDropDown
     Style = csOwnerDrawFixed
@@ -94,7 +96,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Left = 712
     Height = 25
     Hint = 'Decode received commands and apply them to the simulated memory (selected slot).'
-    Top = 48
+    Top = 47
     Width = 256
     Anchors = [akTop, akRight]
     Caption = 'Send all commands to cmp window'
@@ -104,7 +106,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     TabOrder = 1
   end
   object btnConnect: TButton
-    Left = 223
+    Left = 224
     Height = 25
     Top = 16
     Width = 75
@@ -113,7 +115,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     TabOrder = 2
   end
   object btnDisconnect: TButton
-    Left = 223
+    Left = 224
     Height = 25
     Top = 47
     Width = 75
@@ -143,8 +145,10 @@ object frmSimulatedMem: TfrmSimulatedMem
   object cmbCompareWindow: TComboBox
     Left = 303
     Height = 22
-    Top = 19
+    Top = 16
     Width = 145
+    AutoSize = False
+    DropDownCount = 10
     ItemHeight = 16
     OnChange = cmbCompareWindowChange
     Style = csOwnerDrawFixed
@@ -153,27 +157,29 @@ object frmSimulatedMem: TfrmSimulatedMem
   object cmbSlots: TComboBox
     Left = 454
     Height = 22
-    Top = 19
+    Top = 16
     Width = 107
+    AutoSize = False
+    DropDownCount = 10
     ItemHeight = 16
     Style = csOwnerDrawFixed
     TabOrder = 7
   end
   object btnClearListOfCommands: TButton
-    Left = 570
+    Left = 568
     Height = 25
     Top = 16
-    Width = 135
+    Width = 140
     Caption = 'Clear list of commands'
     OnClick = btnClearListOfCommandsClick
     TabOrder = 8
   end
   object btnTestFIFOAndDecoder: TButton
-    Left = 570
+    Left = 568
     Height = 25
     Hint = 'Sends some dummy data to the simulated memory, as if received from COM port.'
     Top = 47
-    Width = 135
+    Width = 140
     Caption = 'Test FIFO and decoder'
     OnClick = btnTestFIFOAndDecoderClick
     ParentShowHint = False
@@ -181,10 +187,12 @@ object frmSimulatedMem: TfrmSimulatedMem
     TabOrder = 9
   end
   object cmbBaud: TComboBox
-    Left = 103
+    Left = 104
     Height = 22
-    Top = 19
+    Top = 16
     Width = 82
+    AutoSize = False
+    DropDownCount = 10
     ItemHeight = 16
     ItemIndex = 20
     Items.Strings = (
@@ -220,7 +228,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Left = 8
     Height = 19
     Hint = 'Shows all possible COM numbers'
-    Top = 47
+    Top = 45
     Width = 60
     Caption = 'Show All'
     ParentShowHint = False
@@ -237,6 +245,8 @@ object frmSimulatedMem: TfrmSimulatedMem
     Caption = 'Received device info'
     ClientHeight = 143
     ClientWidth = 252
+    ParentBackground = False
+    ParentColor = False
     ParentShowHint = False
     ShowHint = True
     TabOrder = 12
@@ -285,7 +295,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Left = 712
     Height = 19
     Hint = 'If checked, all recent commands are sent to the simulated memory (selected slot on compare window).'
-    Top = 84
+    Top = 83
     Width = 256
     Anchors = [akTop, akRight]
     AutoSize = False
@@ -305,10 +315,10 @@ object frmSimulatedMem: TfrmSimulatedMem
     TabOrder = 14
   end
   object btnDisplayCompareWindow: TButton
-    Left = 570
+    Left = 568
     Height = 25
-    Top = 78
-    Width = 135
+    Top = 77
+    Width = 140
     Caption = 'Display cmp window'
     OnClick = btnDisplayCompareWindowClick
     TabOrder = 15

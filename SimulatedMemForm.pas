@@ -237,7 +237,11 @@ begin
           while PosCRLF > 0 do
           begin
             TempCmd := Copy(LongBuffer, 1, PosCRLF - 1);
-            frmSimulatedMem.FIFO.Put(TempCmd);
+            if Pos(#0, TempCmd) > 0 then
+              Delete(TempCmd, Pos(#0, TempCmd), 1);
+
+            if Length(TempCmd) > 0 then
+              frmSimulatedMem.FIFO.Put(TempCmd);
 
             {$IFDEF UNIX}
               Delete(LongBuffer, 1, PosCRLF + 0); //deletes TempCmd and the CRLF after it
@@ -924,13 +928,9 @@ begin
   vstMemCommands.Font.Name := 'Tahoma';
   vstMemCommands.Font.Style := [];
   vstMemCommands.Left := 8;
-  vstMemCommands.Top := 108;
-  {$IFDEF UNIX}
-    vstMemCommands.Width := 643;
-  {$ELSE}
-    vstMemCommands.Width := 673;
-  {$ENDIF}
-  vstMemCommands.Height := 183;
+  vstMemCommands.Top := chkAppendUserNotesOnCmpWindow.Top; //108;      
+  vstMemCommands.Width := btnDisplayCompareWindow.Left + btnDisplayCompareWindow.Width - vstMemCommands.Left;
+  vstMemCommands.Height := ClientHeight - vstMemCommands.Top - 8; //183;
   vstMemCommands.Anchors := [akLeft, akTop, akRight, akBottom];
   vstMemCommands.Header.AutoSizeIndex := 0;
   vstMemCommands.Header.DefaultHeight := 17;
@@ -1058,7 +1058,10 @@ begin
 
   CmpWinIdx := cmbCompareWindow.ItemIndex;
   SlotIdx := cmbSlots.ItemIndex;
-  
+
+  if (CmpWinIdx = -1) or (SlotIdx = -1) then
+    Exit;
+
   ListOfFrmMemStatCompare[CmpWinIdx].ClearMemoryHighlighting;
   repeat
     if vstMemCommands.Selected[Node] then

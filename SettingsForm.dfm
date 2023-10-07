@@ -47,7 +47,7 @@ object frmSettings: TfrmSettings
     Top = 0
     Width = 761
     Height = 461
-    ActivePage = TabSheetMiscColors
+    ActivePage = TabSheetMiscSettings
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 2
     object TabSheetMiscColors: TTabSheet
@@ -86,16 +86,16 @@ object frmSettings: TfrmSettings
             object lblThirdFileEntryColor: TLabel
               Left = 8
               Top = 156
-              Width = 43
+              Width = 41
               Height = 13
-              Caption = 'Third File'
+              Caption = 'Third file'
             end
             object lblFourthFileEntryColor: TLabel
               Left = 8
               Top = 216
-              Width = 51
+              Width = 49
               Height = 13
-              Caption = 'Fourth File'
+              Caption = 'Fourth file'
             end
             object pnlFirstFileEntryChart: TPanel
               Left = 70
@@ -214,16 +214,16 @@ object frmSettings: TfrmSettings
             object lblThirdFileSelectedEntryColor: TLabel
               Left = 8
               Top = 156
-              Width = 43
+              Width = 41
               Height = 13
-              Caption = 'Third File'
+              Caption = 'Third file'
             end
             object lblFourthFileSelectedEntryColor: TLabel
               Left = 8
               Top = 216
-              Width = 51
+              Width = 49
               Height = 13
-              Caption = 'Fourth File'
+              Caption = 'Fourth file'
             end
             object pnlFirstFileSelectedEntryChart: TPanel
               Left = 70
@@ -512,7 +512,7 @@ object frmSettings: TfrmSettings
         Top = 16
         Width = 246
         Height = 17
-        Caption = 'Display Decimal Addresses in Compare Table'
+        Caption = 'Display decimal addresses in Compare Table'
         Checked = True
         State = cbChecked
         TabOrder = 0
@@ -524,7 +524,7 @@ object frmSettings: TfrmSettings
         Top = 48
         Width = 174
         Height = 17
-        Caption = 'Display Table Hints'
+        Caption = 'Display table hints'
         Checked = True
         State = cbChecked
         TabOrder = 1
@@ -659,6 +659,16 @@ object frmSettings: TfrmSettings
           OnClick = rdgrpDefinitionFilePriorityClick
         end
       end
+      object chkShowDefsFolderOnMainWindow: TCheckBox
+        Left = 3
+        Top = 80
+        Width = 246
+        Height = 17
+        Caption = 'Show Defs folder on main window'
+        TabOrder = 4
+        OnKeyUp = chkShowDefsFolderOnMainWindowKeyUp
+        OnMouseUp = chkShowDefsFolderOnMainWindowMouseUp
+      end
     end
     object TabSheetMemorySections: TTabSheet
       Caption = 'Memory Sections'
@@ -735,6 +745,20 @@ object frmSettings: TfrmSettings
         Height = 13
         Anchors = [akLeft, akBottom]
         Caption = 'Mem Translation Op'
+      end
+      object lblDevWarning: TLabel
+        Left = 0
+        Top = 40
+        Width = 662
+        Height = 13
+        Caption = 
+          'Before compiling, please switch to another tab of this page cont' +
+          'rol. There is a bug, which causes the application to hang if lef' +
+          't on this tab.'
+        Color = 8224255
+        ParentColor = False
+        Transparent = False
+        Visible = False
       end
       object btnAdd: TButton
         Left = 0

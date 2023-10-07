@@ -180,6 +180,7 @@ type
 
     DefsFolder: string;
     DefsFolderPriority: TDefsFolderPriority;
+    ShowDefsFolderOnMainWindow: Boolean;
   end;
 
   TMemStatOptions = record

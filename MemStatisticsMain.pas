@@ -171,6 +171,7 @@ type
 
     procedure CreateRemainingComponents;
     procedure RepositionSplitter;
+    procedure SetMemTableHeightFromDefsFolder;
 
     function FastTabReplace(s: string): string;
     procedure GenerateTextStatistics;
@@ -252,7 +253,7 @@ var
  [] - verify if both def parsers support reversed tag order  (max, then min)
    vstMemTableCompareNodes and vstRawTableCompareNodes require refactoring
  - Finish support for multiple address ranges / section. There are many hardcoded calls with the first range (index 0).
- - the table on cmp window, should display gray text on FFFFFFFF entries
+ - the minimap on cmp window should display grayed (desaturated) areas for 0xFFFFFFFF entries.
  - when writing to sim mem, make sure to properly mask bits, because Flash allows writing '0's only. This is required, to get same content as a read-back hex file.
  - add an option to display selected command on minimap
  - SendCmdToCompareWindowByIndex - refactoring
@@ -260,12 +261,12 @@ var
  - bug - when the def folder priority is set to folder (first option), the displayed list of devices (on cmp window) is empty
  - the VST on SimMem window, should have colored background, depending on target addresses, like all the other tables. On PIC32, there should be a memory translation.
  - verify if LoadRoutinesFromMainWindow can be further optimized by sorting Routines and EntriesFromRaw arrays, at least in FP, since it is slower than Delphi  (see SortAlgs unit)
+ - the page control (with the two VSTs), buttons, editboxes, should sit on a panel. This panel can be modified by splitter.
 
  - repainting the minimap from SimMem window should be done by a debounce timer. This should prevent the current amount of flickering.
  - Bug - fix AV in CopyDataFromFileSlot  (data sync error)
  - add option to hide defs folder path from main window
  - TRTLCriticalSection under Linux has different fields. See if they can be used in PollingFIFO.
- - Many buttons from SimMem window are not wide enough to hold text on Linux (with GTK2).
  [in work] - Set timeouts in Linux (if required/possible)
  - BaudRateToConst should return an "error" value for unknown baud rates and that should end up in an error message on window (on tooltip)
 }
@@ -328,18 +329,21 @@ begin
     for i := 0 to vstRawTable.Header.Columns.Count - 1 do
       vstRawTable.Header.Columns.Items[i].Width := Ini.ReadInteger('RawTable', 'Col_' + IntToStr(i), vstRawTable.Header.Columns.Items[i].Width);  
 
+    FMemStatOptions.Misc.ShowDefsFolderOnMainWindow := Ini.ReadBool('mikro', 'ShowDefsFolderOnMainWindow', True);
     s := Ini.ReadString('mikro', 'DefsFolder', '');     //  'C:\Program Files\Mikroelektronika\mikroPascal PRO for PIC32\Defs'
     if DirectoryExists(s) then
     begin
       FMikroComp.DefsFolder := s;
       DisplayDefsFolder;
       lblDefsFolder.Hint := FMikroComp.DefsFolder;
+      lblDefsFolder.Visible := FMemStatOptions.Misc.ShowDefsFolderOnMainWindow;
     end
     else
     begin
       FMikroComp.DefsFolder := s; //'';   //set it to the value from ini, to allow displaying it on settings window
       lblDefsFolder.Caption := '"Defs" Folder: not set';
       lblDefsFolder.Hint := FMikroComp.DefsFolder;
+      lblDefsFolder.Visible := True;
     end;
 
     FMemStatOptions.Misc.DefsFolderPriority := TDefsFolderPriority(Min(Ord(High(TDefsFolderPriority)), Ini.ReadInteger('mikro', 'DefsFolderPriority', 0)));
@@ -466,6 +470,7 @@ begin
     for i := 0 to vstRawTable.Header.Columns.Count - 1 do
       Ini.WriteInteger('RawTable', 'Col_' + IntToStr(i), vstRawTable.Header.Columns.Items[i].Width);
 
+    Ini.WriteBool('mikro', 'ShowDefsFolderOnMainWindow', FMemStatOptions.Misc.ShowDefsFolderOnMainWindow);
     if Trim(FMikroComp.DefsFolder) <> '' then
       Ini.WriteString('mikro', 'DefsFolder', FMikroComp.DefsFolder);     //  'C:\Program Files\Mikroelektronika\mikroPascal PRO for PIC32\Defs'
 
@@ -776,6 +781,21 @@ begin
 end;
 
 
+procedure TfrmMemStatisticsMain.SetMemTableHeightFromDefsFolder;
+begin
+  if not lblDefsFolder.Visible then
+  begin
+    FMemTable.Top := pnlSplitter.Top;
+    FMemTable.Height := pnlSplitter.Height;
+  end
+  else
+  begin
+    FMemTable.Top := 80;
+    FMemTable.Height := ClientHeight - 6 - FMemTable.Top - StatusBar1.Height;
+  end;
+end;
+
+
 procedure TfrmMemStatisticsMain.btnSettingsClick(Sender: TObject);
 var
   AMemStatOptions: TMemStatOptions;
@@ -795,6 +815,9 @@ begin
       DisplayDefsFolder;
       lblDefsFolder.Hint := FMikroComp.DefsFolder;
     end;
+
+    lblDefsFolder.Visible := FMemStatOptions.Misc.ShowDefsFolderOnMainWindow;
+    SetMemTableHeightFromDefsFolder;
 
     vstMemTable.Repaint;
     vstRawTable.Repaint;
@@ -1003,10 +1026,10 @@ begin
   vstMemTable.Font.Height := -11;
   vstMemTable.Font.Name := 'Tahoma';
   vstMemTable.Font.Style := [];
-  vstMemTable.Left := 3;
-  vstMemTable.Top := 0;
-  vstMemTable.Width := 501;
-  vstMemTable.Height := 188;
+  vstMemTable.Left := 8;
+  vstMemTable.Top := 8;
+  vstMemTable.Width := TabSheetRoutines.Width - 16;
+  vstMemTable.Height := TabSheetRoutines.Height - 16;
   vstMemTable.Anchors := [akLeft, akTop, akRight, akBottom];
   vstMemTable.Header.AutoSizeIndex := 0;
   vstMemTable.Header.DefaultHeight := 17;
@@ -1081,10 +1104,10 @@ begin
   vstRawTable.Font.Height := -11;
   vstRawTable.Font.Name := 'Tahoma';
   vstRawTable.Font.Style := [];
-  vstRawTable.Left := 3;
-  vstRawTable.Top := 0;
-  vstRawTable.Width := 501;
-  vstRawTable.Height := 188;
+  vstRawTable.Left := 8;
+  vstRawTable.Top := 8;
+  vstRawTable.Width := TabSheetRaw.Width - 16;
+  vstRawTable.Height := TabSheetRaw.Height - 16;
   vstRawTable.Anchors := [akLeft, akTop, akRight, akBottom];
   vstRawTable.Header.AutoSizeIndex := 0;
   vstRawTable.Header.DefaultHeight := 17;
@@ -1306,6 +1329,7 @@ begin
   tmrStartup.Enabled := False;
   vstMemTable.NodeDataSize := SizeOf(TRoutinesRec);
   vstRawTable.NodeDataSize := SizeOf(TRoutinesRec);
+  SetMemTableHeightFromDefsFolder;
 
   LoadMlk(ParamStr(2));
   LoadLST(ParamStr(1));
@@ -2788,6 +2812,9 @@ end;
 
 procedure TfrmMemStatisticsMain.LoadLST(LstFileFnm: string);
 begin
+  if LstFileFnm = ExtractFileName(LstFileFnm) then //this may not work if LstFileFnm starts with './' or '.\'
+    LstFileFnm := ExtractFilePath(ParamStr(0)) + LstFileFnm;
+
   vstMemTable.Clear;
   vstRawTable.Clear;
   vstMemTable.RootNodeCount := 0;

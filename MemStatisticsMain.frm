@@ -2,10 +2,10 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   Left = 258
   Height = 347
   Top = 270
-  Width = 992
+  Width = 1021
   Caption = 'Memory Statistics'
   ClientHeight = 347
-  ClientWidth = 992
+  ClientWidth = 1021
   Color = clBtnFace
   Constraints.MinHeight = 347
   Constraints.MinWidth = 990
@@ -59,7 +59,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     ShowHint = True
   end
   object spdClearFilters: TSpeedButton
-    Left = 468
+    Left = 472
     Height = 37
     Top = 287
     Width = 76
@@ -71,7 +71,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Left = 0
     Height = 23
     Top = 324
-    Width = 992
+    Width = 1021
     Panels = <    
       item
         Width = 100
@@ -91,10 +91,10 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     TabOrder = 0
   end
   object PageControlEntries: TPageControl
-    Left = 468
+    Left = 465
     Height = 226
     Top = 57
-    Width = 516
+    Width = 548
     ActivePage = TabSheetStatistics
     Anchors = [akTop, akRight, akBottom]
     Constraints.MinHeight = 219
@@ -104,8 +104,8 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     OnChange = PageControlEntriesChange
     object TabSheetRoutines: TTabSheet
       Caption = 'By routines'
-      ClientHeight = 198
-      ClientWidth = 508
+      ClientHeight = 204
+      ClientWidth = 546
       object lblVstBackground: TLabel
         Left = 3
         Height = 122
@@ -119,8 +119,8 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     end
     object TabSheetRaw: TTabSheet
       Caption = 'By address'
-      ClientHeight = 198
-      ClientWidth = 508
+      ClientHeight = 204
+      ClientWidth = 546
       ImageIndex = 1
       object lblVstBackgroundRaw: TLabel
         Left = 3
@@ -136,14 +136,14 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     object TabSheetStatistics: TTabSheet
       Caption = 'Statistics'
       ClientHeight = 200
-      ClientWidth = 508
+      ClientWidth = 540
       ImageIndex = 2
       object lstFreeMemory: TListBox
         Left = 3
         Height = 188
         Hint = 'Press Ctrl+C to copy this list to clipboard.'
         Top = 2
-        Width = 502
+        Width = 534
         Anchors = [akTop, akLeft, akRight, akBottom]
         ItemHeight = 0
         OnKeyDown = lstFreeMemoryKeyDown
@@ -164,7 +164,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     TabOrder = 4
   end
   object lbeMem: TLabeledEdit
-    Left = 548
+    Left = 552
     Height = 21
     Top = 303
     Width = 36
@@ -176,33 +176,33 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     OnChange = lbeMemChange
   end
   object lbeAddrHex: TLabeledEdit
-    Left = 588
+    Left = 592
     Height = 21
     Top = 303
-    Width = 71
+    Width = 80
     Anchors = [akRight, akBottom]
     EditLabel.Height = 13
-    EditLabel.Width = 71
+    EditLabel.Width = 80
     EditLabel.Caption = 'Address [Hex]'
     TabOrder = 6
     OnChange = lbeMemChange
     OnKeyPress = lbeAddrHexKeyPress
   end
   object lbeAddrDec: TLabeledEdit
-    Left = 663
+    Left = 680
     Height = 21
     Top = 303
-    Width = 76
+    Width = 85
     Anchors = [akRight, akBottom]
     EditLabel.Height = 13
-    EditLabel.Width = 76
+    EditLabel.Width = 85
     EditLabel.Caption = 'Address [Dec]'
     TabOrder = 7
     OnChange = lbeMemChange
     OnKeyPress = lbeAddrDecKeyPress
   end
   object lbeSize: TLabeledEdit
-    Left = 744
+    Left = 773
     Height = 21
     Top = 303
     Width = 60
@@ -215,7 +215,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     OnKeyPress = lbeSizeKeyPress
   end
   object lbeEntryName: TLabeledEdit
-    Left = 808
+    Left = 837
     Height = 21
     Top = 303
     Width = 169
@@ -227,19 +227,20 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     OnChange = lbeMemChange
   end
   object pnlVisibleEntries: TPanel
-    Left = 663
+    Left = 692
     Height = 17
     Hint = 'Number of entries that match your search criteria.'
     Top = 57
     Width = 130
     Anchors = [akTop, akRight]
     Caption = 'All visible entries'
+    ParentBackground = False
     ParentShowHint = False
     ShowHint = True
     TabOrder = 10
   end
   object btnSettings: TButton
-    Left = 468
+    Left = 465
     Height = 25
     Top = 32
     Width = 70
@@ -249,7 +250,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     TabOrder = 11
   end
   object btnNewCompareWindow: TButton
-    Left = 544
+    Left = 541
     Height = 25
     Top = 32
     Width = 160
@@ -260,7 +261,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   end
   object pnlSplitter: TPanel
     Cursor = crHSplit
-    Left = 458
+    Left = 440
     Height = 267
     Top = 57
     Width = 10
@@ -275,7 +276,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     OnResize = pnlSplitterResize
   end
   object rdgrpChartContent: TRadioGroup
-    Left = 796
+    Left = 825
     Height = 75
     Top = 0
     Width = 188
@@ -298,13 +299,14 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
       'Display both above'
     )
     OnClick = rdgrpChartContentClick
+    ParentBackground = False
     TabOrder = 3
   end
   object pnlHorizontalResize: TPanel
     Left = 0
     Height = 4
     Top = 325
-    Width = 984
+    Width = 1013
     Anchors = [akLeft, akRight, akBottom]
     BevelOuter = bvNone
     ParentColor = False
@@ -315,7 +317,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Enabled = False
     Interval = 10
     OnTimer = tmrStartupTimer
-    Left = 295
+    Left = 224
     Top = 48
   end
   object tmrBlinkGraphicFocus: TTimer

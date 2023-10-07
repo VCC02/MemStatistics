@@ -304,7 +304,7 @@ object frmSimulatedMem: TfrmSimulatedMem
   end
   object chkAppendUserNotesOnCmpWindow: TCheckBox
     Left = 689
-    Top = 105
+    Top = 108
     Width = 227
     Height = 17
     Anchors = [akTop, akRight]

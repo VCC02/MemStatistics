@@ -4,7 +4,7 @@ object frmMemStatCompare: TfrmMemStatCompare
   Top = 156
   Width = 1149
   Caption = 'Memory Statistics - Visual Compare'
-  ClientHeight = 515
+  ClientHeight = 535
   ClientWidth = 1149
   Color = clBtnFace
   Constraints.MinHeight = 500
@@ -13,20 +13,20 @@ object frmMemStatCompare: TfrmMemStatCompare
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  LCLVersion = '7.5'
+  LCLVersion = '8.1'
   object lblMinimap: TLabel
-    Left = 1037
-    Height = 15
+    Left = 1035
+    Height = 19
     Top = 2
-    Width = 48
+    Width = 55
     Anchors = [akTop, akRight]
     Caption = 'Minimap'
   end
   object lblSettingVisibility: TLabel
     Left = 559
-    Height = 35
+    Height = 34
     Top = 178
-    Width = 390
+    Width = 434
     Caption = 'Setting visibility. Please wait...'
     Font.Color = clWindowText
     Font.Height = -29
@@ -36,8 +36,8 @@ object frmMemStatCompare: TfrmMemStatCompare
   object lblChipName: TLabel
     Left = 408
     Height = 19
-    Top = 491
-    Width = 105
+    Top = 511
+    Width = 118
     Anchors = [akLeft, akBottom]
     Caption = 'not selected '
     Font.Color = clWindowText
@@ -51,8 +51,8 @@ object frmMemStatCompare: TfrmMemStatCompare
   object lblChipNameText: TLabel
     Left = 292
     Height = 19
-    Top = 491
-    Width = 94
+    Top = 511
+    Width = 103
     Anchors = [akLeft, akBottom]
     Caption = 'Chip Name:'
     Font.Color = clWindowText
@@ -64,7 +64,7 @@ object frmMemStatCompare: TfrmMemStatCompare
     ShowHint = True
   end
   object spdbtnJumpToPrevSection: TSpeedButton
-    Left = 1093
+    Left = 1094
     Height = 18
     Hint = 'Jump to previous section'
     Top = 2
@@ -94,7 +94,7 @@ object frmMemStatCompare: TfrmMemStatCompare
     ParentShowHint = False
   end
   object spdbtnJumpToNextSection: TSpeedButton
-    Left = 1122
+    Left = 1123
     Height = 18
     Hint = 'Jump to next section'
     Top = 2
@@ -124,13 +124,14 @@ object frmMemStatCompare: TfrmMemStatCompare
     ParentShowHint = False
   end
   object pnlMiniMap: TPanel
-    Left = 1039
-    Height = 464
+    Left = 1038
+    Height = 484
     Hint = 'Hold Ctrl to select an entry.'
     Top = 21
     Width = 107
     Anchors = [akTop, akRight, akBottom]
     FullRepaint = False
+    ParentBackground = False
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
@@ -140,10 +141,11 @@ object frmMemStatCompare: TfrmMemStatCompare
   end
   object cmbCmpViewOptions: TComboBox
     Left = 0
-    Height = 22
-    Top = 488
+    Height = 26
+    Top = 507
     Width = 145
     Anchors = [akLeft, akBottom]
+    AutoSize = False
     ItemHeight = 16
     ItemIndex = 0
     Items.Strings = (
@@ -159,7 +161,7 @@ object frmMemStatCompare: TfrmMemStatCompare
   object btnChangeDevice: TButton
     Left = 151
     Height = 25
-    Top = 488
+    Top = 508
     Width = 122
     Anchors = [akLeft, akBottom]
     Caption = 'Change Device...'
@@ -170,13 +172,13 @@ object frmMemStatCompare: TfrmMemStatCompare
   end
   object lbeSearchHexAddr: TLabeledEdit
     Left = 856
-    Height = 23
+    Height = 25
     Hint = 'Search Hex address.'
-    Top = 489
+    Top = 507
     Width = 65
     Anchors = [akRight, akBottom]
-    EditLabel.Height = 15
-    EditLabel.Width = 54
+    EditLabel.Height = 19
+    EditLabel.Width = 64
     EditLabel.Caption = 'Addr[Hex]'
     LabelPosition = lpLeft
     ParentShowHint = False
@@ -186,13 +188,13 @@ object frmMemStatCompare: TfrmMemStatCompare
   end
   object lbeSearchData: TLabeledEdit
     Left = 968
-    Height = 23
+    Height = 25
     Hint = 'Search Data. At least one slot has to match.'
-    Top = 489
+    Top = 507
     Width = 65
     Anchors = [akRight, akBottom]
-    EditLabel.Height = 15
-    EditLabel.Width = 24
+    EditLabel.Height = 19
+    EditLabel.Width = 31
     EditLabel.Caption = 'Data'
     LabelPosition = lpLeft
     ParentShowHint = False
@@ -202,13 +204,13 @@ object frmMemStatCompare: TfrmMemStatCompare
   end
   object lbeSearchNote: TLabeledEdit
     Left = 1080
-    Height = 23
+    Height = 25
     Hint = 'Search user note.'
-    Top = 489
+    Top = 507
     Width = 65
     Anchors = [akRight, akBottom]
-    EditLabel.Height = 15
-    EditLabel.Width = 26
+    EditLabel.Height = 19
+    EditLabel.Width = 31
     EditLabel.Caption = 'Note'
     LabelPosition = lpLeft
     ParentShowHint = False
@@ -219,7 +221,7 @@ object frmMemStatCompare: TfrmMemStatCompare
   object pnlUpdatingTable: TPanel
     Left = 882
     Height = 25
-    Top = 440
+    Top = 460
     Width = 129
     Anchors = [akRight, akBottom]
     Caption = 'Updating table...'
@@ -228,6 +230,7 @@ object frmMemStatCompare: TfrmMemStatCompare
     Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = [fsBold]
+    ParentBackground = False
     ParentColor = False
     ParentFont = False
     TabOrder = 3

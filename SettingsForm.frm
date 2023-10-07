@@ -1,22 +1,22 @@
 object frmSettings: TfrmSettings
   Left = 215
-  Height = 513
+  Height = 540
   Top = 185
-  Width = 785
+  Width = 882
   Caption = 'Memory Statistics - Settings'
-  ClientHeight = 513
-  ClientWidth = 785
+  ClientHeight = 540
+  ClientWidth = 882
   Color = clBtnFace
-  Constraints.MinHeight = 448
-  Constraints.MinWidth = 785
+  Constraints.MinHeight = 540
+  Constraints.MinWidth = 882
   OnClose = FormClose
   OnCreate = FormCreate
   OnShow = FormShow
   LCLVersion = '7.5'
   object btnOK: TButton
-    Left = 297
+    Left = 338
     Height = 25
-    Top = 480
+    Top = 507
     Width = 75
     Anchors = [akBottom]
     Caption = 'OK'
@@ -25,9 +25,9 @@ object frmSettings: TfrmSettings
     TabOrder = 0
   end
   object btnCancel: TButton
-    Left = 403
+    Left = 458
     Height = 25
-    Top = 480
+    Top = 507
     Width = 75
     Anchors = [akBottom]
     Caption = 'Cancel'
@@ -36,17 +36,17 @@ object frmSettings: TfrmSettings
   end
   object pagctrlSettings: TPageControl
     Left = 0
-    Height = 474
+    Height = 501
     Top = 0
-    Width = 777
-    ActivePage = TabSheetMemorySections
+    Width = 874
+    ActivePage = TabSheetMiscSettings
     Anchors = [akTop, akLeft, akRight, akBottom]
-    TabIndex = 2
+    TabIndex = 1
     TabOrder = 2
     object TabSheetMiscColors: TTabSheet
-      Caption = 'Colors'
-      ClientHeight = 446
-      ClientWidth = 769
+      Caption = 'Colors   '
+      ClientHeight = 473
+      ClientWidth = 866
       object pagctrlColors: TPageControl
         Left = 3
         Height = 289
@@ -68,6 +68,7 @@ object frmSettings: TfrmSettings
             Caption = 'Entries (PFM, RAM, BFM, EBI, SQI)'
             ClientHeight = 228
             ClientWidth = 284
+            ParentBackground = False
             TabOrder = 0
             object lblFirstFileEntryColor: TLabel
               Left = 6
@@ -87,15 +88,15 @@ object frmSettings: TfrmSettings
               Left = 6
               Height = 15
               Top = 138
-              Width = 49
-              Caption = 'Third File'
+              Width = 47
+              Caption = 'Third file'
             end
             object lblFourthFileEntryColor: TLabel
               Left = 6
               Height = 15
               Top = 198
-              Width = 56
-              Caption = 'Fourth File'
+              Width = 54
+              Caption = 'Fourth file'
             end
             object pnlFirstFileEntryChart: TPanel
               Left = 84
@@ -104,6 +105,7 @@ object frmSettings: TfrmSettings
               Top = 0
               Width = 43
               Color = clRed
+              ParentBackground = False
               ParentColor = False
               ParentShowHint = False
               ShowHint = True
@@ -128,6 +130,7 @@ object frmSettings: TfrmSettings
               Top = 60
               Width = 43
               Color = clLime
+              ParentBackground = False
               ParentColor = False
               ParentShowHint = False
               ShowHint = True
@@ -152,6 +155,7 @@ object frmSettings: TfrmSettings
               Top = 120
               Width = 43
               Color = clSkyBlue
+              ParentBackground = False
               ParentColor = False
               ParentShowHint = False
               ShowHint = True
@@ -176,6 +180,7 @@ object frmSettings: TfrmSettings
               Top = 180
               Width = 43
               Color = clGreen
+              ParentBackground = False
               ParentColor = False
               ParentShowHint = False
               ShowHint = True
@@ -202,6 +207,7 @@ object frmSettings: TfrmSettings
             Caption = 'Selected entries (PFM, RAM, BFM, EBI, SQI)'
             ClientHeight = 228
             ClientWidth = 277
+            ParentBackground = False
             TabOrder = 1
             object lblFirstFileSelectedEntryColor: TLabel
               Left = 6
@@ -221,15 +227,15 @@ object frmSettings: TfrmSettings
               Left = 6
               Height = 15
               Top = 138
-              Width = 49
-              Caption = 'Third File'
+              Width = 47
+              Caption = 'Third file'
             end
             object lblFourthFileSelectedEntryColor: TLabel
               Left = 6
               Height = 15
               Top = 198
-              Width = 56
-              Caption = 'Fourth File'
+              Width = 54
+              Caption = 'Fourth file'
             end
             object pnlFirstFileSelectedEntryChart: TPanel
               Left = 76
@@ -238,6 +244,7 @@ object frmSettings: TfrmSettings
               Top = 0
               Width = 43
               Color = clBlack
+              ParentBackground = False
               ParentColor = False
               ParentShowHint = False
               ShowHint = True
@@ -261,6 +268,7 @@ object frmSettings: TfrmSettings
               Top = 60
               Width = 43
               Color = clBlack
+              ParentBackground = False
               ParentColor = False
               ParentShowHint = False
               ShowHint = True
@@ -284,6 +292,7 @@ object frmSettings: TfrmSettings
               Top = 120
               Width = 43
               Color = clBlack
+              ParentBackground = False
               ParentColor = False
               ParentShowHint = False
               ShowHint = True
@@ -307,6 +316,7 @@ object frmSettings: TfrmSettings
               Top = 180
               Width = 43
               Color = clBlack
+              ParentBackground = False
               ParentColor = False
               ParentShowHint = False
               ShowHint = True
@@ -332,6 +342,7 @@ object frmSettings: TfrmSettings
             Caption = 'Overlapping areas'
             ClientHeight = 228
             ClientWidth = 141
+            ParentBackground = False
             TabOrder = 2
             object rdgrpColorType: TRadioGroup
               Left = 6
@@ -355,6 +366,7 @@ object frmSettings: TfrmSettings
                 'Selected color'
               )
               OnClick = rdgrpColorTypeClick
+              ParentBackground = False
               TabOrder = 0
             end
             object pnlOverlap: TPanel
@@ -364,6 +376,7 @@ object frmSettings: TfrmSettings
               Top = 180
               Width = 43
               Color = clGray
+              ParentBackground = False
               ParentColor = False
               ParentShowHint = False
               ShowHint = True
@@ -387,8 +400,8 @@ object frmSettings: TfrmSettings
         end
         object TabSheetChartMiscColors: TTabSheet
           Caption = 'Chart (Miscellaneous)'
-          ClientHeight = 261
-          ClientWidth = 737
+          ClientHeight = 262
+          ClientWidth = 743
           ImageIndex = 2
           object grpTextColorsChart: TGroupBox
             Left = 0
@@ -398,6 +411,7 @@ object frmSettings: TfrmSettings
             Caption = 'Text'
             ClientHeight = 110
             ClientWidth = 284
+            ParentBackground = False
             TabOrder = 0
             object lblChartTextBackgroundColor: TLabel
               Left = 6
@@ -420,6 +434,7 @@ object frmSettings: TfrmSettings
               Top = 0
               Width = 43
               Color = clCream
+              ParentBackground = False
               ParentColor = False
               ParentShowHint = False
               ShowHint = True
@@ -444,6 +459,7 @@ object frmSettings: TfrmSettings
               Top = 60
               Width = 43
               Color = clBlack
+              ParentBackground = False
               ParentColor = False
               ParentShowHint = False
               ShowHint = True
@@ -469,6 +485,7 @@ object frmSettings: TfrmSettings
             Caption = 'Lines and background'
             ClientHeight = 110
             ClientWidth = 286
+            ParentBackground = False
             TabOrder = 1
             object lblChartBackgroundColor: TLabel
               Left = 6
@@ -491,6 +508,7 @@ object frmSettings: TfrmSettings
               Top = 0
               Width = 43
               Color = clCream
+              ParentBackground = False
               ParentColor = False
               ParentShowHint = False
               ShowHint = True
@@ -515,6 +533,7 @@ object frmSettings: TfrmSettings
               Top = 60
               Width = 43
               Color = clBlack
+              ParentBackground = False
               ParentColor = False
               ParentShowHint = False
               ShowHint = True
@@ -536,16 +555,16 @@ object frmSettings: TfrmSettings
       end
     end
     object TabSheetMiscSettings: TTabSheet
-      Caption = 'Misc'
-      ClientHeight = 446
-      ClientWidth = 769
+      Caption = 'Misc   '
+      ClientHeight = 473
+      ClientWidth = 866
       ImageIndex = 1
       object chkDisplayDecimalAddressesCmpTable: TCheckBox
         Left = 3
         Height = 19
         Top = 16
-        Width = 257
-        Caption = 'Display Decimal Addresses in Compare Table'
+        Width = 254
+        Caption = 'Display decimal addresses in Compare Table'
         Checked = True
         OnKeyUp = chkDisplayDecimalAddressesCmpTableKeyUp
         OnMouseUp = chkDisplayDecimalAddressesCmpTableMouseUp
@@ -556,8 +575,8 @@ object frmSettings: TfrmSettings
         Left = 3
         Height = 19
         Top = 48
-        Width = 121
-        Caption = 'Display Table Hints'
+        Width = 116
+        Caption = 'Display table hints'
         Checked = True
         OnKeyUp = chkDisplayTableHintsKeyUp
         OnMouseUp = chkDisplayTableHintsMouseUp
@@ -572,6 +591,7 @@ object frmSettings: TfrmSettings
         Caption = 'Device'
         ClientHeight = 229
         ClientWidth = 170
+        ParentBackground = False
         TabOrder = 2
         object lblDeviceBitness: TLabel
           Left = 14
@@ -642,31 +662,32 @@ object frmSettings: TfrmSettings
         end
       end
       object grpDeviceDefinitions: TGroupBox
-        Left = 280
-        Height = 126
-        Top = 0
-        Width = 470
+        Left = 320
+        Height = 176
+        Top = 16
+        Width = 534
         Anchors = [akTop, akLeft, akRight]
         Caption = 'Device definitions'
-        ClientHeight = 106
-        ClientWidth = 466
+        ClientHeight = 156
+        ClientWidth = 530
+        ParentBackground = False
         TabOrder = 3
         object lbeDefsFolder: TLabeledEdit
           Left = 6
           Height = 23
-          Top = 17
-          Width = 415
+          Top = 32
+          Width = 458
           Anchors = [akTop, akLeft, akRight]
           EditLabel.Height = 15
-          EditLabel.Width = 415
+          EditLabel.Width = 458
           EditLabel.Caption = 'Defs folder'
           TabOrder = 0
           OnKeyUp = lbeDefsFolderKeyUp
         end
         object btnBrowseDefsFolder: TButton
-          Left = 427
-          Height = 21
-          Top = 17
+          Left = 472
+          Height = 25
+          Top = 32
           Width = 27
           Anchors = [akTop, akRight]
           Caption = '...'
@@ -675,8 +696,8 @@ object frmSettings: TfrmSettings
         end
         object rdgrpDefinitionFilePriority: TRadioGroup
           Left = 6
-          Height = 59
-          Top = 44
+          Height = 76
+          Top = 71
           Width = 185
           AutoFill = True
           Caption = 'Definition file priority'
@@ -687,7 +708,7 @@ object frmSettings: TfrmSettings
           ChildSizing.ShrinkVertical = crsScaleChilds
           ChildSizing.Layout = cclLeftToRightThenTopToBottom
           ChildSizing.ControlsPerLine = 1
-          ClientHeight = 39
+          ClientHeight = 56
           ClientWidth = 181
           ItemIndex = 0
           Items.Strings = (
@@ -695,22 +716,33 @@ object frmSettings: TfrmSettings
             'Local device list (ini)'
           )
           OnClick = rdgrpDefinitionFilePriorityClick
+          ParentBackground = False
           ParentShowHint = False
           ShowHint = True
           TabOrder = 2
         end
       end
+      object chkShowDefsFolderOnMainWindow: TCheckBox
+        Left = 3
+        Height = 19
+        Top = 80
+        Width = 201
+        Caption = 'Show Defs folder on main window'
+        OnKeyUp = chkShowDefsFolderOnMainWindowKeyUp
+        OnMouseUp = chkShowDefsFolderOnMainWindowMouseUp
+        TabOrder = 4
+      end
     end
     object TabSheetMemorySections: TTabSheet
-      Caption = 'Memory Sections'
-      ClientHeight = 446
-      ClientWidth = 769
+      Caption = 'Memory Sections   '
+      ClientHeight = 473
+      ClientWidth = 866
       ImageIndex = 2
       object spdbtnMoveUp: TSpeedButton
         Left = 250
         Height = 25
         Hint = 'Move up'
-        Top = 418
+        Top = 445
         Width = 23
         Anchors = [akLeft, akBottom]
         Enabled = False
@@ -741,7 +773,7 @@ object frmSettings: TfrmSettings
         Left = 279
         Height = 25
         Hint = 'Move down'
-        Top = 418
+        Top = 445
         Width = 23
         Anchors = [akLeft, akBottom]
         Enabled = False
@@ -769,9 +801,9 @@ object frmSettings: TfrmSettings
         ParentShowHint = False
       end
       object lblMemoryTranslationInfoOperation: TLabel
-        Left = 119
+        Left = 136
         Height = 15
-        Top = 285
+        Top = 275
         Width = 109
         Anchors = [akLeft, akBottom]
         Caption = 'Mem Translation Op'
@@ -779,7 +811,7 @@ object frmSettings: TfrmSettings
       object btnAdd: TButton
         Left = 0
         Height = 25
-        Top = 418
+        Top = 445
         Width = 75
         Anchors = [akLeft, akBottom]
         Caption = 'Add'
@@ -789,7 +821,7 @@ object frmSettings: TfrmSettings
       object btnDelete: TButton
         Left = 162
         Height = 25
-        Top = 418
+        Top = 445
         Width = 75
         Anchors = [akLeft, akBottom]
         Caption = 'Delete...'
@@ -797,14 +829,15 @@ object frmSettings: TfrmSettings
         TabOrder = 2
       end
       object grpChartMemoryAllocation: TGroupBox
-        Left = 375
-        Height = 117
-        Top = 287
-        Width = 198
+        Left = 440
+        Height = 144
+        Top = 279
+        Width = 224
         Anchors = [akLeft, akBottom]
         Caption = 'Chart (Memory allocation) - Colors'
-        ClientHeight = 97
-        ClientWidth = 194
+        ClientHeight = 124
+        ClientWidth = 220
+        ParentBackground = False
         TabOrder = 3
         object lblEntryColor: TLabel
           Left = 53
@@ -816,7 +849,7 @@ object frmSettings: TfrmSettings
         object lblSelectedEntryColor: TLabel
           Left = 53
           Height = 15
-          Top = 53
+          Top = 65
           Width = 106
           Caption = 'Selected Entry Color'
         end
@@ -824,9 +857,10 @@ object frmSettings: TfrmSettings
           Left = 4
           Height = 43
           Hint = 'Double click to edit'
-          Top = 0
+          Top = 8
           Width = 43
           Color = 5197823
+          ParentBackground = False
           ParentColor = False
           ParentShowHint = False
           ShowHint = True
@@ -836,7 +870,7 @@ object frmSettings: TfrmSettings
         object colboxEntryChart: TColorBox
           Left = 53
           Height = 22
-          Top = 23
+          Top = 25
           Width = 130
           Selected = 5197823
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
@@ -848,9 +882,10 @@ object frmSettings: TfrmSettings
           Left = 4
           Height = 43
           Hint = 'Double click to edit'
-          Top = 49
+          Top = 69
           Width = 43
           Color = clYellow
+          ParentBackground = False
           ParentColor = False
           ParentShowHint = False
           ShowHint = True
@@ -860,7 +895,7 @@ object frmSettings: TfrmSettings
         object colboxSelectedEntryChart: TColorBox
           Left = 53
           Height = 22
-          Top = 72
+          Top = 86
           Width = 130
           Selected = clYellow
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
@@ -870,14 +905,15 @@ object frmSettings: TfrmSettings
         end
       end
       object grpTable: TGroupBox
-        Left = 575
-        Height = 117
-        Top = 287
-        Width = 194
+        Left = 672
+        Height = 144
+        Top = 279
+        Width = 192
         Anchors = [akLeft, akBottom]
         Caption = 'Table - Colors'
-        ClientHeight = 97
-        ClientWidth = 190
+        ClientHeight = 124
+        ClientWidth = 188
+        ParentBackground = False
         TabOrder = 4
         object lblEntryColorTable: TLabel
           Left = 54
@@ -889,7 +925,7 @@ object frmSettings: TfrmSettings
         object lblTextColorTable: TLabel
           Left = 54
           Height = 15
-          Top = 53
+          Top = 65
           Width = 54
           Caption = 'Text Color'
         end
@@ -897,9 +933,10 @@ object frmSettings: TfrmSettings
           Left = 4
           Height = 43
           Hint = 'Double click to edit'
-          Top = 0
+          Top = 8
           Width = 43
           Color = 13158655
+          ParentBackground = False
           ParentColor = False
           ParentShowHint = False
           ShowHint = True
@@ -909,7 +946,7 @@ object frmSettings: TfrmSettings
         object colboxEntryColorTable: TColorBox
           Left = 54
           Height = 22
-          Top = 21
+          Top = 25
           Width = 130
           Selected = 13158655
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
@@ -921,9 +958,10 @@ object frmSettings: TfrmSettings
           Left = 4
           Height = 43
           Hint = 'Double click to edit'
-          Top = 49
+          Top = 69
           Width = 43
           Color = clBlack
+          ParentBackground = False
           ParentColor = False
           ParentShowHint = False
           ShowHint = True
@@ -933,7 +971,7 @@ object frmSettings: TfrmSettings
         object colboxTextColorTable: TColorBox
           Left = 54
           Height = 22
-          Top = 72
+          Top = 86
           Width = 130
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
           ItemHeight = 16
@@ -945,11 +983,11 @@ object frmSettings: TfrmSettings
         Left = 3
         Height = 23
         Hint = 'Examples: PFM, RAM, BFM, CFG, EBI, SQI'
-        Top = 301
-        Width = 110
+        Top = 296
+        Width = 125
         Anchors = [akLeft, akBottom]
         EditLabel.Height = 15
-        EditLabel.Width = 110
+        EditLabel.Width = 125
         EditLabel.Caption = 'Display Name'
         ParentShowHint = False
         ShowHint = True
@@ -960,11 +998,11 @@ object frmSettings: TfrmSettings
         Left = 3
         Height = 23
         Hint = 'Examples: Program Flash, RAM, Boot Flash, Config Flash, Ext Bus Interface, Ser Quad Interface'
-        Top = 345
-        Width = 110
+        Top = 353
+        Width = 125
         Anchors = [akLeft, akBottom]
         EditLabel.Height = 15
-        EditLabel.Width = 110
+        EditLabel.Width = 125
         EditLabel.Caption = 'Long Display Name'
         ParentShowHint = False
         ShowHint = True
@@ -975,11 +1013,11 @@ object frmSettings: TfrmSettings
         Left = 3
         Height = 23
         Hint = 'Examples: ROM, RAM, BOOTROM, CFGREG, EBIROM, SQIROM.   Comma separated values can be used, if multiple definition names are required for the same definition.'
-        Top = 389
-        Width = 110
+        Top = 416
+        Width = 125
         Anchors = [akLeft, akBottom]
         EditLabel.Height = 15
-        EditLabel.Width = 110
+        EditLabel.Width = 125
         EditLabel.Caption = 'Definition Name'
         ParentShowHint = False
         ShowHint = True
@@ -987,14 +1025,14 @@ object frmSettings: TfrmSettings
         OnChange = GenericLabeledEditChange
       end
       object lbeAddressOffsetS1: TLabeledEdit
-        Left = 119
+        Left = 136
         Height = 23
         Hint = 'For PIC32, this can be 0x0, 0x20000000 or -0x20000000.   (-0x20000000 = 0xE0000000)'
-        Top = 345
-        Width = 110
+        Top = 353
+        Width = 137
         Anchors = [akLeft, akBottom]
         EditLabel.Height = 15
-        EditLabel.Width = 110
+        EditLabel.Width = 137
         EditLabel.Caption = 'Address Offset S1'
         ParentShowHint = False
         ShowHint = True
@@ -1002,14 +1040,14 @@ object frmSettings: TfrmSettings
         OnChange = GenericLabeledEditChange
       end
       object lbeMinDefaultAddr: TLabeledEdit
-        Left = 119
+        Left = 136
         Height = 23
         Hint = 'Physical address (hex), used when the section is not found in definition file.'
-        Top = 389
-        Width = 110
+        Top = 416
+        Width = 136
         Anchors = [akLeft, akBottom]
         EditLabel.Height = 15
-        EditLabel.Width = 110
+        EditLabel.Width = 136
         EditLabel.Caption = 'Min Default Address'
         ParentShowHint = False
         ShowHint = True
@@ -1017,14 +1055,14 @@ object frmSettings: TfrmSettings
         OnChange = GenericLabeledEditChange
       end
       object lbeAddressOffsetS2: TLabeledEdit
-        Left = 235
+        Left = 279
         Height = 23
         Hint = 'For PIC32, this can be 0x0, 0x20000000 or -0x20000000.   (-0x20000000 = 0xE0000000)'
-        Top = 345
-        Width = 133
+        Top = 353
+        Width = 152
         Anchors = [akLeft, akBottom]
         EditLabel.Height = 15
-        EditLabel.Width = 133
+        EditLabel.Width = 152
         EditLabel.Caption = 'Address Offset S2'
         ParentShowHint = False
         ShowHint = True
@@ -1032,14 +1070,14 @@ object frmSettings: TfrmSettings
         OnChange = GenericLabeledEditChange
       end
       object lbeMaxDefaultAddr: TLabeledEdit
-        Left = 235
+        Left = 279
         Height = 23
         Hint = 'Physical address (hex), used when the section is not found in definition file.'
-        Top = 389
-        Width = 133
+        Top = 416
+        Width = 152
         Anchors = [akLeft, akBottom]
         EditLabel.Height = 15
-        EditLabel.Width = 133
+        EditLabel.Width = 152
         EditLabel.Caption = 'Max Default Address'
         ParentShowHint = False
         ShowHint = True
@@ -1047,13 +1085,13 @@ object frmSettings: TfrmSettings
         OnChange = GenericLabeledEditChange
       end
       object lbeMemoryTranslationInfoValue: TLabeledEdit
-        Left = 235
+        Left = 279
         Height = 23
-        Top = 301
-        Width = 133
+        Top = 296
+        Width = 152
         Anchors = [akLeft, akBottom]
         EditLabel.Height = 15
-        EditLabel.Width = 133
+        EditLabel.Width = 152
         EditLabel.Caption = 'Mem Translation Value'
         ParentShowHint = False
         ShowHint = True
@@ -1061,11 +1099,10 @@ object frmSettings: TfrmSettings
         OnChange = GenericLabeledEditChange
       end
       object cmbMemoryTranslationInfoOperation: TComboBox
-        Left = 119
+        Left = 136
         Height = 22
-        Top = 303
-        Width = 110
-        Anchors = [akLeft, akBottom]
+        Top = 296
+        Width = 137
         ItemHeight = 16
         ItemIndex = 0
         Items.Strings = (
@@ -1079,9 +1116,9 @@ object frmSettings: TfrmSettings
         Text = 'None'
       end
       object chkVisibleOnCompare: TCheckBox
-        Left = 375
+        Left = 440
         Height = 19
-        Top = 424
+        Top = 449
         Width = 121
         Anchors = [akLeft, akBottom]
         Caption = 'Visible on compare'
@@ -1092,10 +1129,10 @@ object frmSettings: TfrmSettings
         TabOrder = 14
       end
       object chkDisplayEvenIfMissingFromDefinition: TCheckBox
-        Left = 520
+        Left = 597
         Height = 19
         Hint = 'Display EBI and SQI columns, even if their sections are not present in the definition file (.mlk / .json).'
-        Top = 424
+        Top = 449
         Width = 223
         Anchors = [akLeft, akBottom]
         Caption = 'Display even if missing from definition'
@@ -1110,7 +1147,7 @@ object frmSettings: TfrmSettings
       object bitbtnUpdate: TBitBtn
         Left = 81
         Height = 25
-        Top = 418
+        Top = 445
         Width = 75
         Anchors = [akLeft, akBottom]
         Caption = 'Update'
@@ -1118,15 +1155,25 @@ object frmSettings: TfrmSettings
         TabOrder = 1
       end
       object chkVisibleOnTable: TCheckBox
-        Left = 375
+        Left = 440
         Height = 19
-        Top = 403
+        Top = 428
         Width = 100
         Anchors = [akLeft, akBottom]
         Caption = 'Visible on table'
         OnKeyUp = chkVisibleOnTableKeyUp
         OnMouseUp = chkVisibleOnTableMouseUp
         TabOrder = 16
+      end
+      object lblDevWarning: TLabel
+        Left = 0
+        Height = 15
+        Top = 40
+        Width = 725
+        Caption = 'Before compiling, please switch to another tab of this page control. There is a bug, which causes the application to hang if left on this tab.'
+        Color = 8224255
+        Transparent = False
+        Visible = False
       end
     end
   end
@@ -1159,8 +1206,8 @@ object frmSettings: TfrmSettings
   object imglstMemSections: TImageList
     Height = 32
     Width = 32
-    Left = 576
-    Top = 464
+    Left = 568
+    Top = 184
     Bitmap = {
       4C7A0100000020000000200000001A0000000000000078DAEDC1010D000000C2
       A0F74F6D0F0714000000F06E10000001

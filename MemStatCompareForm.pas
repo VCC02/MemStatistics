@@ -1119,15 +1119,15 @@ begin
   NewColum.Text := 'Mem';
 
   NewColum := vstSlotCmp.Header.Columns.Add;
-  NewColum.MinWidth := 90;
+  NewColum.MinWidth := 100;
   NewColum.Position := 2;
-  NewColum.Width := 90;
+  NewColum.Width := 100;
   NewColum.Text := 'Address [Hex]';
 
   NewColum := vstSlotCmp.Header.Columns.Add;
-  NewColum.MinWidth := 90;
+  NewColum.MinWidth := 100;
   NewColum.Position := 3;
-  NewColum.Width := 90;
+  NewColum.Width := 100;
   NewColum.Text := 'Address [Dec]';
 
   NewColum := vstSlotCmp.Header.Columns.Add;
@@ -1658,9 +1658,10 @@ begin
   else
     OpenDialogHex.FileName := AFileSlot.FileNameHex;
 
+  CloseHex(AFileSlot, ASlotIndex);
+
   if LoadHEXFile(OpenDialogHex.FileName, True, AFileSlot.DecodedHEX, Debugmsg) then
   begin
-    CloseHex(AFileSlot, ASlotIndex);
     AFileSlot.FileNameHex := OpenDialogHex.FileName;
     AFileSlot.HasHex := True;
 
@@ -2302,8 +2303,14 @@ begin
             TargetCanvas.Pen.Color := FMemStatColorOptions.FirstFileEntryChart;
             CackedBkCol := FCachedSlotEntryColorTableArr[SectionIndex].Slot1;
 
-            if (Integer(Node.Index) < Len1) and FSlot1.FullHEX[Node.Index].Highlighted then
-              CackedBkCol := WeightedAverage2Colors(CackedBkCol, clAqua, 0.8);
+            if Integer(Node.Index) < Len1 then
+            begin
+              if FSlot1.FullHEX[Node.Index].Highlighted then
+                CackedBkCol := WeightedAverage2Colors(CackedBkCol, clAqua, 0.8);
+
+              if FSlot1.FullHEX[Node.Index].HData = $FFFFFFFF then   //////////////////////////////// $FFFFFFFF is for 32-bit
+                CackedBkCol := WeightedAverage2Colors(CackedBkCol, clWhite, 0.3);
+            end;
 
             TargetCanvas.Brush.Color := CackedBkCol;
           end;
@@ -2313,8 +2320,14 @@ begin
             TargetCanvas.Pen.Color := FMemStatColorOptions.SecondFileEntryChart;
             CackedBkCol := FCachedSlotEntryColorTableArr[SectionIndex].Slot2;
 
-            if (Integer(Node.Index) < Len2) and FSlot2.FullHEX[Node.Index].Highlighted then
-              CackedBkCol := WeightedAverage2Colors(CackedBkCol, clAqua, 0.8);
+            if Integer(Node.Index) < Len2 then
+            begin
+              if FSlot2.FullHEX[Node.Index].Highlighted then
+                CackedBkCol := WeightedAverage2Colors(CackedBkCol, clAqua, 0.8);
+
+              if FSlot2.FullHEX[Node.Index].HData = $FFFFFFFF then   //////////////////////////////// $FFFFFFFF is for 32-bit
+                CackedBkCol := WeightedAverage2Colors(CackedBkCol, clWhite, 0.3);
+            end;
 
             TargetCanvas.Brush.Color := CackedBkCol;
           end;
@@ -2324,8 +2337,14 @@ begin
             TargetCanvas.Pen.Color := FMemStatColorOptions.ThirdFileEntryChart;
             CackedBkCol := FCachedSlotEntryColorTableArr[SectionIndex].Slot3;
 
-            if (Integer(Node.Index) < Len3) and FSlot3.FullHEX[Node.Index].Highlighted then
-              CackedBkCol := WeightedAverage2Colors(CackedBkCol, clAqua, 0.8);
+            if Integer(Node.Index) < Len3 then
+            begin
+              if FSlot3.FullHEX[Node.Index].Highlighted then
+                CackedBkCol := WeightedAverage2Colors(CackedBkCol, clAqua, 0.8);
+
+              if FSlot3.FullHEX[Node.Index].HData = $FFFFFFFF then   //////////////////////////////// $FFFFFFFF is for 32-bit
+                CackedBkCol := WeightedAverage2Colors(CackedBkCol, clWhite, 0.3);
+            end;
 
             TargetCanvas.Brush.Color := CackedBkCol;
           end;
@@ -2335,8 +2354,14 @@ begin
             TargetCanvas.Pen.Color := FMemStatColorOptions.FourthFileEntryChart;
             CackedBkCol := FCachedSlotEntryColorTableArr[SectionIndex].Slot4;
 
-            if (Integer(Node.Index) < Len4) and FSlot4.FullHEX[Node.Index].Highlighted then
-              CackedBkCol := WeightedAverage2Colors(CackedBkCol, clAqua, 0.8);
+            if Integer(Node.Index) < Len4 then
+            begin
+              if FSlot4.FullHEX[Node.Index].Highlighted then
+                CackedBkCol := WeightedAverage2Colors(CackedBkCol, clAqua, 0.8);
+
+              if FSlot4.FullHEX[Node.Index].HData = $FFFFFFFF then   //////////////////////////////// $FFFFFFFF is for 32-bit
+                CackedBkCol := WeightedAverage2Colors(CackedBkCol, clWhite, 0.3);
+            end;
 
             TargetCanvas.Brush.Color := CackedBkCol;
           end;
