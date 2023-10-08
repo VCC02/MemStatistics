@@ -9,10 +9,10 @@ object frmSettings: TfrmSettings
   Color = clBtnFace
   Constraints.MinHeight = 540
   Constraints.MinWidth = 882
+  LCLVersion = '8.2'
   OnClose = FormClose
   OnCreate = FormCreate
   OnShow = FormShow
-  LCLVersion = '7.5'
   object btnOK: TButton
     Left = 338
     Height = 25
@@ -21,8 +21,8 @@ object frmSettings: TfrmSettings
     Anchors = [akBottom]
     Caption = 'OK'
     Enabled = False
-    OnClick = btnOKClick
     TabOrder = 0
+    OnClick = btnOKClick
   end
   object btnCancel: TButton
     Left = 458
@@ -31,8 +31,8 @@ object frmSettings: TfrmSettings
     Width = 75
     Anchors = [akBottom]
     Caption = 'Cancel'
-    OnClick = btnCancelClick
     TabOrder = 1
+    OnClick = btnCancelClick
   end
   object pagctrlSettings: TPageControl
     Left = 0
@@ -120,8 +120,8 @@ object frmSettings: TfrmSettings
               Selected = clRed
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
               ItemHeight = 16
-              OnChange = colboxGenericChange
               TabOrder = 1
+              OnChange = colboxGenericChange
             end
             object pnlSecondFileEntryChart: TPanel
               Left = 84
@@ -145,8 +145,8 @@ object frmSettings: TfrmSettings
               Selected = clLime
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
               ItemHeight = 16
-              OnChange = colboxGenericChange
               TabOrder = 3
+              OnChange = colboxGenericChange
             end
             object pnlThirdFileEntryChart: TPanel
               Left = 84
@@ -170,8 +170,8 @@ object frmSettings: TfrmSettings
               Selected = clSkyBlue
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
               ItemHeight = 16
-              OnChange = colboxGenericChange
               TabOrder = 5
+              OnChange = colboxGenericChange
             end
             object pnlFourthFileEntryChart: TPanel
               Left = 84
@@ -195,8 +195,8 @@ object frmSettings: TfrmSettings
               Selected = clGreen
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
               ItemHeight = 16
-              OnChange = colboxGenericChange
               TabOrder = 7
+              OnChange = colboxGenericChange
             end
           end
           object grpSelectedEntriesColorsChartMemComp: TGroupBox
@@ -258,8 +258,8 @@ object frmSettings: TfrmSettings
               Width = 145
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
               ItemHeight = 16
-              OnChange = colboxGenericChange
               TabOrder = 1
+              OnChange = colboxGenericChange
             end
             object pnlSecondFileSelectedEntryChart: TPanel
               Left = 76
@@ -282,8 +282,8 @@ object frmSettings: TfrmSettings
               Width = 145
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
               ItemHeight = 16
-              OnChange = colboxGenericChange
               TabOrder = 3
+              OnChange = colboxGenericChange
             end
             object pnlThirdFileSelectedEntryChart: TPanel
               Left = 76
@@ -306,8 +306,8 @@ object frmSettings: TfrmSettings
               Width = 145
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
               ItemHeight = 16
-              OnChange = colboxGenericChange
               TabOrder = 5
+              OnChange = colboxGenericChange
             end
             object pnlFourthFileSelectedEntryChart: TPanel
               Left = 76
@@ -330,8 +330,8 @@ object frmSettings: TfrmSettings
               Width = 145
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
               ItemHeight = 16
-              OnChange = colboxGenericChange
               TabOrder = 7
+              OnChange = colboxGenericChange
             end
           end
           object grpOverlapColorsChartMemComp: TGroupBox
@@ -365,9 +365,9 @@ object frmSettings: TfrmSettings
                 'Average color'
                 'Selected color'
               )
-              OnClick = rdgrpColorTypeClick
               ParentBackground = False
               TabOrder = 0
+              OnClick = rdgrpColorTypeClick
             end
             object pnlOverlap: TPanel
               Left = 12
@@ -392,9 +392,9 @@ object frmSettings: TfrmSettings
               Selected = clGray
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
               ItemHeight = 16
-              OnChange = colboxGenericChange
               TabOrder = 2
               Visible = False
+              OnChange = colboxGenericChange
             end
           end
         end
@@ -449,8 +449,8 @@ object frmSettings: TfrmSettings
               Selected = clCream
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
               ItemHeight = 16
-              OnChange = colboxGenericChange
               TabOrder = 1
+              OnChange = colboxGenericChange
             end
             object pnlTextColorChart: TPanel
               Left = 84
@@ -473,8 +473,8 @@ object frmSettings: TfrmSettings
               Width = 145
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
               ItemHeight = 16
-              OnChange = colboxGenericChange
               TabOrder = 3
+              OnChange = colboxGenericChange
             end
           end
           object grpLinesAndBackgroundColorsChart: TGroupBox
@@ -523,8 +523,8 @@ object frmSettings: TfrmSettings
               Selected = clCream
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
               ItemHeight = 16
-              OnChange = colboxGenericChange
               TabOrder = 1
+              OnChange = colboxGenericChange
             end
             object pnlLineChart: TPanel
               Left = 84
@@ -547,8 +547,8 @@ object frmSettings: TfrmSettings
               Width = 145
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
               ItemHeight = 16
-              OnChange = colboxGenericChange
               TabOrder = 3
+              OnChange = colboxGenericChange
             end
           end
         end
@@ -563,25 +563,25 @@ object frmSettings: TfrmSettings
         Left = 3
         Height = 19
         Top = 16
-        Width = 254
+        Width = 252
         Caption = 'Display decimal addresses in Compare Table'
         Checked = True
-        OnKeyUp = chkDisplayDecimalAddressesCmpTableKeyUp
-        OnMouseUp = chkDisplayDecimalAddressesCmpTableMouseUp
         State = cbChecked
         TabOrder = 0
+        OnKeyUp = chkDisplayDecimalAddressesCmpTableKeyUp
+        OnMouseUp = chkDisplayDecimalAddressesCmpTableMouseUp
       end
       object chkDisplayTableHints: TCheckBox
         Left = 3
         Height = 19
         Top = 48
-        Width = 116
+        Width = 114
         Caption = 'Display table hints'
         Checked = True
-        OnKeyUp = chkDisplayTableHintsKeyUp
-        OnMouseUp = chkDisplayTableHintsMouseUp
         State = cbChecked
         TabOrder = 1
+        OnKeyUp = chkDisplayTableHintsKeyUp
+        OnMouseUp = chkDisplayTableHintsMouseUp
       end
       object grpDevice: TGroupBox
         Left = 3
@@ -654,11 +654,11 @@ object frmSettings: TfrmSettings
             '16-bit'
             '32-bit'
           )
-          OnChange = cmbDeviceBitnessChange
           ParentShowHint = False
           ShowHint = True
           Style = csOwnerDrawFixed
           TabOrder = 3
+          OnChange = cmbDeviceBitnessChange
         end
       end
       object grpDeviceDefinitions: TGroupBox
@@ -691,8 +691,8 @@ object frmSettings: TfrmSettings
           Width = 27
           Anchors = [akTop, akRight]
           Caption = '...'
-          OnClick = btnBrowseDefsFolderClick
           TabOrder = 1
+          OnClick = btnBrowseDefsFolderClick
         end
         object rdgrpDefinitionFilePriority: TRadioGroup
           Left = 6
@@ -715,22 +715,22 @@ object frmSettings: TfrmSettings
             'Defs folder (mlk / json)'
             'Local device list (ini)'
           )
-          OnClick = rdgrpDefinitionFilePriorityClick
           ParentBackground = False
           ParentShowHint = False
           ShowHint = True
           TabOrder = 2
+          OnClick = rdgrpDefinitionFilePriorityClick
         end
       end
       object chkShowDefsFolderOnMainWindow: TCheckBox
         Left = 3
         Height = 19
         Top = 80
-        Width = 201
+        Width = 199
         Caption = 'Show Defs folder on main window'
+        TabOrder = 4
         OnKeyUp = chkShowDefsFolderOnMainWindowKeyUp
         OnMouseUp = chkShowDefsFolderOnMainWindowMouseUp
-        TabOrder = 4
       end
     end
     object TabSheetMemorySections: TTabSheet
@@ -764,10 +764,10 @@ object frmSettings: TfrmSettings
           FFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF4CB1224C
           B1224CB122FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000
         }
-        OnClick = spdbtnMoveUpClick
         ShowHint = True
         ParentFont = False
         ParentShowHint = False
+        OnClick = spdbtnMoveUpClick
       end
       object spdbtnMoveDown: TSpeedButton
         Left = 279
@@ -795,15 +795,15 @@ object frmSettings: TfrmSettings
           22FFFFFFFFFFFF000000FFFFFF4CB1224CB1224CB1224CB1224CB1224CB1224C
           B1224CB1224CB1224CB1224CB1224CB1224CB122FFFFFF000000
         }
-        OnClick = spdbtnMoveDownClick
         ShowHint = True
         ParentFont = False
         ParentShowHint = False
+        OnClick = spdbtnMoveDownClick
       end
       object lblMemoryTranslationInfoOperation: TLabel
         Left = 136
         Height = 15
-        Top = 275
+        Top = 278
         Width = 109
         Anchors = [akLeft, akBottom]
         Caption = 'Mem Translation Op'
@@ -815,8 +815,8 @@ object frmSettings: TfrmSettings
         Width = 75
         Anchors = [akLeft, akBottom]
         Caption = 'Add'
-        OnClick = btnAddClick
         TabOrder = 0
+        OnClick = btnAddClick
       end
       object btnDelete: TButton
         Left = 162
@@ -825,8 +825,8 @@ object frmSettings: TfrmSettings
         Width = 75
         Anchors = [akLeft, akBottom]
         Caption = 'Delete...'
-        OnClick = btnDeleteClick
         TabOrder = 2
+        OnClick = btnDeleteClick
       end
       object grpChartMemoryAllocation: TGroupBox
         Left = 440
@@ -875,8 +875,8 @@ object frmSettings: TfrmSettings
           Selected = 5197823
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
           ItemHeight = 16
-          OnChange = colboxGenericChange
           TabOrder = 1
+          OnChange = colboxGenericChange
         end
         object pnlSelectedEntryChart: TPanel
           Left = 4
@@ -900,8 +900,8 @@ object frmSettings: TfrmSettings
           Selected = clYellow
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
           ItemHeight = 16
-          OnChange = colboxGenericChange
           TabOrder = 3
+          OnChange = colboxGenericChange
         end
       end
       object grpTable: TGroupBox
@@ -951,8 +951,8 @@ object frmSettings: TfrmSettings
           Selected = 13158655
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
           ItemHeight = 16
-          OnChange = colboxGenericChange
           TabOrder = 1
+          OnChange = colboxGenericChange
         end
         object pnlTextColorTable: TPanel
           Left = 4
@@ -975,8 +975,8 @@ object frmSettings: TfrmSettings
           Width = 130
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor]
           ItemHeight = 16
-          OnChange = colboxGenericChange
           TabOrder = 3
+          OnChange = colboxGenericChange
         end
       end
       object lbeDisplayName: TLabeledEdit
@@ -1103,6 +1103,7 @@ object frmSettings: TfrmSettings
         Height = 22
         Top = 296
         Width = 137
+        Anchors = [akLeft, akBottom]
         ItemHeight = 16
         ItemIndex = 0
         Items.Strings = (
@@ -1110,39 +1111,39 @@ object frmSettings: TfrmSettings
           'ADD'
           'OR'
         )
-        OnChange = cmbMemoryTranslationInfoOperationChange
         Style = csOwnerDrawFixed
         TabOrder = 13
         Text = 'None'
+        OnChange = cmbMemoryTranslationInfoOperationChange
       end
       object chkVisibleOnCompare: TCheckBox
         Left = 440
         Height = 19
         Top = 449
-        Width = 121
+        Width = 119
         Anchors = [akLeft, akBottom]
         Caption = 'Visible on compare'
         Checked = True
-        OnKeyUp = chkVisibleOnCompareKeyUp
-        OnMouseUp = chkVisibleOnCompareMouseUp
         State = cbChecked
         TabOrder = 14
+        OnKeyUp = chkVisibleOnCompareKeyUp
+        OnMouseUp = chkVisibleOnCompareMouseUp
       end
       object chkDisplayEvenIfMissingFromDefinition: TCheckBox
         Left = 597
         Height = 19
         Hint = 'Display EBI and SQI columns, even if their sections are not present in the definition file (.mlk / .json).'
         Top = 449
-        Width = 223
+        Width = 221
         Anchors = [akLeft, akBottom]
         Caption = 'Display even if missing from definition'
         Checked = True
-        OnKeyUp = chkDisplayEvenIfMissingFromDefinitionKeyUp
-        OnMouseUp = chkDisplayEvenIfMissingFromDefinitionMouseUp
         ParentShowHint = False
         ShowHint = True
         State = cbChecked
         TabOrder = 15
+        OnKeyUp = chkDisplayEvenIfMissingFromDefinitionKeyUp
+        OnMouseUp = chkDisplayEvenIfMissingFromDefinitionMouseUp
       end
       object bitbtnUpdate: TBitBtn
         Left = 81
@@ -1151,19 +1152,19 @@ object frmSettings: TfrmSettings
         Width = 75
         Anchors = [akLeft, akBottom]
         Caption = 'Update'
-        OnClick = btnUpdateClick
         TabOrder = 1
+        OnClick = btnUpdateClick
       end
       object chkVisibleOnTable: TCheckBox
         Left = 440
         Height = 19
         Top = 428
-        Width = 100
+        Width = 98
         Anchors = [akLeft, akBottom]
         Caption = 'Visible on table'
+        TabOrder = 16
         OnKeyUp = chkVisibleOnTableKeyUp
         OnMouseUp = chkVisibleOnTableMouseUp
-        TabOrder = 16
       end
       object lblDevWarning: TLabel
         Left = 0
@@ -1172,6 +1173,7 @@ object frmSettings: TfrmSettings
         Width = 725
         Caption = 'Before compiling, please switch to another tab of this page control. There is a bug, which causes the application to hang if left on this tab.'
         Color = 8224255
+        ParentColor = False
         Transparent = False
         Visible = False
       end
