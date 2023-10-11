@@ -248,13 +248,12 @@ var
  - Displaying split columns (S1 and S2 schemes) is PIC32 specific, because of KSEGs. This should be an option in settings window. There is no proper support for this in MemTables.
  - See  "get a concatenated range, and make sure DrawMem and DrawMemFocusedEntry will also use that"  comment in MemTables.pas.
  - The setting window should not have the "Update" button. There should be only "Add" and "Delete". "Add" should add a new empty row.
- [] - Provide D2006 and FP32/64 on Win/Lin builds. There should also be some instructions regarding GTK libraries for Linux.
  - Bug - the displayed ranges, for non-existent columns, look wrong. See EEPROM.
  [] - verify if both def parsers support reversed tag order  (max, then min)
    vstMemTableCompareNodes and vstRawTableCompareNodes require refactoring
  - Finish support for multiple address ranges / section. There are many hardcoded calls with the first range (index 0).
  - the minimap on cmp window should display grayed (desaturated) areas for 0xFFFFFFFF entries.
- - when writing to sim mem, make sure to properly mask bits, because Flash allows writing '0's only. This is required, to get same content as a read-back hex file.
+ - when writing to sim mem, make sure to properly mask bits, because Flash allows writing '0's only. This is required, to get same content as a read-back hex file. (Should be an option)
  - add an option to display selected command on minimap
  - SendCmdToCompareWindowByIndex - refactoring
  - verify if EraseMemoryChunk and WriteMemory really require calls to GetUserNoteAtAddress and UpdateUserNote
@@ -262,13 +261,19 @@ var
  - the VST on SimMem window, should have colored background, depending on target addresses, like all the other tables. On PIC32, there should be a memory translation.
  - verify if LoadRoutinesFromMainWindow can be further optimized by sorting Routines and EntriesFromRaw arrays, at least in FP, since it is slower than Delphi  (see SortAlgs unit)
  - the page control (with the two VSTs), buttons, editboxes, should sit on a panel. This panel can be modified by splitter.
+ - verify various typecasting to Integer, which might cause wrong results on 64-bit
 
  - repainting the minimap from SimMem window should be done by a debounce timer. This should prevent the current amount of flickering.
- - Bug - fix AV in CopyDataFromFileSlot  (data sync error)
- - add option to hide defs folder path from main window
+ [] - Bug - fix AV in CopyDataFromFileSlot  (data sync error)
  - TRTLCriticalSection under Linux has different fields. See if they can be used in PollingFIFO.
  [in work] - Set timeouts in Linux (if required/possible)
  - BaudRateToConst should return an "error" value for unknown baud rates and that should end up in an error message on window (on tooltip)
+ - display erase page and write page selection (Addr [Hex] column) on cmp window, based on received device info
+ - load custom lst, instead of loading from main on cmp window
+ - bug - the cmp window doesn't want to load lst info from main, until used by SimMem window
+ - the SimMem window should highlight commands which will end up erasing or writing out of bounds memory
+ - memory sections should have a flag, configurable from settings window, to highlight if they are erased/written by commands on SimWindow. The CFG sections should be set to True.
+ - the .lst loader should read comments, because they contain names for most routines
 }
 
 

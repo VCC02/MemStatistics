@@ -434,9 +434,7 @@ var
   ResultMessages: TStringList;
 begin
   Result := True;
-  lstHexFile := TStringList.Create;
-  ResultMessages := TStringList.Create;
-  SetLength(DecodedHEX, 0); 
+  SetLength(DecodedHEX, 0);
 
   if not FileExists(FileName) then
   begin
@@ -444,6 +442,8 @@ begin
     Exit;
   end;
 
+  lstHexFile := TStringList.Create;
+  ResultMessages := TStringList.Create;
   try
     BaseAddress := 0;
     lstHexFile.LoadFromFile(FileName);

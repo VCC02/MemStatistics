@@ -93,6 +93,8 @@ type
     btnSendSelectedCommands: TButton;
     imglstCmds: TImageList;
     chkAutoScrollToSelectedCommands: TCheckBox;
+    lbeSearchCommand: TLabeledEdit;
+    tmrSearch: TTimer;
     procedure tmrReadFIFOTimer(Sender: TObject);
     procedure btnLoadHEXClick(Sender: TObject);
     procedure btnLoadHEXFromMainWindowClick(Sender: TObject);
@@ -117,6 +119,8 @@ type
     procedure tmrStartupTimer(Sender: TObject);
     procedure btnDisplayCompareWindowClick(Sender: TObject);
     procedure btnSendSelectedCommandsClick(Sender: TObject);
+    procedure lbeSearchCommandChange(Sender: TObject);
+    procedure tmrSearchTimer(Sender: TObject);
   private
     { Private declarations }
     FFIFO: TPollingFIFO;
@@ -132,7 +136,7 @@ type
     procedure SaveSettingsToIni;
     procedure CreateRemainingComponents;
 
-    {$IFDEF Windows}
+    {$IFnDEF UNIX}
       procedure DetectDeviceChange(var Msg: TMessage); message WM_DEVICECHANGE;
     {$ENDIF}
 
@@ -155,6 +159,7 @@ type
     procedure HighlightCmdToCompareWindowByIndex(ACommandsToHighlight: TStringList; ACmdIdx, ACmpWinIdx, ASlotIdx: Integer);
     procedure SendAllCmdsToCompareWindow;
     procedure SendSelectedCmdsToCompareWindow;
+    procedure SearchCmd(ASearchText: string);
   public
     { Public declarations }
     procedure UpdateAvailableCmpWindowSelection;
@@ -306,7 +311,7 @@ begin
 end;
 
 
-{$IFDEF Windows}
+{$IFnDEF UNIX}
   procedure TfrmSimulatedMem.DetectDeviceChange(var Msg: TMessage);
   begin
     Sleep(100);
@@ -654,6 +659,40 @@ begin
       Exit;
     end;
   end;
+end;
+
+
+procedure TfrmSimulatedMem.lbeSearchCommandChange(Sender: TObject);
+begin
+  tmrSearch.Enabled := True;
+end;
+
+
+procedure TfrmSimulatedMem.tmrSearchTimer(Sender: TObject);
+begin
+  tmrSearch.Enabled := False;
+  SearchCmd(lbeSearchCommand.Text);
+end;
+
+
+procedure TfrmSimulatedMem.SearchCmd(ASearchText: string);
+var
+  Node: PVirtualNode;
+  IsVisible: Boolean;
+  UpperCaseSearchText: string;
+begin
+  Node := vstMemCommands.GetFirst;
+  if Node = nil then
+    Exit;
+
+  UpperCaseSearchText := UpperCase(ASearchText);
+
+  repeat
+    IsVisible := (ASearchText = '') or (Pos(UpperCaseSearchText, UpperCase(FAllCommands.Strings[Node^.Index])) > 0);
+
+    vstMemCommands.IsVisible[Node] := IsVisible;
+    Node := Node^.NextSibling;
+  until Node = nil;
 end;
 
 

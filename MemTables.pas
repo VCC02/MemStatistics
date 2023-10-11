@@ -265,14 +265,15 @@ begin
   if Length(ColColors) = 0 then
     SetLength(ColColors, 6); //something to be displayed
 
-  for i := 0 to Length(ColColors) - 1 do
-  begin
-    try
-      ColColors[i] := FMemStatColorOptions.EntryColorArr[i];
-    except
-      ColColors[i] := clRed; //in case EntryColorTableArr has fewer items than ColColors
+  if Length(FMemStatColorOptions.EntryColorArr) > 0 then   //prevent startup exceptions
+    for i := 0 to Length(ColColors) - 1 do
+    begin
+      try
+        ColColors[i] := FMemStatColorOptions.EntryColorArr[i];
+      except
+        ColColors[i] := clRed; //in case EntryColorTableArr has fewer items than ColColors
+      end;
     end;
-  end;
 
   for i := 0 to n - 1 do
     DrawEntryByIndex(Src, YOffset, i, RoutineIndex_Visibilities, AddressOffsets, ColumnXs, AWidthDiv, ColColors);

@@ -1,13 +1,13 @@
 object frmSimulatedMem: TfrmSimulatedMem
   Left = 43
-  Height = 338
+  Height = 363
   Top = 57
   Width = 972
   Caption = 'Memory Statistics - Simulated Memory'
-  ClientHeight = 338
+  ClientHeight = 363
   ClientWidth = 972
   Color = clBtnFace
-  Constraints.MinHeight = 338
+  Constraints.MinHeight = 363
   Constraints.MinWidth = 972
   Font.Color = clWindowText
   Font.Height = -11
@@ -347,6 +347,18 @@ object frmSimulatedMem: TfrmSimulatedMem
     ShowHint = True
     TabOrder = 17
   end
+  object lbeSearchCommand: TLabeledEdit
+    Left = 712
+    Height = 21
+    Top = 328
+    Width = 256
+    Anchors = [akTop, akRight]
+    EditLabel.Height = 13
+    EditLabel.Width = 256
+    EditLabel.Caption = 'Search command'
+    TabOrder = 18
+    OnChange = lbeSearchCommandChange
+  end
   object tmrReadFIFO: TTimer
     Enabled = False
     Interval = 100
@@ -410,5 +422,12 @@ object frmSimulatedMem: TfrmSimulatedMem
       36F12EFB6CA927CE54EE25DF65DDA8AE2F1B936562D7AB1158B294893B4CBA1A
       4D6AB94BF341DB9DEE16E45DFB917C2F185C66FF0617F27A19
     }
+  end
+  object tmrSearch: TTimer
+    Enabled = False
+    Interval = 200
+    OnTimer = tmrSearchTimer
+    Left = 48
+    Top = 216
   end
 end

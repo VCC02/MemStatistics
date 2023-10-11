@@ -2,10 +2,10 @@ object frmSimulatedMem: TfrmSimulatedMem
   Left = 0
   Top = 0
   Caption = 'Memory Statistics - Simulated Memory'
-  ClientHeight = 299
+  ClientHeight = 346
   ClientWidth = 924
   Color = clBtnFace
-  Constraints.MinHeight = 338
+  Constraints.MinHeight = 385
   Constraints.MinWidth = 940
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,7 +18,7 @@ object frmSimulatedMem: TfrmSimulatedMem
   OnShow = FormShow
   DesignSize = (
     924
-    299)
+    346)
   PixelsPerInch = 96
   TextHeight = 13
   object lblCOMNumber: TLabel
@@ -347,6 +347,18 @@ object frmSimulatedMem: TfrmSimulatedMem
     ParentShowHint = False
     ShowHint = True
     TabOrder = 17
+  end
+  object lbeSearchCommand: TLabeledEdit
+    Left = 689
+    Top = 317
+    Width = 227
+    Height = 21
+    Anchors = [akTop, akRight]
+    EditLabel.Width = 81
+    EditLabel.Height = 13
+    EditLabel.Caption = 'Search command'
+    TabOrder = 18
+    OnChange = lbeSearchCommandChange
   end
   object tmrReadFIFO: TTimer
     Enabled = False
@@ -768,5 +780,12 @@ object frmSimulatedMem: TfrmSimulatedMem
       000000000000F000000000000000F800000000000000FE01000000000000FF03
       000000000000FF87800180010000000000000000000000000000000000000000
       000000000000}
+  end
+  object tmrSearch: TTimer
+    Enabled = False
+    Interval = 200
+    OnTimer = tmrSearchTimer
+    Left = 48
+    Top = 184
   end
 end

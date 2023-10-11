@@ -48,8 +48,8 @@ type
   end;
 
   TUserNoteArr = array of TUserNote;
-
-  TRangesOfAddrForTHexContent = array of THexContent;
+                                       //THexContent is an array of entries
+  TRangesOfAddrForTHexContent = array of THexContent;  //This array is usually one item long. For PIC32MZ, BFM can have 3 items.
   TFullHexContent = record
     Ranges: TRangesOfAddrForTHexContent;     //e.g. FullPFMHEX, FullBFMHEX, FullEBIHEX, FullSQIHEX, FullCFGHEX
   end;
@@ -311,7 +311,7 @@ type
 
     procedure SearchInSlotDataTable(AAddressHex, AData, ANote: string);
 
-    procedure CopyDataFromFileSlot(var FileSlot: TFileSlot; ADevSectionIndex: Integer; var ARangesOfHexContent: TRangesOfAddrForTHexContent; var DisplayWarning: Boolean; out DisplayAddr, DisplayLength: DWord);
+    procedure CopyDataFromFileSlot(var ASrcFileSlot: TFileSlot; ADevSectionIndex: Integer; var ARangesOfHexContent: TRangesOfAddrForTHexContent; var DisplayWarning: Boolean; out DisplayAddr, DisplayLength: DWord);
     procedure ConvertDecodedHexToFullMemory(var FileSlot: TFileSlot);
     procedure DrawMiniMap;
     procedure UpdateMiniMapColorOptions;
@@ -820,29 +820,32 @@ begin
 end;
 
 
-procedure TfrmMemStatCompare.CopyDataFromFileSlot(var FileSlot: TFileSlot; ADevSectionIndex: Integer; var ARangesOfHexContent: TRangesOfAddrForTHexContent; var DisplayWarning: Boolean; out DisplayAddr, DisplayLength: DWord);
+procedure TfrmMemStatCompare.CopyDataFromFileSlot(var ASrcFileSlot: TFileSlot; ADevSectionIndex: Integer; var ARangesOfHexContent: TRangesOfAddrForTHexContent; var DisplayWarning: Boolean; out DisplayAddr, DisplayLength: DWord);
 var
   i, j: Integer;
   Addr: DWord;
   DevShiftAmount, DevPointerSize: Byte;
   MemRange: TDefSectionAddrRange;
+  RangesCount: Integer;
 begin
   DevShiftAmount := FDeviceInfo.DevShiftAmount;
   DevPointerSize := FDeviceInfo.DevPointerSize;
 
   if Length(ARangesOfHexContent) = 0 then  /////////////////////////////////////////////////////////// this should not be needed if GetAddressRangesCountFromSection returns the proper result
     Exit;
+
+  RangesCount := FDeviceInfo.GetAddressRangesCountFromSection(ADevSectionIndex);
              ///////////////////////////// to verify indexing: ARangesOfHexContent[j][Addr].HData
-  for i := 0 to Length(FileSlot.DecodedHEX) - 1 do
-    for j := 0 to FDeviceInfo.GetAddressRangesCountFromSection(ADevSectionIndex) - 1 do
-    begin
-      MemRange := FDeviceInfo.GetAddressRangesByIndex(ADevSectionIndex, j);
-    
-      if (FileSlot.DecodedHEX[i].HAddr >= MemRange.MinAddr) and (FileSlot.DecodedHEX[i].HAddr <= MemRange.MaxAddr) then
+  for j := 0 to RangesCount - 1 do
+  begin
+    MemRange := FDeviceInfo.GetAddressRangesByIndex(ADevSectionIndex, j);
+
+    for i := 0 to Length(ASrcFileSlot.DecodedHEX) - 1 do
+      if (ASrcFileSlot.DecodedHEX[i].HAddr >= MemRange.MinAddr) and (ASrcFileSlot.DecodedHEX[i].HAddr <= MemRange.MaxAddr) then
       begin
-        Addr := (FileSlot.DecodedHEX[i].HAddr - MemRange.MinAddr) shr DevShiftAmount;
+        Addr := (ASrcFileSlot.DecodedHEX[i].HAddr - MemRange.MinAddr) shr DevShiftAmount;
         if Addr < DWord(Length(ARangesOfHexContent[j])) + DevPointerSize then
-          ARangesOfHexContent[j][Addr].HData := FileSlot.DecodedHEX[i].HData   /////////////////crash here if Length(ARangesOfHexContent) = 0, although GetAddressRangesCountFromSection returns something else
+          ARangesOfHexContent[j][Addr].HData := ASrcFileSlot.DecodedHEX[i].HData   /////////////////crash here if Length(ARangesOfHexContent) = 0, although GetAddressRangesCountFromSection returns something else
         else
         begin
           DisplayWarning := True;
@@ -850,7 +853,7 @@ begin
           DisplayLength := DWord(Length(ARangesOfHexContent[j])) shl DevShiftAmount + MemRange.MinAddr;
         end;
       end;
-    end;
+  end;
 end;
 
 
@@ -907,7 +910,7 @@ begin
   DisplayLength := 0;
 
   for i := 0 to Length(AllFullHexContents) - 1 do  // e.g.: PFM, BFM, CFG, EBI, SQI
-    for j := 0 to Length(AllFullHexContents[i].Ranges) - 1 do   // BFM0, BFM1, BFM2    - this array is usually one item long, but for PIC32MZ, this can have multiple items for the BFM ranges
+    for j := 0 to Length(AllFullHexContents[i].Ranges) - 1 do   // BFM0, BFM1, BFM2    - this array is usually one item long, but on PIC32MZ, this can have multiple items for the BFM ranges
     begin
       MemRange := FDeviceInfo.GetAddressRangesByIndex(i, j);
 
