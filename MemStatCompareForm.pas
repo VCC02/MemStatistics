@@ -771,6 +771,7 @@ begin
 
   if AllSlotsAreEmpty then
   begin
+    vstSlotCmp.ClearSelection;
     vstSlotCmp.RootNodeCount := 0;
     SetLength(FUserNoteArr, 0);
   end;

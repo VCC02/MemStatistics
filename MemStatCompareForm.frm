@@ -10,10 +10,10 @@ object frmMemStatCompare: TfrmMemStatCompare
   Constraints.MinHeight = 500
   Constraints.MinWidth = 1000
   Menu = mmCmpMain
+  LCLVersion = '8.4'
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  LCLVersion = '8.1'
   object lblMinimap: TLabel
     Left = 1035
     Height = 19
@@ -88,10 +88,10 @@ object frmMemStatCompare: TfrmMemStatCompare
       FFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF4CB1224C
       B1224CB122FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000
     }
-    OnClick = spdbtnJumpToPrevSectionClick
     ShowHint = True
     ParentFont = False
     ParentShowHint = False
+    OnClick = spdbtnJumpToPrevSectionClick
   end
   object spdbtnJumpToNextSection: TSpeedButton
     Left = 1123
@@ -118,10 +118,10 @@ object frmMemStatCompare: TfrmMemStatCompare
       22FFFFFFFFFFFF000000FFFFFF4CB1224CB1224CB1224CB1224CB1224CB1224C
       B1224CB1224CB1224CB1224CB1224CB1224CB122FFFFFF000000
     }
-    OnClick = spdbtnJumpToNextSectionClick
     ShowHint = True
     ParentFont = False
     ParentShowHint = False
+    OnClick = spdbtnJumpToNextSectionClick
   end
   object pnlMiniMap: TPanel
     Left = 1038
@@ -153,10 +153,10 @@ object frmMemStatCompare: TfrmMemStatCompare
       'Show different'
       'Show same'
     )
-    OnChange = cmbCmpViewOptionsChange
     Style = csOwnerDrawFixed
     TabOrder = 1
     Text = 'Show all'
+    OnChange = cmbCmpViewOptionsChange
   end
   object btnChangeDevice: TButton
     Left = 151
@@ -165,10 +165,10 @@ object frmMemStatCompare: TfrmMemStatCompare
     Width = 122
     Anchors = [akLeft, akBottom]
     Caption = 'Change Device...'
-    OnClick = btnChangeDeviceClick
     ParentShowHint = False
     ShowHint = True
     TabOrder = 2
+    OnClick = btnChangeDeviceClick
   end
   object lbeSearchHexAddr: TLabeledEdit
     Left = 856
