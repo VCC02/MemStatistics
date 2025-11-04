@@ -188,12 +188,36 @@ end;
 
 function TDeviceInfo.GetAddressRangesCountFromSection(ASectionIndex: Integer): Integer;
 begin
+  if Length(FDeviceSections) = 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  if ASectionIndex > Length(FDeviceSections) - 1 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
   Result := Length(FDeviceSections[ASectionIndex].AddrRanges);
 end;
 
 
 function TDeviceInfo.GetRangesLengthsCountFromSection(ASectionIndex: Integer): Integer;
 begin
+  if Length(FDeviceSections) = 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  if ASectionIndex > Length(FDeviceSections) - 1 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
   Result := Length(FDeviceSections[ASectionIndex].AddrRanges);
 end;
 

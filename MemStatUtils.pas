@@ -238,6 +238,8 @@ procedure UpdateDevBitness(ADeviceBitness: TDeviceBitness; out ADevShiftAmount, 
 procedure GetDeviceMemoryContentFromLocalFile(ADeviceName: string; AMemSectionNames: TStringList; var AAddressRanges: TDefSectionAddrRangeArrArr);
 procedure GetListOfDevicesFromLocalFile(AListOfDevices: TStringList);
 
+procedure GetDefaultDeviceSections(var AMemStatOptions: TMemStatOptions);
+
 const
   CAddressOffset_Data1: DWord = 0;
   CAddressOffset_Data2: DWord = 4;
@@ -1131,6 +1133,138 @@ begin
     Ini.ReadSections(AListOfDevices);
   finally
     Ini.Free;
+  end;
+end;
+
+
+procedure GetDefaultDeviceSections(var AMemStatOptions: TMemStatOptions);
+var
+  i: Integer;
+begin
+  SetLength(AMemStatOptions.Colors.EntryColorArr, 7);
+  SetLength(AMemStatOptions.Colors.SelectedEntryColorArr, 7);
+  SetLength(AMemStatOptions.Colors.EntryColorTableArr, 7);
+  SetLength(AMemStatOptions.Colors.TextColorTableArr, 7);
+  SetLength(AMemStatOptions.DevInfoEditArr, 7);
+
+  AMemStatOptions.DevInfoEditArr[0].Section.DisplayName := 'PFM';
+  AMemStatOptions.DevInfoEditArr[0].Section.LongDisplayName := 'Program Flash';
+  AMemStatOptions.DevInfoEditArr[0].Section.DefName := 'ROM';
+  SetLength(AMemStatOptions.DevInfoEditArr[0].Section.AddrRanges, 0);
+  AMemStatOptions.DevInfoEditArr[0].MemoryTranslationInfo.Operation := atoOR;
+  AMemStatOptions.DevInfoEditArr[0].MemoryTranslationInfo.Value := $9D000000; //-1660944384
+  AMemStatOptions.DevInfoEditArr[0].AddressOffsets.S1 := 0;
+  AMemStatOptions.DevInfoEditArr[0].AddressOffsets.S2 := $20000000; //536870912
+  AMemStatOptions.DevInfoEditArr[0].EntryColor := $8080FF; //8421631
+  AMemStatOptions.DevInfoEditArr[0].SelectedEntryColor := $008000; //32768
+  AMemStatOptions.DevInfoEditArr[0].TableEntryColor := $FCE2FB; //16573179
+  AMemStatOptions.DevInfoEditArr[0].TableTextColor := $CE0000; //13500416
+  AMemStatOptions.DevInfoEditArr[0].VisibleOnTable := True;
+  AMemStatOptions.DevInfoEditArr[0].VisibleOnCompare := True;
+  AMemStatOptions.DevInfoEditArr[0].DisplayEvenIfMissingFromDefinition := True;
+
+  AMemStatOptions.DevInfoEditArr[1].Section.DisplayName := 'RAM';
+  AMemStatOptions.DevInfoEditArr[1].Section.LongDisplayName := 'RAM';
+  AMemStatOptions.DevInfoEditArr[1].Section.DefName := 'RAM';
+  SetLength(AMemStatOptions.DevInfoEditArr[1].Section.AddrRanges, 0);
+  AMemStatOptions.DevInfoEditArr[1].MemoryTranslationInfo.Operation := atoOR;
+  AMemStatOptions.DevInfoEditArr[1].MemoryTranslationInfo.Value := $A0000000; //-1610612736
+  AMemStatOptions.DevInfoEditArr[1].AddressOffsets.S1 := Integer($E0000000); //-536870912
+  AMemStatOptions.DevInfoEditArr[1].AddressOffsets.S2 := 0;
+  AMemStatOptions.DevInfoEditArr[1].EntryColor := $FFE1C4; //16769476
+  AMemStatOptions.DevInfoEditArr[1].SelectedEntryColor := $FF6363; //16737123
+  AMemStatOptions.DevInfoEditArr[1].TableEntryColor := $FFE1C4; //16769476
+  AMemStatOptions.DevInfoEditArr[1].TableTextColor := $000080; //128
+  AMemStatOptions.DevInfoEditArr[1].VisibleOnTable := True;
+  AMemStatOptions.DevInfoEditArr[1].VisibleOnCompare := False;
+  AMemStatOptions.DevInfoEditArr[1].DisplayEvenIfMissingFromDefinition := True;
+
+  AMemStatOptions.DevInfoEditArr[2].Section.DisplayName := 'BFM';
+  AMemStatOptions.DevInfoEditArr[2].Section.LongDisplayName := 'Boot Flash';
+  AMemStatOptions.DevInfoEditArr[2].Section.DefName := 'BOOTROM';
+  SetLength(AMemStatOptions.DevInfoEditArr[2].Section.AddrRanges, 0);
+  AMemStatOptions.DevInfoEditArr[2].MemoryTranslationInfo.Operation := atoOR;
+  AMemStatOptions.DevInfoEditArr[2].MemoryTranslationInfo.Value := $BFC00000; //-1077936128
+  AMemStatOptions.DevInfoEditArr[2].AddressOffsets.S1 := Integer($E0000000);  //-536870912
+  AMemStatOptions.DevInfoEditArr[2].AddressOffsets.S2 := 0;
+  AMemStatOptions.DevInfoEditArr[2].EntryColor := $00D5D5; //54741
+  AMemStatOptions.DevInfoEditArr[2].SelectedEntryColor := $800000; //8388608
+  AMemStatOptions.DevInfoEditArr[2].TableEntryColor := $86EEE7; //8842983
+  AMemStatOptions.DevInfoEditArr[2].TableTextColor := $006200; //25088
+  AMemStatOptions.DevInfoEditArr[2].VisibleOnTable := True;
+  AMemStatOptions.DevInfoEditArr[2].VisibleOnCompare := True;
+  AMemStatOptions.DevInfoEditArr[2].DisplayEvenIfMissingFromDefinition := True;
+
+  AMemStatOptions.DevInfoEditArr[3].Section.DisplayName := 'CFG';
+  AMemStatOptions.DevInfoEditArr[3].Section.LongDisplayName := 'Config Flash';
+  AMemStatOptions.DevInfoEditArr[3].Section.DefName := 'CFGREG';
+  SetLength(AMemStatOptions.DevInfoEditArr[3].Section.AddrRanges, 0);
+  AMemStatOptions.DevInfoEditArr[3].MemoryTranslationInfo.Operation := atoOR;
+  AMemStatOptions.DevInfoEditArr[3].MemoryTranslationInfo.Value := $BFC00000; //-1077936128
+  AMemStatOptions.DevInfoEditArr[3].AddressOffsets.S1 := Integer($E0000000);  //-536870912
+  AMemStatOptions.DevInfoEditArr[3].AddressOffsets.S2 := 0;
+  AMemStatOptions.DevInfoEditArr[3].EntryColor := $70CFFE; //7393278
+  AMemStatOptions.DevInfoEditArr[3].SelectedEntryColor := $00FF00; //65280
+  AMemStatOptions.DevInfoEditArr[3].TableEntryColor := $75D6FF; //7722751
+  AMemStatOptions.DevInfoEditArr[3].TableTextColor := $0000C6; //198
+  AMemStatOptions.DevInfoEditArr[3].VisibleOnTable := False;
+  AMemStatOptions.DevInfoEditArr[3].VisibleOnCompare := True;
+  AMemStatOptions.DevInfoEditArr[3].DisplayEvenIfMissingFromDefinition := True;
+
+  AMemStatOptions.DevInfoEditArr[4].Section.DisplayName := 'EBI';
+  AMemStatOptions.DevInfoEditArr[4].Section.LongDisplayName := 'Ext Bus Interface';
+  AMemStatOptions.DevInfoEditArr[4].Section.DefName := 'EBIROM';
+  SetLength(AMemStatOptions.DevInfoEditArr[4].Section.AddrRanges, 0);
+  AMemStatOptions.DevInfoEditArr[4].MemoryTranslationInfo.Operation := atoADD;
+  AMemStatOptions.DevInfoEditArr[4].MemoryTranslationInfo.Value := $A0000000; //-1610612736
+  AMemStatOptions.DevInfoEditArr[4].AddressOffsets.S1 := 0;
+  AMemStatOptions.DevInfoEditArr[4].AddressOffsets.S2 := $20000000; //536870912
+  AMemStatOptions.DevInfoEditArr[4].EntryColor := $FF9BFF; //16751615
+  AMemStatOptions.DevInfoEditArr[4].SelectedEntryColor := $FF6262; //16736866
+  AMemStatOptions.DevInfoEditArr[4].TableEntryColor := $FFA4D6; //16753878
+  AMemStatOptions.DevInfoEditArr[4].TableTextColor := 0;
+  AMemStatOptions.DevInfoEditArr[4].VisibleOnTable := False;
+  AMemStatOptions.DevInfoEditArr[4].VisibleOnCompare := True;
+  AMemStatOptions.DevInfoEditArr[4].DisplayEvenIfMissingFromDefinition := False;
+
+  AMemStatOptions.DevInfoEditArr[5].Section.DisplayName := 'SQI';
+  AMemStatOptions.DevInfoEditArr[5].Section.LongDisplayName := 'Ser Quad Interface';
+  AMemStatOptions.DevInfoEditArr[5].Section.DefName := 'SQIROM';
+  SetLength(AMemStatOptions.DevInfoEditArr[5].Section.AddrRanges, 0);
+  AMemStatOptions.DevInfoEditArr[5].MemoryTranslationInfo.Operation := atoADD;
+  AMemStatOptions.DevInfoEditArr[5].MemoryTranslationInfo.Value := $A0000000; //-1610612736
+  AMemStatOptions.DevInfoEditArr[5].AddressOffsets.S1 := 0;
+  AMemStatOptions.DevInfoEditArr[5].AddressOffsets.S2 := $20000000; //536870912
+  AMemStatOptions.DevInfoEditArr[5].EntryColor := $BFFE96; //12582550
+  AMemStatOptions.DevInfoEditArr[5].SelectedEntryColor := $AE5EFF; //11427583
+  AMemStatOptions.DevInfoEditArr[5].TableEntryColor := $FFFFA6; //16777126
+  AMemStatOptions.DevInfoEditArr[5].TableTextColor := 0;
+  AMemStatOptions.DevInfoEditArr[5].VisibleOnTable := False;
+  AMemStatOptions.DevInfoEditArr[5].VisibleOnCompare := True;
+  AMemStatOptions.DevInfoEditArr[5].DisplayEvenIfMissingFromDefinition := False;
+
+  AMemStatOptions.DevInfoEditArr[6].Section.DisplayName := 'EEPROM';
+  AMemStatOptions.DevInfoEditArr[6].Section.LongDisplayName := 'EEPROM';
+  AMemStatOptions.DevInfoEditArr[6].Section.DefName := 'EEPROM';
+  SetLength(AMemStatOptions.DevInfoEditArr[6].Section.AddrRanges, 0);
+  AMemStatOptions.DevInfoEditArr[6].MemoryTranslationInfo.Operation := atoADD;
+  AMemStatOptions.DevInfoEditArr[6].MemoryTranslationInfo.Value := $B0000000; //-1342177280
+  AMemStatOptions.DevInfoEditArr[6].AddressOffsets.S1 := 0;
+  AMemStatOptions.DevInfoEditArr[6].AddressOffsets.S2 := $20000000; //536870912
+  AMemStatOptions.DevInfoEditArr[6].EntryColor := $FFFF00; //16776960
+  AMemStatOptions.DevInfoEditArr[6].SelectedEntryColor := $800080; //8388736
+  AMemStatOptions.DevInfoEditArr[6].TableEntryColor := $00FF00; //65280
+  AMemStatOptions.DevInfoEditArr[6].TableTextColor := $0000FF; //255
+  AMemStatOptions.DevInfoEditArr[6].VisibleOnTable := False;
+  AMemStatOptions.DevInfoEditArr[6].VisibleOnCompare := True;
+  AMemStatOptions.DevInfoEditArr[6].DisplayEvenIfMissingFromDefinition := False;
+
+  for i := 0 to Length(AMemStatOptions.DevInfoEditArr) - 1 do
+  begin
+    AMemStatOptions.Colors.EntryColorArr[i] := AMemStatOptions.DevInfoEditArr[i].EntryColor;
+    AMemStatOptions.Colors.SelectedEntryColorArr[i] := AMemStatOptions.DevInfoEditArr[i].SelectedEntryColor;
+    AMemStatOptions.Colors.EntryColorTableArr[i] := AMemStatOptions.DevInfoEditArr[i].TableEntryColor;
+    AMemStatOptions.Colors.TextColorTableArr[i] := AMemStatOptions.DevInfoEditArr[i].TableTextColor;
   end;
 end;
 

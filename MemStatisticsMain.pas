@@ -346,12 +346,12 @@ begin
     else
     begin
       FMikroComp.DefsFolder := s; //'';   //set it to the value from ini, to allow displaying it on settings window
-      lblDefsFolder.Caption := '"Defs" Folder: not set';
-      lblDefsFolder.Hint := FMikroComp.DefsFolder;
+      lblDefsFolder.Caption := '"Defs" Folder: not set / not found';
+      lblDefsFolder.Hint := lblDefsFolder.Caption + #13#10 + FMikroComp.DefsFolder + #13#10 + 'It can be configured from the Settings window.';
       lblDefsFolder.Visible := True;
     end;
 
-    FMemStatOptions.Misc.DefsFolderPriority := TDefsFolderPriority(Min(Ord(High(TDefsFolderPriority)), Ini.ReadInteger('mikro', 'DefsFolderPriority', 0)));
+    FMemStatOptions.Misc.DefsFolderPriority := TDefsFolderPriority(Min(Ord(High(TDefsFolderPriority)), Ini.ReadInteger('mikro', 'DefsFolderPriority', 1)));
     FMikroComp.DefsFolderPriority := FMemStatOptions.Misc.DefsFolderPriority;
 
     MenuItem_BlinkFocusedEntry.Checked := Ini.ReadBool('Table', 'BlinkSelected', True);
@@ -360,6 +360,10 @@ begin
 
     LoadMemSectionsFromIni(Ini);
     LoadColorsFromIni(Ini);
+
+    if Ini.ReadInteger('MemSections', 'Count', 0) = 0 then
+      GetDefaultDeviceSections(FMemStatOptions);
+
     FMemTable.MemStatColorOptions := FMemStatOptions.Colors;
     FMemTable.MemStatMiscOptions := FMemStatOptions.Misc;
 

@@ -11,11 +11,11 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   Constraints.MinWidth = 990
   Font.Height = -11
   Font.Name = 'Tahoma'
+  LCLVersion = '8.4'
   OnClose = FormClose
   OnCreate = FormCreate
   OnPaint = FormPaint
   OnResize = FormResize
-  LCLVersion = '7.5'
   object lblListName: TLabel
     Left = 8
     Height = 19
@@ -114,6 +114,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoSize = False
         Color = clWindow
+        ParentColor = False
         Transparent = False
       end
     end
@@ -130,6 +131,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoSize = False
         Color = clWindow
+        ParentColor = False
         Transparent = False
       end
     end
@@ -146,11 +148,11 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
         Width = 534
         Anchors = [akTop, akLeft, akRight, akBottom]
         ItemHeight = 0
-        OnKeyDown = lstFreeMemoryKeyDown
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
         Visible = False
+        OnKeyDown = lstFreeMemoryKeyDown
       end
     end
   end
@@ -246,8 +248,8 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Width = 70
     Anchors = [akTop, akRight]
     Caption = 'Settings...'
-    OnClick = btnSettingsClick
     TabOrder = 11
+    OnClick = btnSettingsClick
   end
   object btnNewCompareWindow: TButton
     Left = 541
@@ -256,8 +258,8 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Width = 160
     Anchors = [akTop, akRight]
     Caption = 'New Compare Window...'
-    OnClick = btnNewCompareWindowClick
     TabOrder = 12
+    OnClick = btnNewCompareWindowClick
   end
   object pnlSplitter: TPanel
     Cursor = crHSplit
@@ -298,9 +300,9 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
       'Display only from raw addresses'
       'Display both above'
     )
-    OnClick = rdgrpChartContentClick
     ParentBackground = False
     TabOrder = 3
+    OnClick = rdgrpChartContentClick
   end
   object pnlHorizontalResize: TPanel
     Left = 0

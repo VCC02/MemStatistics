@@ -300,7 +300,11 @@ begin
   SetLength(ColColors, FDeviceInfo.GetDeviceSectionCount);
 
   if Length(ColColors) = 0 then
+  begin
     SetLength(ColColors, 6); //something to be displayed
+    SetLength(FMemStatColorOptions.EntryColorArr, Length(ColColors)); //EntryColorArr should not be set here, but it's an easy fix to a further AV.
+    SetLength(FMemStatColorOptions.SelectedEntryColorArr, Length(ColColors));  //same as above
+  end;
 
   if FDisplayFocusedEntry then
   begin
