@@ -86,6 +86,9 @@ implementation
   {$R *.dfm}
 {$ENDIF}
 
+uses
+  Clipbrd;
+
 
 function GetNewDevice(AllDevices: string; Selected: Integer; var NewChipName: string): Integer;
 begin
@@ -214,6 +217,8 @@ begin
   vstDevices.Height := 226;
   vstDevices.Hint := 'Double click to select and exit. Press Esc to leave unchanged.';
   vstDevices.Anchors := [akLeft, akTop, akRight, akBottom];
+  vstDevices.Colors.UnfocusedColor := clMedGray;
+  vstDevices.Colors.UnfocusedSelectionColor := clGradientInactiveCaption;
   vstDevices.Header.AutoSizeIndex := 0;
   vstDevices.Header.DefaultHeight := 17;
   vstDevices.Header.Font.Charset := DEFAULT_CHARSET;
@@ -275,6 +280,8 @@ end;
 
 procedure TfrmDevices.vstDevicesKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
+var
+  Node: PVirtualNode;
 begin
   if Key = VK_ESCAPE then
   begin
@@ -282,13 +289,19 @@ begin
     tmrClose.Enabled := True;
   end;
 
+  Node := vstDevices.GetFirstSelected;
+
   if Key = VK_RETURN then
-    if vstDevices.GetFirstSelected <> nil then
+    if Node <> nil then
     begin
       SetFieldToSelectedDevice;
       Tag := 1;
       tmrClose.Enabled := True;
     end;
+
+  if (Key = Ord('C')) and (ssCtrl in Shift) then
+    if Node <> nil then
+      Clipboard.AsText := FDevices.Strings[Node.Index];
 end;
 
 end.

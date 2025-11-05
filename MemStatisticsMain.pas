@@ -261,7 +261,6 @@ var
  - the VST on SimMem window, should have colored background, depending on target addresses, like all the other tables. On PIC32, there should be a memory translation.
  - verify if LoadRoutinesFromMainWindow can be further optimized by sorting Routines and EntriesFromRaw arrays, at least in FP, since it is slower than Delphi  (see SortAlgs unit)
  - the page control (with the two VSTs), buttons, editboxes, should sit on a panel. This panel can be modified by splitter.
- - verify various typecasting to Integer, which might cause wrong results on 64-bit
 
  - repainting the minimap from SimMem window should be done by a debounce timer. This should prevent the current amount of flickering.
  [] - Bug - fix AV in CopyDataFromFileSlot  (data sync error)
@@ -274,6 +273,9 @@ var
  - the SimMem window should highlight commands which will end up erasing or writing out of bounds memory
  - memory sections should have a flag, configurable from settings window, to highlight if they are erased/written by commands on SimWindow. The CFG sections should be set to True.
  - the .lst loader should read comments, because they contain names for most routines
+
+ - The cmp window should be able to display standard bootloader routines as asm entries, despite the fact that they are not present in lst file (e.g. various jmp instructions).
+   Maybe some of them can display explanations in user column.
 }
 
 

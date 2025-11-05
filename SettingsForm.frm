@@ -9,7 +9,7 @@ object frmSettings: TfrmSettings
   Color = clBtnFace
   Constraints.MinHeight = 540
   Constraints.MinWidth = 882
-  LCLVersion = '8.2'
+  LCLVersion = '8.4'
   OnClose = FormClose
   OnCreate = FormCreate
   OnShow = FormShow
@@ -645,7 +645,7 @@ object frmSettings: TfrmSettings
         object cmbDeviceBitness: TComboBox
           Left = 14
           Height = 22
-          Hint = 'This has to match the architecture that MemStatistics is working with.'
+          Hint = 'This has to match the architecture that MemStatistics is working with.'#13#10'This setting is saved to ini an reloaded on next run.'#13#10'If this app is used for multiple architectures, then it has to be copied to a different directory, along with its ini file,'#13#10'where each instance is configured with its own architecture.'
           Top = 194
           Width = 145
           ItemHeight = 16

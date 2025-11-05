@@ -12,10 +12,10 @@ object frmSimulatedMem: TfrmSimulatedMem
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
+  LCLVersion = '8.4'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
-  LCLVersion = '7.5'
   object lblCOMNumber: TLabel
     Left = 8
     Height = 13
@@ -88,9 +88,9 @@ object frmSimulatedMem: TfrmSimulatedMem
     AutoSize = False
     DropDownCount = 10
     ItemHeight = 16
-    OnDropDown = cmbCOMPortDropDown
     Style = csOwnerDrawFixed
     TabOrder = 0
+    OnDropDown = cmbCOMPortDropDown
   end
   object btnSendAllCmdToCompareWindow: TButton
     Left = 712
@@ -100,10 +100,10 @@ object frmSimulatedMem: TfrmSimulatedMem
     Width = 256
     Anchors = [akTop, akRight]
     Caption = 'Send all commands to cmp window'
-    OnClick = btnSendAllCmdToCompareWindowClick
     ParentShowHint = False
     ShowHint = True
     TabOrder = 1
+    OnClick = btnSendAllCmdToCompareWindowClick
   end
   object btnConnect: TButton
     Left = 224
@@ -111,8 +111,8 @@ object frmSimulatedMem: TfrmSimulatedMem
     Top = 16
     Width = 75
     Caption = 'Connect'
-    OnClick = btnConnectClick
     TabOrder = 2
+    OnClick = btnConnectClick
   end
   object btnDisconnect: TButton
     Left = 224
@@ -121,26 +121,32 @@ object frmSimulatedMem: TfrmSimulatedMem
     Width = 75
     Caption = 'Disconnect'
     Enabled = False
-    OnClick = btnDisconnectClick
     TabOrder = 3
+    OnClick = btnDisconnectClick
   end
   object btnLoadHEXFromMainWindow: TButton
     Left = 384
     Height = 25
+    Hint = 'This loads a hex file in the selected "Compare window".'
     Top = 47
     Width = 177
     Caption = 'Load HEX from main window'
-    OnClick = btnLoadHEXFromMainWindowClick
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 4
+    OnClick = btnLoadHEXFromMainWindowClick
   end
   object btnLoadHEX: TButton
     Left = 303
     Height = 25
+    Hint = 'This loads a hex file in the selected "Compare window".'
     Top = 47
     Width = 75
     Caption = 'LoadHEX...'
-    OnClick = btnLoadHEXClick
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 5
+    OnClick = btnLoadHEXClick
   end
   object cmbCompareWindow: TComboBox
     Left = 303
@@ -150,9 +156,9 @@ object frmSimulatedMem: TfrmSimulatedMem
     AutoSize = False
     DropDownCount = 10
     ItemHeight = 16
-    OnChange = cmbCompareWindowChange
     Style = csOwnerDrawFixed
     TabOrder = 6
+    OnChange = cmbCompareWindowChange
   end
   object cmbSlots: TComboBox
     Left = 454
@@ -171,8 +177,8 @@ object frmSimulatedMem: TfrmSimulatedMem
     Top = 16
     Width = 140
     Caption = 'Clear list of commands'
-    OnClick = btnClearListOfCommandsClick
     TabOrder = 8
+    OnClick = btnClearListOfCommandsClick
   end
   object btnTestFIFOAndDecoder: TButton
     Left = 568
@@ -181,10 +187,10 @@ object frmSimulatedMem: TfrmSimulatedMem
     Top = 47
     Width = 140
     Caption = 'Test FIFO and decoder'
-    OnClick = btnTestFIFOAndDecoderClick
     ParentShowHint = False
     ShowHint = True
     TabOrder = 9
+    OnClick = btnTestFIFOAndDecoderClick
   end
   object cmbBaud: TComboBox
     Left = 104
@@ -226,10 +232,10 @@ object frmSimulatedMem: TfrmSimulatedMem
   end
   object chkShowAll: TCheckBox
     Left = 8
-    Height = 19
+    Height = 17
     Hint = 'Shows all possible COM numbers'
     Top = 45
-    Width = 60
+    Width = 58
     Caption = 'Show All'
     ParentShowHint = False
     ShowHint = True
@@ -320,8 +326,8 @@ object frmSimulatedMem: TfrmSimulatedMem
     Top = 77
     Width = 140
     Caption = 'Display cmp window'
-    OnClick = btnDisplayCompareWindowClick
     TabOrder = 15
+    OnClick = btnDisplayCompareWindowClick
   end
   object btnSendSelectedCommands: TButton
     Left = 712
@@ -331,17 +337,17 @@ object frmSimulatedMem: TfrmSimulatedMem
     Width = 256
     Anchors = [akTop, akRight]
     Caption = 'Send selected commands to cmp window'
-    OnClick = btnSendSelectedCommandsClick
     ParentShowHint = False
     ShowHint = True
     TabOrder = 16
+    OnClick = btnSendSelectedCommandsClick
   end
   object chkAutoScrollToSelectedCommands: TCheckBox
     Left = 303
-    Height = 19
+    Height = 17
     Hint = 'When checked, clicking on one or more commands, on the list, will scroll to the first selected one in compare window.'
     Top = 83
-    Width = 176
+    Width = 174
     Caption = 'Autoscroll to selected commands'
     ParentShowHint = False
     ShowHint = True

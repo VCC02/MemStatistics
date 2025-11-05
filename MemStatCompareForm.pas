@@ -65,6 +65,7 @@ type
   { TfrmMemStatCompare }
 
   TfrmMemStatCompare = class(TForm)
+    imgUserNotes: TImage;
     mmCmpMain: TMainMenu;
     File1: TMenuItem;
     LoadHEX1: TMenuItem;
@@ -102,6 +103,8 @@ type
     lblMinimap: TLabel;
     pnlMiniMap: TPanel;
     OpenDialogHex: TOpenDialog;
+    spdbtnJumpToNextDifference: TSpeedButton;
+    spdbtnJumpToPrevDifference: TSpeedButton;
     tmrStartup: TTimer;
     CloseHEX1: TMenuItem;
     CloseListing1: TMenuItem;
@@ -168,6 +171,8 @@ type
     procedure ReloadHEX2Click(Sender: TObject);
     procedure ReloadHEX3Click(Sender: TObject);
     procedure ReloadHEX4Click(Sender: TObject);
+    procedure spdbtnJumpToNextDifferenceClick(Sender: TObject);
+    procedure spdbtnJumpToPrevDifferenceClick(Sender: TObject);
     procedure tmrStartupTimer(Sender: TObject);
     procedure pnlMiniMapMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
@@ -338,6 +343,7 @@ type
     procedure MinimapMouseLeave(Sender: TObject);
 
     function AllSlotsAreEmpty: Boolean;
+    function IsAnyDifference(Node: PVirtualNode; Len1, Len2, Len3, Len4: Integer): Boolean;
 
     function GetCmpFocusedSelectionColor: TColor;
     function GetCmpUnfocusedSelectionColor: TColor;
@@ -1180,11 +1186,13 @@ begin
 
   TempMenuItem := TMenuItem.Create(Self);
   TempMenuItem.Caption := 'Clear selected user notes';
+  TempMenuItem.Bitmap := imgUserNotes.Picture.Bitmap;
   TempMenuItem.OnClick := MenuItem_ClearSelectedUserNotesClick;
   pmVST.Items.Add(TempMenuItem);
 
   TempMenuItem := TMenuItem.Create(Self);
   TempMenuItem.Caption := 'Clear SimMem commands from selected user notes';
+  TempMenuItem.Bitmap := MenuItem_ShowSimulatedMemory.Bitmap;
   TempMenuItem.OnClick := MenuItem_ClearSimCmdsFromSelectedUserNotesClick;
   pmVST.Items.Add(TempMenuItem);
 end;
@@ -1194,6 +1202,8 @@ procedure TfrmMemStatCompare.FormCreate(Sender: TObject);
 begin
   CreateRemainingComponents;
   Menu := mmCmpMain; //Manually set, because an IDE bug makes the window grow in height, every time the file is modified.
+
+  SaveAsSettings1.Bitmap := Savesettingstofile1.Bitmap;
 
   FDeviceInfo := TDeviceInfo.Create;
 
@@ -2045,6 +2055,119 @@ end;
 procedure TfrmMemStatCompare.ReloadHEX4Click(Sender: TObject);
 begin
   ReloadHex(Sender, FSlot4, 4);
+end;
+
+
+function TfrmMemStatCompare.IsAnyDifference(Node: PVirtualNode; Len1, Len2, Len3, Len4: Integer): Boolean;
+begin
+  Result := ((Len1 > 0) and (Len2 > 0) and (FSlot1.FullHEX[Node.Index].HData <> FSlot2.FullHEX[Node.Index].HData)) or
+            ((Len1 > 0) and (Len3 > 0) and (FSlot1.FullHEX[Node.Index].HData <> FSlot3.FullHEX[Node.Index].HData)) or
+            ((Len1 > 0) and (Len4 > 0) and (FSlot1.FullHEX[Node.Index].HData <> FSlot4.FullHEX[Node.Index].HData)) or
+            ((Len2 > 0) and (Len3 > 0) and (FSlot2.FullHEX[Node.Index].HData <> FSlot3.FullHEX[Node.Index].HData)) or
+            ((Len2 > 0) and (Len4 > 0) and (FSlot2.FullHEX[Node.Index].HData <> FSlot4.FullHEX[Node.Index].HData)) or
+            ((Len3 > 0) and (Len4 > 0) and (FSlot3.FullHEX[Node.Index].HData <> FSlot4.FullHEX[Node.Index].HData));
+end;
+
+
+procedure TfrmMemStatCompare.spdbtnJumpToPrevDifferenceClick(Sender: TObject);
+var
+  Node, FirstNode: PVirtualNode;
+  Len1, Len2, Len3, Len4: Integer;
+begin
+  if vstSlotCmp.RootNodeCount < 2 then
+    Exit;
+
+  Node := vstSlotCmp.GetFirstSelected;
+  if Node = nil then
+  begin
+    vstSlotCmp.Selected[vstSlotCmp.GetFirst] := True;
+    vstSlotCmp.ScrollIntoView(Node, False);
+    vstSlotCmp.SetFocus;
+    tmrRepaintMinimapOnSelect.Enabled := True;
+    Exit;
+  end;
+
+  Node := Node^.PrevSibling;
+  if Node = nil then
+    Exit;
+
+  FirstNode := vstSlotCmp.GetFirst;
+  if Node = FirstNode then
+  begin
+    vstSlotCmp.ClearSelection;
+    vstSlotCmp.Selected[Node] := True;
+    vstSlotCmp.ScrollIntoView(Node, False);
+    vstSlotCmp.SetFocus;
+    tmrRepaintMinimapOnSelect.Enabled := True;
+    Exit;
+  end;
+
+  GetAllSlotsLengths(FSlot1, FSlot2, FSlot3, FSlot4, Len1, Len2, Len3, Len4);
+
+  repeat
+    if IsAnyDifference(Node, Len1, Len2, Len3, Len4) then
+    begin
+      vstSlotCmp.ClearSelection;
+      vstSlotCmp.Selected[Node] := True;
+      vstSlotCmp.ScrollIntoView(Node, False);
+      vstSlotCmp.SetFocus;
+      tmrRepaintMinimapOnSelect.Enabled := True;
+      Exit;
+    end;
+
+    Node := Node^.PrevSibling;
+  until (Node = nil) or (Node = FirstNode);
+end;
+
+
+procedure TfrmMemStatCompare.spdbtnJumpToNextDifferenceClick(Sender: TObject);
+var
+  Node, LastNode: PVirtualNode;
+  Len1, Len2, Len3, Len4: Integer;
+begin
+  if vstSlotCmp.RootNodeCount < 2 then
+    Exit;
+
+  Node := vstSlotCmp.GetFirstSelected;
+  if Node = nil then
+  begin
+    vstSlotCmp.Selected[vstSlotCmp.GetLast] := True;
+    vstSlotCmp.ScrollIntoView(Node, False);
+    vstSlotCmp.SetFocus;
+    tmrRepaintMinimapOnSelect.Enabled := True;
+    Exit;
+  end;
+
+  Node := Node^.NextSibling;
+  if Node = nil then
+    Exit;
+
+  LastNode := vstSlotCmp.GetLast;
+  if Node = LastNode then
+  begin
+    vstSlotCmp.ClearSelection;
+    vstSlotCmp.Selected[Node] := True;
+    vstSlotCmp.ScrollIntoView(Node, False);
+    vstSlotCmp.SetFocus;
+    tmrRepaintMinimapOnSelect.Enabled := True;
+    Exit;
+  end;
+
+  GetAllSlotsLengths(FSlot1, FSlot2, FSlot3, FSlot4, Len1, Len2, Len3, Len4);
+
+  repeat
+    if IsAnyDifference(Node, Len1, Len2, Len3, Len4) then
+    begin
+      vstSlotCmp.ClearSelection;
+      vstSlotCmp.Selected[Node] := True;
+      vstSlotCmp.ScrollIntoView(Node, False);
+      vstSlotCmp.SetFocus;
+      tmrRepaintMinimapOnSelect.Enabled := True;
+      Exit;
+    end;
+
+    Node := Node^.NextSibling;
+  until (Node = nil) or (Node = LastNode);
 end;
 
 

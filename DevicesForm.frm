@@ -7,11 +7,11 @@ object frmDevices: TfrmDevices
   ClientHeight = 258
   ClientWidth = 310
   Color = clBtnFace
+  Position = poScreenCenter
+  LCLVersion = '8.4'
   OnClose = FormClose
   OnCreate = FormCreate
   OnShow = FormShow
-  Position = poScreenCenter
-  LCLVersion = '7.5'
   object edtSearch: TEdit
     Left = 1
     Height = 23
@@ -19,11 +19,11 @@ object frmDevices: TfrmDevices
     Top = 230
     Width = 193
     Anchors = [akLeft, akRight, akBottom]
-    OnChange = edtSearchChange
-    OnKeyDown = edtSearchKeyDown
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
+    OnChange = edtSearchChange
+    OnKeyDown = edtSearchKeyDown
   end
   object btnCancel: TButton
     Left = 255
@@ -32,8 +32,8 @@ object frmDevices: TfrmDevices
     Width = 53
     Anchors = [akRight, akBottom]
     Caption = 'Cancel'
-    OnClick = btnCancelClick
     TabOrder = 1
+    OnClick = btnCancelClick
   end
   object btnOK: TButton
     Left = 198
@@ -42,8 +42,8 @@ object frmDevices: TfrmDevices
     Width = 51
     Anchors = [akRight, akBottom]
     Caption = 'OK'
-    OnClick = vstDevicesDblClick
     TabOrder = 2
+    OnClick = vstDevicesDblClick
   end
   object tmrClose: TTimer
     Enabled = False
