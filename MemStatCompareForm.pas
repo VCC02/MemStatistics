@@ -1674,33 +1674,38 @@ begin
 
   CloseHex(AFileSlot, ASlotIndex);
 
-  if LoadHEXFile(OpenDialogHex.FileName, True, AFileSlot.DecodedHEX, Debugmsg) then
-  begin
-    AFileSlot.FileNameHex := OpenDialogHex.FileName;
-    AFileSlot.HasHex := True;
+  pnlMiniMap.Enabled := False; //prevent displaying the zoom window, which causes any MessageBox to be covered by this window
+  try
+    if LoadHEXFile(OpenDialogHex.FileName, True, AFileSlot.DecodedHEX, Debugmsg) then
+    begin
+      AFileSlot.FileNameHex := OpenDialogHex.FileName;
+      AFileSlot.HasHex := True;
 
-    case ASlotIndex of
-      1:
-        vstSlotCmp.Header.Columns.Items[CColumnIdx_Slot1_Data].Text := 'Slot1 Data' + #13#10 + ExtractFileName(AFileSlot.FileNameHex) + #13#10 + ExtractFileName(AFileSlot.FileNameLst);
+      case ASlotIndex of
+        1:
+          vstSlotCmp.Header.Columns.Items[CColumnIdx_Slot1_Data].Text := 'Slot1 Data' + #13#10 + ExtractFileName(AFileSlot.FileNameHex) + #13#10 + ExtractFileName(AFileSlot.FileNameLst);
 
-      2:
-        vstSlotCmp.Header.Columns.Items[CColumnIdx_Slot2_Data].Text := 'Slot2 Data' + #13#10 + ExtractFileName(AFileSlot.FileNameHex) + #13#10 + ExtractFileName(AFileSlot.FileNameLst);
+        2:
+          vstSlotCmp.Header.Columns.Items[CColumnIdx_Slot2_Data].Text := 'Slot2 Data' + #13#10 + ExtractFileName(AFileSlot.FileNameHex) + #13#10 + ExtractFileName(AFileSlot.FileNameLst);
 
-      3:
-        vstSlotCmp.Header.Columns.Items[CColumnIdx_Slot3_Data].Text := 'Slot3 Data' + #13#10 + ExtractFileName(AFileSlot.FileNameHex) + #13#10 + ExtractFileName(AFileSlot.FileNameLst);
+        3:
+          vstSlotCmp.Header.Columns.Items[CColumnIdx_Slot3_Data].Text := 'Slot3 Data' + #13#10 + ExtractFileName(AFileSlot.FileNameHex) + #13#10 + ExtractFileName(AFileSlot.FileNameLst);
 
-      4:
-        vstSlotCmp.Header.Columns.Items[CColumnIdx_Slot4_Data].Text := 'Slot4 Data' + #13#10 + ExtractFileName(AFileSlot.FileNameHex) + #13#10 + ExtractFileName(AFileSlot.FileNameLst);
+        4:
+          vstSlotCmp.Header.Columns.Items[CColumnIdx_Slot4_Data].Text := 'Slot4 Data' + #13#10 + ExtractFileName(AFileSlot.FileNameHex) + #13#10 + ExtractFileName(AFileSlot.FileNameLst);
 
-      else
-        raise Exception.Create('Unsupported index when loading hex file: ' + IntToStr(ASlotIndex));
+        else
+          raise Exception.Create('Unsupported index when loading hex file: ' + IntToStr(ASlotIndex));
+      end;
+
+      ConvertDecodedHexToFullMemory(AFileSlot);
+      SetVisibleEntries;
+      vstSlotCmp.Repaint;
+      DrawMiniMap;
+      ClearMemoryHighlighting;
     end;
-    
-    ConvertDecodedHexToFullMemory(AFileSlot);
-    SetVisibleEntries;
-    vstSlotCmp.Repaint;
-    DrawMiniMap;
-    ClearMemoryHighlighting;
+  finally
+    pnlMiniMap.Enabled := True;
   end;
 end;  
 
@@ -2082,6 +2087,7 @@ begin
   begin
     vstSlotCmp.Selected[vstSlotCmp.GetFirst] := True;
     vstSlotCmp.ScrollIntoView(Node, False);
+    vstSlotCmp.Repaint; //the last nodes are not repainted properly, so do a full repaint
     vstSlotCmp.SetFocus;
     tmrRepaintMinimapOnSelect.Enabled := True;
     Exit;
@@ -2097,6 +2103,7 @@ begin
     vstSlotCmp.ClearSelection;
     vstSlotCmp.Selected[Node] := True;
     vstSlotCmp.ScrollIntoView(Node, False);
+    vstSlotCmp.Repaint; //the last nodes are not repainted properly, so do a full repaint
     vstSlotCmp.SetFocus;
     tmrRepaintMinimapOnSelect.Enabled := True;
     Exit;
@@ -2110,6 +2117,7 @@ begin
       vstSlotCmp.ClearSelection;
       vstSlotCmp.Selected[Node] := True;
       vstSlotCmp.ScrollIntoView(Node, False);
+      vstSlotCmp.Repaint; //the last nodes are not repainted properly, so do a full repaint
       vstSlotCmp.SetFocus;
       tmrRepaintMinimapOnSelect.Enabled := True;
       Exit;
@@ -2133,6 +2141,7 @@ begin
   begin
     vstSlotCmp.Selected[vstSlotCmp.GetLast] := True;
     vstSlotCmp.ScrollIntoView(Node, False);
+    vstSlotCmp.Repaint; //the last nodes are not repainted properly, so do a full repaint
     vstSlotCmp.SetFocus;
     tmrRepaintMinimapOnSelect.Enabled := True;
     Exit;
@@ -2148,6 +2157,7 @@ begin
     vstSlotCmp.ClearSelection;
     vstSlotCmp.Selected[Node] := True;
     vstSlotCmp.ScrollIntoView(Node, False);
+    vstSlotCmp.Repaint; //the last nodes are not repainted properly, so do a full repaint
     vstSlotCmp.SetFocus;
     tmrRepaintMinimapOnSelect.Enabled := True;
     Exit;
@@ -2161,6 +2171,7 @@ begin
       vstSlotCmp.ClearSelection;
       vstSlotCmp.Selected[Node] := True;
       vstSlotCmp.ScrollIntoView(Node, False);
+      vstSlotCmp.Repaint; //the last nodes are not repainted properly, so do a full repaint
       vstSlotCmp.SetFocus;
       tmrRepaintMinimapOnSelect.Enabled := True;
       Exit;
