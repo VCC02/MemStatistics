@@ -16,13 +16,6 @@ object frmSimulatedMem: TfrmSimulatedMem
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
-  object lblCOMNumber: TLabel
-    Left = 8
-    Height = 13
-    Top = 0
-    Width = 63
-    Caption = 'COM Number'
-  end
   object lblCompareWindow: TLabel
     Left = 303
     Height = 13
@@ -37,41 +30,6 @@ object frmSimulatedMem: TfrmSimulatedMem
     Width = 18
     Caption = 'Slot'
   end
-  object lblCOMStatus: TLabel
-    Left = 88
-    Height = 13
-    Hint = 'Status is updated on connect/disconnect.'
-    Top = 48
-    Width = 119
-    Caption = 'Status: Disconnected'
-    Font.Color = clMaroon
-    Font.Height = -11
-    Font.Name = 'Tahoma'
-    Font.Style = [fsBold]
-    ParentFont = False
-    ParentShowHint = False
-    ShowHint = True
-  end
-  object lblBaudRate: TLabel
-    Left = 103
-    Height = 13
-    Top = 0
-    Width = 47
-    Caption = 'Baud rate'
-  end
-  object lblStatusMsg: TLabel
-    Left = 8
-    Height = 13
-    Top = 70
-    Width = 23
-    Caption = 'Msg:'
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'Tahoma'
-    ParentFont = False
-    ParentShowHint = False
-    ShowHint = True
-  end
   object lblAllReceivedCommands: TLabel
     Left = 8
     Height = 13
@@ -79,18 +37,6 @@ object frmSimulatedMem: TfrmSimulatedMem
     Width = 177
     AutoSize = False
     Caption = 'All received commands:'
-  end
-  object cmbCOMPort: TComboBox
-    Left = 8
-    Height = 22
-    Top = 16
-    Width = 89
-    AutoSize = False
-    DropDownCount = 10
-    ItemHeight = 16
-    Style = csOwnerDrawFixed
-    TabOrder = 0
-    OnDropDown = cmbCOMPortDropDown
   end
   object btnSendAllCmdToCompareWindow: TButton
     Left = 712
@@ -102,27 +48,8 @@ object frmSimulatedMem: TfrmSimulatedMem
     Caption = 'Send all commands to cmp window'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 1
+    TabOrder = 0
     OnClick = btnSendAllCmdToCompareWindowClick
-  end
-  object btnConnect: TButton
-    Left = 224
-    Height = 25
-    Top = 16
-    Width = 75
-    Caption = 'Connect'
-    TabOrder = 2
-    OnClick = btnConnectClick
-  end
-  object btnDisconnect: TButton
-    Left = 224
-    Height = 25
-    Top = 47
-    Width = 75
-    Caption = 'Disconnect'
-    Enabled = False
-    TabOrder = 3
-    OnClick = btnDisconnectClick
   end
   object btnLoadHEXFromMainWindow: TButton
     Left = 384
@@ -133,7 +60,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Caption = 'Load HEX from main window'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 4
+    TabOrder = 1
     OnClick = btnLoadHEXFromMainWindowClick
   end
   object btnLoadHEX: TButton
@@ -145,7 +72,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Caption = 'LoadHEX...'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 5
+    TabOrder = 2
     OnClick = btnLoadHEXClick
   end
   object cmbCompareWindow: TComboBox
@@ -157,7 +84,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     DropDownCount = 10
     ItemHeight = 16
     Style = csOwnerDrawFixed
-    TabOrder = 6
+    TabOrder = 3
     OnChange = cmbCompareWindowChange
   end
   object cmbSlots: TComboBox
@@ -169,7 +96,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     DropDownCount = 10
     ItemHeight = 16
     Style = csOwnerDrawFixed
-    TabOrder = 7
+    TabOrder = 4
   end
   object btnClearListOfCommands: TButton
     Left = 568
@@ -177,7 +104,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Top = 16
     Width = 140
     Caption = 'Clear list of commands'
-    TabOrder = 8
+    TabOrder = 5
     OnClick = btnClearListOfCommandsClick
   end
   object btnTestFIFOAndDecoder: TButton
@@ -189,57 +116,8 @@ object frmSimulatedMem: TfrmSimulatedMem
     Caption = 'Test FIFO and decoder'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 9
+    TabOrder = 6
     OnClick = btnTestFIFOAndDecoderClick
-  end
-  object cmbBaud: TComboBox
-    Left = 104
-    Height = 22
-    Top = 16
-    Width = 82
-    AutoSize = False
-    DropDownCount = 10
-    ItemHeight = 16
-    ItemIndex = 20
-    Items.Strings = (
-      '75'
-      '110'
-      '134'
-      '150'
-      '300'
-      '600'
-      '1200'
-      '1800'
-      '2400'
-      '4800'
-      '7200'
-      '9600'
-      '14400'
-      '19200'
-      '38400'
-      '56000'
-      '57600'
-      '115200'
-      '128000'
-      '230400'
-      '256000'
-      '460800'
-      '921600'
-    )
-    Style = csOwnerDrawFixed
-    TabOrder = 10
-    Text = '256000'
-  end
-  object chkShowAll: TCheckBox
-    Left = 8
-    Height = 17
-    Hint = 'Shows all possible COM numbers'
-    Top = 45
-    Width = 58
-    Caption = 'Show All'
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 11
   end
   object grpReceivedDeviceInfo: TGroupBox
     Left = 712
@@ -255,7 +133,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     ParentColor = False
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 12
+    TabOrder = 7
     object lblDevicePointerSize: TLabel
       Left = 8
       Height = 13
@@ -308,7 +186,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Caption = 'Autosend commands to cmp window'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 13
+    TabOrder = 8
   end
   object chkAppendUserNotesOnCmpWindow: TCheckBox
     Left = 712
@@ -318,7 +196,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Anchors = [akTop, akRight]
     AutoSize = False
     Caption = 'Append user notes on cmp window'
-    TabOrder = 14
+    TabOrder = 9
   end
   object btnDisplayCompareWindow: TButton
     Left = 568
@@ -326,7 +204,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Top = 77
     Width = 140
     Caption = 'Display cmp window'
-    TabOrder = 15
+    TabOrder = 10
     OnClick = btnDisplayCompareWindowClick
   end
   object btnSendSelectedCommands: TButton
@@ -339,7 +217,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Caption = 'Send selected commands to cmp window'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 16
+    TabOrder = 11
     OnClick = btnSendSelectedCommandsClick
   end
   object chkAutoScrollToSelectedCommands: TCheckBox
@@ -351,7 +229,7 @@ object frmSimulatedMem: TfrmSimulatedMem
     Caption = 'Autoscroll to selected commands'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 17
+    TabOrder = 12
   end
   object lbeSearchCommand: TLabeledEdit
     Left = 712
@@ -362,8 +240,17 @@ object frmSimulatedMem: TfrmSimulatedMem
     EditLabel.Height = 13
     EditLabel.Width = 256
     EditLabel.Caption = 'Search command'
-    TabOrder = 18
+    TabOrder = 13
     OnChange = lbeSearchCommandChange
+  end
+  object pnlCOMUI: TPanel
+    Left = 0
+    Height = 90
+    Top = 0
+    Width = 301
+    BevelOuter = bvNone
+    ParentBackground = False
+    TabOrder = 14
   end
   object tmrReadFIFO: TTimer
     Enabled = False

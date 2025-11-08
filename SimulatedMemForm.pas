@@ -36,19 +36,11 @@ uses
   {$ELSE}
     Windows,
   {$ENDIF}
-  Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, PollingFIFO, ExtCtrls, VirtualTrees, ComCtrls, ImgList;
+  SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, PollingFIFO, ExtCtrls, VirtualTrees, ComCtrls, ImgList,
+  SimpleCOMUI;
 
 type
-  TComThread = class(TThread)
-  private
-    FCharsReceived: Integer;
-  protected
-    procedure Execute; override;
-  public
-    property CharsReceived: Integer read FCharsReceived;
-  end;
-
   TDeviceFlashInfo = record
     Pointer_Size: Integer;
     ProgramFlash_Size: Integer;
@@ -60,25 +52,17 @@ type
   { TfrmSimulatedMem }
 
   TfrmSimulatedMem = class(TForm)
-    cmbCOMPort: TComboBox;
+    pnlCOMUI: TPanel;
     tmrReadFIFO: TTimer;
     btnSendAllCmdToCompareWindow: TButton;
-    btnConnect: TButton;
-    btnDisconnect: TButton;
     btnLoadHEXFromMainWindow: TButton;
     btnLoadHEX: TButton;
     cmbCompareWindow: TComboBox;
-    lblCOMNumber: TLabel;
     lblCompareWindow: TLabel;
     cmbSlots: TComboBox;
     lblSlot: TLabel;
-    lblCOMStatus: TLabel;
     btnClearListOfCommands: TButton;
     btnTestFIFOAndDecoder: TButton;
-    cmbBaud: TComboBox;
-    lblBaudRate: TLabel;
-    lblStatusMsg: TLabel;
-    chkShowAll: TCheckBox;
     grpReceivedDeviceInfo: TGroupBox;
     lblDevicePointerSize: TLabel;
     lblProgramFlashSize: TLabel;
@@ -113,9 +97,6 @@ type
     procedure btnClearListOfCommandsClick(Sender: TObject);
     procedure btnTestFIFOAndDecoderClick(Sender: TObject);
     procedure btnSendAllCmdToCompareWindowClick(Sender: TObject);
-    procedure btnConnectClick(Sender: TObject);
-    procedure btnDisconnectClick(Sender: TObject);
-    procedure cmbCOMPortDropDown(Sender: TObject);
     procedure tmrStartupTimer(Sender: TObject);
     procedure btnDisplayCompareWindowClick(Sender: TObject);
     procedure btnSendSelectedCommandsClick(Sender: TObject);
@@ -128,6 +109,7 @@ type
     FCOMName: string;
     FAllCommands: TStringList;
     vstMemCommands: TVirtualStringTree;
+    frSimpleCOMUI: TfrSimpleCOMUI;
 
     FDeviceFlashInfo: TDeviceFlashInfo;
     FTh: TComThread;
@@ -135,21 +117,6 @@ type
     procedure LoadSettingsFromIni;
     procedure SaveSettingsToIni;
     procedure CreateRemainingComponents;
-
-    {$IFnDEF UNIX}
-      procedure DetectDeviceChange(var Msg: TMessage); message WM_DEVICECHANGE;
-    {$ENDIF}
-
-    procedure UpdateListOfCOMPorts;
-    function GetCurrentCOMName: string;
-    procedure ConnectToCOMPort;
-    procedure DisconnectFromCOMPort;
-
-    procedure DisplayExtraErrorMessage(AMsg: string; AExtraInfo: string = '');
-    procedure ClearExtraErrorMessage;
-
-    procedure CreateTh;
-    procedure TerminateTh;
 
     procedure FillInListOfAvailableSlots;
     procedure FillInListOfAvailableCmpWindows;
@@ -160,6 +127,10 @@ type
     procedure SendAllCmdsToCompareWindow;
     procedure SendSelectedCmdsToCompareWindow;
     procedure SearchCmd(ASearchText: string);
+
+    procedure HandleOnConnectionToCOM;
+    procedure HandleOnDisconnectionFromCOM;
+    procedure HandleOnExecuteCOMThread(ATerminated: PBoolean);
   public
     { Public declarations }
     procedure UpdateAvailableCmpWindowSelection;
@@ -210,220 +181,68 @@ const
   CDevCmd_Erase_EQ = CDevCmd_Erase + '=';
 
 
-procedure TComThread.Execute;
+procedure TfrmSimulatedMem.HandleOnConnectionToCOM;
+begin
+  tmrReadFIFO.Enabled := True;
+end;
+
+
+procedure TfrmSimulatedMem.HandleOnDisconnectionFromCOM;
+begin
+  tmrReadFIFO.Enabled := False;
+end;
+
+
+procedure TfrmSimulatedMem.HandleOnExecuteCOMThread(ATerminated: PBoolean);
 type
   TArr = array[0..0] of AnsiChar;
 var
   TempNrCharsReceived, ActualRead: Integer;
-  s, TempCmd, LongBuffer: string;    //LongBuffer is used as a stream FIFO (adds data on one end, then removes from the other)
+  s, TempCmd: string;
+  LongBuffer: string;  //LongBuffer is used as a stream FIFO (adds data on one end, then removes from the other)
   PosCRLF: Integer;
   arr: ^TArr;
 begin
   LongBuffer := '';
-
   repeat
-    try
-      if COMIsConnected(frmSimulatedMem.COMName) then
-      begin
-        TempNrCharsReceived := GetReceivedByteCount(frmSimulatedMem.ConnHandle);
-
-        if TempNrCharsReceived > 0 then
-        begin
-          SetLength(s, TempNrCharsReceived);
-          arr := @s[1];
-
-          ActualRead := ReceiveDataFromCOM(frmSimulatedMem.ConnHandle, arr^, TempNrCharsReceived);
-          if ActualRead < TempNrCharsReceived then
-            SetLength(s, ActualRead);
-
-          LongBuffer := LongBuffer + s;  //keep adding to it
-          PosCRLF := Pos({$IFDEF UNIX} #10 {$ELSE} #13#10 {$ENDIF}, LongBuffer); //maybe the config is wrong, so that #13 doesn't make it
-
-          while PosCRLF > 0 do
-          begin
-            TempCmd := Copy(LongBuffer, 1, PosCRLF - 1);
-            if Pos(#0, TempCmd) > 0 then
-              Delete(TempCmd, Pos(#0, TempCmd), 1);
-
-            if Length(TempCmd) > 0 then
-              frmSimulatedMem.FIFO.Put(TempCmd);
-
-            {$IFDEF UNIX}
-              Delete(LongBuffer, 1, PosCRLF + 0); //deletes TempCmd and the CRLF after it
-              PosCRLF := Pos(#10, LongBuffer);
-            {$ELSE}
-              Delete(LongBuffer, 1, PosCRLF + 1); //deletes TempCmd and the CRLF after it
-              PosCRLF := Pos(#13#10, LongBuffer);
-            {$ENDIF}
-          end;
-        end;
-
-        FCharsReceived := TempNrCharsReceived;
-      end;
-
-      Sleep(1);
-    except
-
-    end;
-  until Terminated;
-end;
-
-
-procedure TfrmSimulatedMem.ConnectToCOMPort;
-begin
-  tmrReadFIFO.Enabled := True;
-  lblCOMStatus.Font.Color := $00006800;
-  lblCOMStatus.Caption := 'Status: Connected';
-  lblCOMStatus.Hint := '';
-
-  ClearExtraErrorMessage;
-
-  btnConnect.Enabled := False;
-  btnDisconnect.Enabled := True;
-  cmbCOMPort.Enabled := False;
-  cmbBaud.Enabled := False;
-
-  CreateTh;
-end;
-
-
-procedure TfrmSimulatedMem.DisconnectFromCOMPort;
-begin
-  TerminateTh;
-  DisconnectFromCOM(FCOMName);  //set internal library info to "disconnected"
-
-  try
-    lblCOMStatus.Hint := SysErrorMessage(GetCOMError(FCOMName));
-  except
-    //GetComErrors may throw an AV if the COM port is closed  :(
-  end;
-
-  tmrReadFIFO.Enabled := False;
-  lblCOMStatus.Font.Color := clMaroon;
-  lblCOMStatus.Caption := 'Status: Disconnected';
-
-  ClearExtraErrorMessage;
-  
-  btnConnect.Enabled := True;
-  btnDisconnect.Enabled := False;
-  cmbCOMPort.Enabled := True;
-  cmbBaud.Enabled := True;
-end;
-
-
-{$IFnDEF UNIX}
-  procedure TfrmSimulatedMem.DetectDeviceChange(var Msg: TMessage);
-  begin
-    Sleep(100);
-    UpdateListOfCOMPorts;
-
-    if cmbCOMPort.Items.IndexOf(FCOMName) = -1 then  //current com is disconnected
-      if COMIsConnected(FCOMName) then
-        DisconnectFromCOMPort;
-  end;
-{$ENDIF}
-
-
-procedure TfrmSimulatedMem.UpdateListOfCOMPorts;
-var
-  OldSelection: string;
-  NewSelectionIndex: Integer;
-  AllCOMs: TStringList;
-begin
-  AllCOMs := TStringList.Create;
-  try
-    ListExistentCOMPorts(AllCOMs, Visible and chkShowAll.Checked);
-
-    if cmbCOMPort.Items.Text <> AllCOMs.Text then
+    if COMIsConnected(frSimpleCOMUI.COMName) then
     begin
-      OldSelection := '';
-      if cmbCOMPort.ItemIndex <> -1 then
-        OldSelection := cmbCOMPort.Items.Strings[cmbCOMPort.ItemIndex];
+      TempNrCharsReceived := GetReceivedByteCount(frSimpleCOMUI.ConnHandle);
 
-      cmbCOMPort.Items.Text := AllCOMs.Text;
-
-      if OldSelection <> '' then
+      if TempNrCharsReceived > 0 then
       begin
-        NewSelectionIndex := cmbCOMPort.Items.IndexOf(OldSelection);
-        if NewSelectionIndex <> -1 then
-          cmbCOMPort.ItemIndex := NewSelectionIndex;
+        SetLength(s, TempNrCharsReceived);
+        arr := @s[1];
+
+        ActualRead := ReceiveDataFromCOM(frSimpleCOMUI.ConnHandle, arr^, TempNrCharsReceived);
+        if ActualRead < TempNrCharsReceived then
+          SetLength(s, ActualRead);
+
+        LongBuffer := LongBuffer + s;  //keep adding to it
+        PosCRLF := Pos({$IFDEF UNIX} #10 {$ELSE} #13#10 {$ENDIF}, LongBuffer); //maybe the config is wrong, so that #13 doesn't make it
+
+        while PosCRLF > 0 do
+        begin
+          TempCmd := Copy(LongBuffer, 1, PosCRLF - 1);
+          if Pos(#0, TempCmd) > 0 then
+            Delete(TempCmd, Pos(#0, TempCmd), 1);
+
+          if Length(TempCmd) > 0 then
+            FIFO.Put(TempCmd);
+
+          {$IFDEF UNIX}
+            Delete(LongBuffer, 1, PosCRLF + 0); //deletes TempCmd and the CRLF after it
+            PosCRLF := Pos(#10, LongBuffer);
+          {$ELSE}
+            Delete(LongBuffer, 1, PosCRLF + 1); //deletes TempCmd and the CRLF after it
+            PosCRLF := Pos(#13#10, LongBuffer);
+          {$ENDIF}
+        end;
       end;
     end;
-  finally
-    AllCOMs.Free;
-  end;
-end;
 
-
-function TfrmSimulatedMem.GetCurrentCOMName: string;
-begin
-  if cmbCOMPort.ItemIndex = -1 then
-  begin
-    Result := '';
-    Exit;
-  end;
-
-  Result := cmbCOMPort.Items.Strings[cmbCOMPort.ItemIndex];
-end;
-
-
-procedure TfrmSimulatedMem.DisplayExtraErrorMessage(AMsg: string; AExtraInfo: string = '');
-begin
-  lblStatusMsg.Caption := 'Msg: ' + AMsg;
-  lblStatusMsg.Font.Color := clMaroon;
-  lblStatusMsg.Font.Style := [fsBold];
-  lblStatusMsg.Hint := AExtraInfo;
-
-  {$IFDEF UNIX}
-    if AMsg = 'Permission denied' then
-      lblStatusMsg.Hint := lblStatusMsg.Hint + #13#10 +
-                           'Type this into a terminal, then relogin: ' + #13#10 +
-                           'sudo usermod -a -G dialout $USER';
-  {$ENDIF}
-end;
-
-
-procedure TfrmSimulatedMem.ClearExtraErrorMessage;
-begin
-  lblStatusMsg.Caption := 'Msg';
-  lblStatusMsg.Font.Color := clWindowText;
-  lblStatusMsg.Font.Style := [];
-end;
-
-
-procedure TfrmSimulatedMem.btnConnectClick(Sender: TObject);
-var
-  BaudStr: string;
-begin
-  FCOMName := GetCurrentCOMName;
-  if FCOMName = '' then
-  begin
-    DisplayExtraErrorMessage('No COM is selected.');
-    Exit;
-  end;
-
-  if cmbBaud.ItemIndex = -1 then
-    BaudStr := '256000'
-  else
-    BaudStr := cmbBaud.Items.Strings[cmbBaud.ItemIndex];
-
-  FConnHandle := ConnectToCOM(FCOMName, StrToIntDef(BaudStr, 256000), {Parity_none, 8, ONESTOPBIT,} 4096, 4096);
-  if FConnHandle > 0 then
-    ConnectToCOMPort
-  else
-  begin
-    try
-      DisplayExtraErrorMessage(SysErrorMessage(GetCOMError(FCOMName)), GetCOMExtraError(FCOMName)); //SysErrorMessage(GetLastError);
-    except
-      //GetComErrors may throw an AV if the COM port is closed  :(
-    end;
-  end;
-end;
-
-
-procedure TfrmSimulatedMem.btnDisconnectClick(Sender: TObject);
-begin
-  DisconnectFromCOMPort;
+    Sleep(1);
+  until ATerminated^;
 end;
 
 
@@ -794,12 +613,6 @@ begin
 end;
 
 
-procedure TfrmSimulatedMem.cmbCOMPortDropDown(Sender: TObject);
-begin
-  UpdateListOfCOMPorts;
-end;
-
-
 procedure TfrmSimulatedMem.FillInListOfAvailableSlots;
 var
   i, n, Selection: Integer;
@@ -850,52 +663,9 @@ begin
 end;
 
 
-procedure TfrmSimulatedMem.CreateTh;
-begin
-  if FTh <> nil then
-    TerminateTh;
-  
-  FTh := TComThread.Create(True);
-  FTh.FreeOnTerminate := False;
-
-  {$IFDEF VER180}
-    FTh.Resume;
-  {$ELSE}
-    FTh.Start;
-  {$ENDIF}
-end;
-
-
-procedure TfrmSimulatedMem.TerminateTh;
-var
-  tk: Int64;
-begin
-  if FTh = nil then
-    Exit;
-    
-  try
-    FTh.Terminate;
-
-    tk := GetTickCount64;
-    repeat
-      Application.ProcessMessages;
-      Sleep(1);
-    until FTh.Terminated or (GetTickCount64 - tk > 1000);
-  except
-  end;
-
-  try
-    FreeAndNil(FTh);
-  except
-  end;
-end;
-
-
 procedure TfrmSimulatedMem.LoadSettingsFromIni;
 var
   Ini: TMemIniFile;
-  Baud, COMIndex: Integer;
-  BaudStr: string;
 begin    //opening again, the file from main window, because this window is not created when loading from main
   Ini := TMemIniFile.Create(ExtractFilePath(ParamStr(0)) + 'MemStat.ini');
   try
@@ -904,8 +674,8 @@ begin    //opening again, the file from main window, because this window is not 
     Width := Ini.ReadInteger('SimMemWindow', 'Width', Width);
     Height := Ini.ReadInteger('SimMemWindow', 'Height', Height);
 
-    FComName := Ini.ReadString('SimMemWindow', 'ComName', 'COM0');
-    Baud := Ini.ReadInteger('SimMemWindow', 'Baud', 256000);
+    frSimpleCOMUI.ComName := Ini.ReadString('SimMemWindow', 'ComName', 'COM0');
+    frSimpleCOMUI.BaudRate := Ini.ReadInteger('SimMemWindow', 'Baud', 256000);
 
     chkAutoScrollToSelectedCommands.Checked := Ini.ReadBool('SimMemWindow', 'AutoScrollToSelectedCommands', chkAutoScrollToSelectedCommands.Checked);
     chkAutoSendCommandsToCmpWindow.Checked := Ini.ReadBool('SimMemWindow', 'AutoSendCommandsToCmpWindow', chkAutoSendCommandsToCmpWindow.Checked);
@@ -913,19 +683,12 @@ begin    //opening again, the file from main window, because this window is not 
   finally
     Ini.Free;
   end;
-
-  COMIndex := cmbCOMPort.Items.IndexOf(FComName);
-  cmbCOMPort.ItemIndex := COMIndex;
-                                                              
-  BaudStr := IntToStr(Baud);
-  cmbBaud.ItemIndex := cmbBaud.Items.IndexOf(BaudStr);
 end;
 
 
 procedure TfrmSimulatedMem.SaveSettingsToIni;
 var
   Ini: TMemIniFile;
-  Baud: Integer;
 begin    //saving again, the file from main window
   Ini := TMemIniFile.Create(ExtractFilePath(ParamStr(0)) + 'MemStat.ini');
   try
@@ -934,14 +697,8 @@ begin    //saving again, the file from main window
     Ini.WriteInteger('SimMemWindow', 'Width', Width);
     Ini.WriteInteger('SimMemWindow', 'Height', Height);
 
-    Ini.WriteString('SimMemWindow', 'ComName', GetCurrentCOMName);
-
-    if cmbBaud.ItemIndex = -1 then
-      Baud := 0
-    else
-      Baud := StrToIntDef(cmbBaud.Items.Strings[cmbBaud.ItemIndex], 0);
-
-    Ini.WriteInteger('SimMemWindow', 'Baud', Baud);
+    Ini.WriteString('SimMemWindow', 'ComName', frSimpleCOMUI.GetCurrentCOMName);
+    Ini.WriteInteger('SimMemWindow', 'Baud', frSimpleCOMUI.BaudRate);
 
     Ini.WriteBool('SimMemWindow', 'AutoScrollToSelectedCommands', chkAutoScrollToSelectedCommands.Checked);
     Ini.WriteBool('SimMemWindow', 'AutoSendCommandsToCmpWindow', chkAutoSendCommandsToCmpWindow.Checked);
@@ -1001,6 +758,17 @@ begin
   NewColum.Position := 1;
   NewColum.Width := 10000;
   NewColum.Text := 'Command';
+
+  frSimpleCOMUI := TfrSimpleCOMUI.Create(Self);
+  frSimpleCOMUI.Parent := pnlCOMUI;
+  frSimpleCOMUI.Left := 0;
+  frSimpleCOMUI.Top := 0;
+  frSimpleCOMUI.Width := pnlCOMUI.Width;
+  frSimpleCOMUI.Height := pnlCOMUI.Height;
+
+  frSimpleCOMUI.OnConnectionToCOM := HandleOnConnectionToCOM;
+  frSimpleCOMUI.OnDisconnectionFromCOM := HandleOnDisconnectionFromCOM;
+  frSimpleCOMUI.OnExecuteCOMThread := HandleOnExecuteCOMThread;
 end;
 
 
@@ -1022,14 +790,6 @@ begin
   tmrReadFIFO.Enabled := False;
   FreeAndNil(FFIFO);
   FreeAndNil(FAllCommands);
-
-  TerminateTh;
-
-  try
-    if COMIsConnected(FComName) then
-      DisconnectFromCOM(FComName);
-  except
-  end;
 
   try
     SaveSettingsToIni;
@@ -1158,7 +918,7 @@ procedure TfrmSimulatedMem.tmrStartupTimer(Sender: TObject);
 begin
   tmrStartup.Enabled := False;
 
-  UpdateListOfCOMPorts;
+  frSimpleCOMUI.UpdateListOfCOMPorts;
   LoadSettingsFromIni;
 end;
 

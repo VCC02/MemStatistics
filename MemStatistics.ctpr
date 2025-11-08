@@ -129,6 +129,12 @@
         <Filename Value="..\MiscUtils\SimpleCOM.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\MiscUtils\SimpleCOMUI.pas"/>
+        <FRMtype Value="200"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
