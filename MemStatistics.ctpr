@@ -37,6 +37,9 @@
     </RunParams>
     <RequiredPackages>
       <Item>
+        <PackageName Value="pl_Indy"/>
+      </Item>
+      <Item>
         <PackageName Value="pl_VirtualTrees"/>
       </Item>
       <Item>
@@ -168,6 +171,9 @@
         </Win32>
       </Options>
     </Linking>
+    <Other>
+      <CustomOptions Value="-d_TestBuild"/>
+    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions>

@@ -709,7 +709,11 @@ begin
   begin
     SetLength(ASections[i].AddrRanges, Length(AFileSlot.Sections[i].AddrRanges));
     for j := 0 to Length(AFileSlot.Sections[i].AddrRanges) - 1 do
+    begin
       ASections[i].AddrRanges[j].Len := AFileSlot.Sections[i].AddrRanges[j].Len;
+      //ASections[i].AddrRanges[j].MinAddr := AFileSlot.Sections[i].AddrRanges[j].MinAddr;
+      //ASections[i].AddrRanges[j].MaxAddr := AFileSlot.Sections[i].AddrRanges[j].MaxAddr;
+    end;
 
     ASections[i].DisplayName := AFileSlot.Sections[i].DisplayName;
     ASections[i].LongDisplayName := AFileSlot.Sections[i].LongDisplayName;

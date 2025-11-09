@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2025 VCC
     creation date: 2014
     initial release date: 17 Sep 2023
 
@@ -366,8 +366,8 @@ type
     function GetSlotCount: Integer;
     procedure LoadExternalHex(ASlotIdex: Integer; AFromMainWindow: Boolean = False);
 
-    procedure EraseMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; AUserNote: string = '');  //A chunk is usually the same size as an erase page size. However, this class doesn't have to know such details.
-    procedure WriteMemory(ASlotIdex: Integer; AStartAddress: Cardinal; var AData: array of Byte; AUserNote: string = '');
+    procedure EraseMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; out AIsOverwritingCFG: Boolean; AUserNote: string = '');  //A chunk is usually the same size as an erase page size. However, this class doesn't have to know such details.
+    procedure WriteMemory(ASlotIdex: Integer; AStartAddress: Cardinal; var AData: array of Byte; out AIsOverwritingCFG: Boolean; AUserNote: string = '');
     procedure ClearMemoryHighlighting;
     procedure HighlightMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; AScrollIntoView: Boolean);   //A chunk can be the same size as an erase page size or a write row size.
     procedure HighlightSlotAsConnected(ASlotIdex: Integer);
@@ -3239,16 +3239,38 @@ begin
 end;
 
 
+function FlashOperationIsOverwritingCFG(ADeviceInfo: TDeviceInfo; ACfgSectionIndex: Integer; CfgRange: TDefSectionAddrRange; AEntryAddress: Int64): Boolean;
+var
+  j: Integer;
+begin
+  Result := False;
+  for j := 0 to ADeviceInfo.GetAddressRangesCountFromSection(ACfgSectionIndex) - 1 do
+  begin
+    CfgRange := ADeviceInfo.GetAddressRangesByIndex(ACfgSectionIndex, j);
+    if InRange(AEntryAddress, CfgRange.MinAddr, CfgRange.MaxAddr) then
+    begin
+      Result := True;
+      Break;
+    end;
+  end;
+end;
+
+
 {Simulated memory via COM port connection}
-procedure TfrmMemStatCompare.EraseMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; AUserNote: string = '');  //A chunk is usually the same size as an erase page size. However, this class doesn't have to know such details.
+procedure TfrmMemStatCompare.EraseMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; out AIsOverwritingCFG: Boolean; AUserNote: string = '');  //A chunk is usually the same size as an erase page size. However, this class doesn't have to know such details.
 var
   MaxAddress, EntryAddress: Int64;
   i: Integer;
   TempShiftAmount, TempPointerSize: Byte;
   CurrentNote: string;
+  CfgSectionIndex: Integer;
+  CfgRange: TDefSectionAddrRange;
 begin
   MaxAddress := Int64(AStartAddress) + Int64(ASize);
   UpdateDevBitness(FDeviceInfo.DeviceBitness, TempShiftAmount, TempPointerSize);
+  AIsOverwritingCFG := False;
+
+  CfgSectionIndex := FDeviceInfo.GetIndexOfDeviceSectionByDefName('CFGREG');  //This field is user-configurable, but there is no other way to identify it.
 
   vstSlotCmp.BeginUpdate;
   try
@@ -3258,20 +3280,28 @@ begin
       if (EntryAddress >= Int64(AStartAddress)) and (EntryAddress < MaxAddress) then
       begin
         case FDeviceInfo.DeviceBitness of
-          db8: FAllSlots[ASlotIdex]^.FullHEX[i].HData := $FF;
-          db16: FAllSlots[ASlotIdex]^.FullHEX[i].HData := $FFFF;
+          db8: FAllSlots[ASlotIdex]^.FullHEX[i].HData := $FF;    //TBD
+          db16: FAllSlots[ASlotIdex]^.FullHEX[i].HData := $FFFF; //TBD
           db32: FAllSlots[ASlotIdex]^.FullHEX[i].HData := $FFFFFFFF;
         end;
 
         FAllSlots[ASlotIdex]^.FullHEX[i].HDataStr := IntToHex(FAllSlots[ASlotIdex]^.FullHEX[i].HData, TempPointerSize shl 1);
 
+        if CfgSectionIndex > -1 then
+          AIsOverwritingCFG := FlashOperationIsOverwritingCFG(FDeviceInfo, CfgSectionIndex, CfgRange, EntryAddress);
+
         if AUserNote > '' then
         begin
           CurrentNote := GetUserNoteAtAddress(EntryAddress);
-          UpdateUserNote(EntryAddress, CurrentNote + ' ' + AUserNote);
+
+          if AIsOverwritingCFG then
+            UpdateUserNote(EntryAddress, CurrentNote + ' (overwriting CFG) ' + AUserNote)
+          else
+            UpdateUserNote(EntryAddress, CurrentNote + ' ' + AUserNote);
           //FUserNoteArr[i].Note := FUserNoteArr[i].Note + ' ' + AUserNote;
+
           FUserNotesModified := True;
-        end;
+        end; //AUserNote > ''
       end;  //address in range
 
     end;    
@@ -3283,15 +3313,26 @@ begin
 end;
 
 
-procedure TfrmMemStatCompare.WriteMemory(ASlotIdex: Integer; AStartAddress: Cardinal; var AData: array of Byte; AUserNote: string = '');
+procedure TfrmMemStatCompare.WriteMemory(ASlotIdex: Integer; AStartAddress: Cardinal; var AData: array of Byte; out AIsOverwritingCFG: Boolean; AUserNote: string = '');
 var
   MaxAddress, EntryAddress: Int64;
   i, ChunkOffset: Integer;
   TempShiftAmount, TempPointerSize: Byte;
   CurrentNote: string;
+  CfgSectionIndex: Integer;
+  CfgRange: TDefSectionAddrRange;
+  StartAddress64, DataLen64: Int64;
+  DataLen: Integer;
+  TempData, TempNewData: DWord;
 begin
-  MaxAddress := Int64(AStartAddress) + Int64(Length(AData));
+  StartAddress64 := Int64(AStartAddress);
+  DataLen := Length(AData);
+  DataLen64 := Int64(DataLen);
+  MaxAddress := StartAddress64 + DataLen64;
   UpdateDevBitness(FDeviceInfo.DeviceBitness, TempShiftAmount, TempPointerSize);
+  AIsOverwritingCFG := False;
+
+  CfgSectionIndex := FDeviceInfo.GetIndexOfDeviceSectionByDefName('CFGREG');  //This field is user-configurable, but there is no other way to identify it.
 
   vstSlotCmp.BeginUpdate;
   try
@@ -3301,15 +3342,33 @@ begin
       EntryAddress := FAllSlots[ASlotIdex]^.FullHEX[i].HAddr;
       if (EntryAddress >= Int64(AStartAddress)) and (EntryAddress < MaxAddress) then
       begin
-        Move(AData[ChunkOffset], FAllSlots[ASlotIdex]^.FullHEX[i].HData, TempPointerSize);  //src, dst, cnt
+        if FDeviceInfo.DeviceBitness = db32 then
+        begin   //Ideally, this section should be implemented for all architectures, but it reqquires more testing. TempData might need to be replaced with Byte and Word for 8-bit and 16-bit architectures, or an array of bytes.
+          TempData := FAllSlots[ASlotIdex]^.FullHEX[i].HData;
+          TempNewData := $FFFFFFFF;
+          Move(AData[ChunkOffset], TempNewData, TempPointerSize);  //src, dst, cnt
+          TempData := TempData and TempNewData;  //this will only clear bits, not set them
+          Move(TempData, FAllSlots[ASlotIdex]^.FullHEX[i].HData, TempPointerSize);  //src, dst, cnt
+        end
+        else
+          Move(AData[ChunkOffset], FAllSlots[ASlotIdex]^.FullHEX[i].HData, TempPointerSize);  //src, dst, cnt   - plain overwriting of data - not like real Flash
+
         Inc(ChunkOffset, TempPointerSize);
 
         FAllSlots[ASlotIdex]^.FullHEX[i].HDataStr := IntToHex(FAllSlots[ASlotIdex]^.FullHEX[i].HData, TempPointerSize shl 1);
 
+        if CfgSectionIndex > -1 then
+          AIsOverwritingCFG := FlashOperationIsOverwritingCFG(FDeviceInfo, CfgSectionIndex, CfgRange, EntryAddress);
+
         if AUserNote > '' then
         begin
           CurrentNote := GetUserNoteAtAddress(EntryAddress);
-          UpdateUserNote(EntryAddress, CurrentNote + ' ' + AUserNote);
+
+          if AIsOverwritingCFG then
+            UpdateUserNote(EntryAddress, CurrentNote + ' (overwriting CFG) ' + AUserNote)
+          else
+            UpdateUserNote(EntryAddress, CurrentNote + ' ' + AUserNote);
+
 //          FUserNoteArr[i].Note := FUserNoteArr[i].Note + ' ' + AUserNote;
           FUserNotesModified := True;
         end;

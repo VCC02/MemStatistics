@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2025 VCC
     creation date: 2023
     initial release date: 23 Sep 2023
 
@@ -38,7 +38,12 @@ uses
   {$ENDIF}
   SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, PollingFIFO, ExtCtrls, VirtualTrees, ComCtrls, ImgList,
-  SimpleCOMUI;
+  SimpleCOMUI
+
+  {$IFDEF TestBuild}
+    , IdHTTPServer, IdCustomHTTPServer, IdContext, IdSync
+  {$ENDIF}
+  ;
 
 type
   TDeviceFlashInfo = record
@@ -48,6 +53,14 @@ type
     Write_Size: Integer;
     Erase_Size: Integer;
   end;
+
+  {$IFDEF TestBuild}
+    TFlashSyncObj = class(TIdSync)
+    protected
+      procedure DoSynchronize; override;
+    end;
+
+  {$ENDIF}
 
   { TfrmSimulatedMem }
 
@@ -90,6 +103,8 @@ type
     procedure vstMemCommandsGetImageIndex(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
       var Ghosted: Boolean; var ImageIndex: Integer);
+    procedure vstMemCommandsKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure vstMemCommandsMouseUp(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FormCreate(Sender: TObject);
@@ -108,8 +123,14 @@ type
     FConnHandle: THandle;
     FCOMName: string;
     FAllCommands: TStringList;
+    FAllCommandsOverwritingCFG: TStringList;
     vstMemCommands: TVirtualStringTree;
     frSimpleCOMUI: TfrSimpleCOMUI;
+
+    {$IFDEF TestBuild}
+      chkTestServer: TCheckBox;
+      IdHTTPServer1: TIdHTTPServer;
+    {$ENDIF}
 
     FDeviceFlashInfo: TDeviceFlashInfo;
     FTh: TComThread;
@@ -122,7 +143,7 @@ type
     procedure FillInListOfAvailableCmpWindows;
 
     procedure ReadFromFIFO;
-    procedure SendCmdToCompareWindowByIndex(ACommandsToSend: TStringList; ACmdIdx, ACmpWinIdx, ASlotIdx: Integer; AAppendUserNotes: Boolean);
+    procedure SendCmdToCompareWindowByIndex(ACommandsToSend: TStringList; ACmdIdx, ACmpWinIdx, ASlotIdx: Integer; AAppendUserNotes: Boolean; out AIsOverwritingCFG: Boolean);
     procedure HighlightCmdToCompareWindowByIndex(ACommandsToHighlight: TStringList; ACmdIdx, ACmpWinIdx, ASlotIdx: Integer);
     procedure SendAllCmdsToCompareWindow;
     procedure SendSelectedCmdsToCompareWindow;
@@ -131,6 +152,14 @@ type
     procedure HandleOnConnectionToCOM;
     procedure HandleOnDisconnectionFromCOM;
     procedure HandleOnExecuteCOMThread(ATerminated: PBoolean);
+
+    {$IFDEF TestBuild}
+      procedure chkTestServerChange(Sender: TObject);
+      procedure IdHTTPServer1CommandGet(AContext: TIdContext;
+        ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+
+      procedure ReadFromFIFOThreaded;
+    {$ENDIF}
   public
     { Public declarations }
     procedure UpdateAvailableCmpWindowSelection;
@@ -156,7 +185,7 @@ implementation
 
 
 uses
-  MemStatCompareForm, MemStatUtils, SimpleCOM, IniFiles;
+  MemStatCompareForm, MemStatUtils, SimpleCOM, IniFiles, Clipbrd;
 
 const
   CDevCmd_Pointer_Size = 'Pointer_Size';
@@ -179,6 +208,27 @@ const
   CDevCmd_Write_Word_EQ = CDevCmd_Write_Word + '=';
   CDevCmd_Write_Row_EQ = CDevCmd_Write_Row + '=';
   CDevCmd_Erase_EQ = CDevCmd_Erase + '=';
+
+
+{$IFDEF TestBuild}
+  procedure TFlashSyncObj.DoSynchronize;
+  begin
+    frmSimulatedMem.ReadFromFIFO;
+  end;
+
+
+  procedure TfrmSimulatedMem.ReadFromFIFOThreaded;
+  var
+    SyncObj: TFlashSyncObj;
+  begin
+    SyncObj := TFlashSyncObj.Create;
+    try
+      SyncObj.Synchronize;
+    finally
+      SyncObj.Free;
+    end;
+  end;
+{$ENDIF}
 
 
 procedure TfrmSimulatedMem.HandleOnConnectionToCOM;
@@ -288,13 +338,14 @@ begin
 end;
 
 
-procedure TfrmSimulatedMem.SendCmdToCompareWindowByIndex(ACommandsToSend: TStringList; ACmdIdx, ACmpWinIdx, ASlotIdx: Integer; AAppendUserNotes: Boolean);
+procedure TfrmSimulatedMem.SendCmdToCompareWindowByIndex(ACommandsToSend: TStringList; ACmdIdx, ACmpWinIdx, ASlotIdx: Integer; AAppendUserNotes: Boolean; out AIsOverwritingCFG: Boolean);
 var
   j, k: Integer;
   TempData, s, AddressStr, UserNote: string;
   TempWord, Address: DWord;
   DataToWrite: array of Byte;
 begin
+  AIsOverwritingCFG := False;
   s := ACommandsToSend.Strings[ACmdIdx];
 
   if Pos(CDevCmd_Pointer_Size_EQ, s) = 1 then
@@ -364,7 +415,7 @@ begin
       else
         UserNote := '';
 
-      ListOfFrmMemStatCompare[ACmpWinIdx].WriteMemory(ASlotIdx, Address, DataToWrite, UserNote);
+      ListOfFrmMemStatCompare[ACmpWinIdx].WriteMemory(ASlotIdx, Address, DataToWrite, AIsOverwritingCFG, UserNote);
       Exit;
     end;
 
@@ -398,7 +449,7 @@ begin
       else
         UserNote := '';
 
-      ListOfFrmMemStatCompare[ACmpWinIdx].WriteMemory(ASlotIdx, Address, DataToWrite, UserNote);
+      ListOfFrmMemStatCompare[ACmpWinIdx].WriteMemory(ASlotIdx, Address, DataToWrite, AIsOverwritingCFG, UserNote);
       Exit;
     end;
 
@@ -417,7 +468,7 @@ begin
       else
         UserNote := '';
 
-      ListOfFrmMemStatCompare[ACmpWinIdx].EraseMemoryChunk(ASlotIdx, Address, FDeviceFlashInfo.Erase_Size, UserNote);
+      ListOfFrmMemStatCompare[ACmpWinIdx].EraseMemoryChunk(ASlotIdx, Address, FDeviceFlashInfo.Erase_Size, AIsOverwritingCFG, UserNote);
       Exit;
     end;
   end;
@@ -520,13 +571,17 @@ var
   i: Integer;
   CmpWinIdx, SlotIdx: Integer;
   AppendUserNotes: Boolean;
+  IsOverwritingCFG: Boolean;
 begin
   CmpWinIdx := cmbCompareWindow.ItemIndex;
   SlotIdx := cmbSlots.ItemIndex;
   AppendUserNotes := chkAppendUserNotesOnCmpWindow.Checked;
 
   for i := 0 to FAllCommands.Count - 1 do
-    SendCmdToCompareWindowByIndex(FAllCommands, i, CmpWinIdx, SlotIdx, AppendUserNotes);
+  begin
+    SendCmdToCompareWindowByIndex(FAllCommands, i, CmpWinIdx, SlotIdx, AppendUserNotes, IsOverwritingCFG);
+    FAllCommandsOverwritingCFG.Strings[i] := IntToStr(Ord(IsOverwritingCFG));
+  end;
 end;
 
 
@@ -535,6 +590,7 @@ var
   Node: PVirtualNode;
   CmpWinIdx, SlotIdx: Integer;
   AppendUserNotes: Boolean;
+  IsOverwritingCFG: Boolean;
 begin
   Node := vstMemCommands.GetFirstSelected;
   if Node = nil then
@@ -546,8 +602,11 @@ begin
 
   repeat
     if vstMemCommands.Selected[Node] then
-      SendCmdToCompareWindowByIndex(FAllCommands, Node^.Index, CmpWinIdx, SlotIdx, AppendUserNotes);
-      
+    begin
+      SendCmdToCompareWindowByIndex(FAllCommands, Node^.Index, CmpWinIdx, SlotIdx, AppendUserNotes, IsOverwritingCFG);
+      FAllCommandsOverwritingCFG.Strings[Node^.Index] := IntToStr(Ord(IsOverwritingCFG));
+    end;
+
     Node := Node^.NextSibling;
   until Node = nil;
 end;
@@ -568,6 +627,7 @@ end;
 procedure TfrmSimulatedMem.btnClearListOfCommandsClick(Sender: TObject);
 begin
   FAllCommands.Clear;
+  FAllCommandsOverwritingCFG.Clear;
   vstMemCommands.RootNodeCount := 0;
   vstMemCommands.Repaint;
 end;
@@ -745,6 +805,7 @@ begin
   vstMemCommands.TreeOptions.AutoOptions := [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnFocus];
   vstMemCommands.OnGetText := vstMemCommandsGetText;
   vstMemCommands.OnGetImageIndex := vstMemCommandsGetImageIndex;
+  vstMemCommands.OnKeyDown := vstMemCommandsKeyDown;
   vstMemCommands.OnMouseUp := vstMemCommandsMouseUp;
 
   NewColum := vstMemCommands.Header.Columns.Add;
@@ -769,6 +830,20 @@ begin
   frSimpleCOMUI.OnConnectionToCOM := HandleOnConnectionToCOM;
   frSimpleCOMUI.OnDisconnectionFromCOM := HandleOnDisconnectionFromCOM;
   frSimpleCOMUI.OnExecuteCOMThread := HandleOnExecuteCOMThread;
+
+  {$IFDEF TestBuild}
+    chkTestServer := TCheckBox.Create(Self);
+    chkTestServer.Parent := Self;
+    chkTestServer.Left := lblAllReceivedCommands.Left + lblAllReceivedCommands.Width + 20;
+    chkTestServer.Top := chkAutoScrollToSelectedCommands.Top;
+    chkTestServer.Caption := 'Test server';
+    chkTestServer.ShowHint := True;
+    chkTestServer.OnChange := chkTestServerChange;
+
+    IdHTTPServer1 := TIdHTTPServer.Create(Self);
+    IdHTTPServer1.DefaultPort := 11358;
+    IdHTTPServer1.OnCommandGet := IdHTTPServer1CommandGet;
+  {$ENDIF}
 end;
 
 
@@ -778,6 +853,7 @@ begin
 
   FFIFO := TPollingFIFO.Create;
   FAllCommands := TStringList.Create;
+  FAllCommandsOverwritingCFG := TStringList.Create;
   FCOMName := '';
   FTh := nil;
 
@@ -790,6 +866,7 @@ begin
   tmrReadFIFO.Enabled := False;
   FreeAndNil(FFIFO);
   FreeAndNil(FAllCommands);
+  FreeAndNil(FAllCommandsOverwritingCFG);
 
   try
     SaveSettingsToIni;
@@ -816,7 +893,13 @@ procedure TfrmSimulatedMem.vstMemCommandsGetText(Sender: TBaseVirtualTree;
   var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
 begin
   case Column of
-    0: CellText := IntToStr(Node^.Index); 
+    0:
+    begin
+      CellText := IntToStr(Node^.Index);
+      if FAllCommandsOverwritingCFG.Strings[Node^.Index] = '1' then
+        CellText := CellText + '  (Overwriting CFG)';
+    end;
+
     1: CellText := '"' + FAllCommands.Strings[Node^.Index] + '"';
   end;
 end;
@@ -833,15 +916,57 @@ begin
     ImageIndex := 0;
     s := FAllCommands.Strings[Node^.Index];
 
-    if Pos(CDevCmd_Erase + '=', s) = 1 then
-      ImageIndex := 1
-    else
-      if Pos(CDevCmd_Write_Word + '=', s) = 1 then
-        ImageIndex := 2
+    if FAllCommandsOverwritingCFG.Strings[Node^.Index] <> '1' then
+    begin
+      if Pos(CDevCmd_Erase + '=', s) = 1 then
+        ImageIndex := 1
       else
-        if Pos(CDevCmd_Write_Row + '=', s) = 1 then
-          ImageIndex := 3;
+        if Pos(CDevCmd_Write_Word + '=', s) = 1 then
+          ImageIndex := 2
+        else
+          if Pos(CDevCmd_Write_Row + '=', s) = 1 then
+            ImageIndex := 3;
+    end
+    else
+    begin
+      ImageIndex := 4;
+      if Pos(CDevCmd_Erase + '=', s) = 1 then
+        ImageIndex := 5
+      else
+        if Pos(CDevCmd_Write_Word + '=', s) = 1 then
+          ImageIndex := 6
+        else
+          if Pos(CDevCmd_Write_Row + '=', s) = 1 then
+            ImageIndex := 7;
+    end;
   end;
+end;
+
+
+procedure TfrmSimulatedMem.vstMemCommandsKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  s: string;
+  Node: PVirtualNode;
+begin
+  if ssCtrl in Shift then
+    if Key = Ord('C') then
+    begin
+      s := '';
+
+      Node := vstMemCommands.GetFirstSelected;
+      if Node = nil then
+        Exit;
+
+      repeat
+        if vstMemCommands.Selected[Node] then
+          s := FAllCommands.Strings[Node^.Index];
+
+        Node := Node^.NextSibling;
+      until Node = nil;
+
+      Clipboard.AsText := s;
+    end;
 end;
 
 
@@ -878,6 +1003,7 @@ var
   i: Integer;
   CmpWinIdx, SlotIdx: Integer;
   AppendUserNotes: Boolean;
+  IsOverwritingCFG: Boolean;
 begin
   if FFIFO.GetLength = 0 then
     Exit;
@@ -900,7 +1026,12 @@ begin
       AppendUserNotes := chkAppendUserNotesOnCmpWindow.Checked;
 
       for i := 0 to FIFOContent.Count - 1 do
-        SendCmdToCompareWindowByIndex(FIFOContent, i, CmpWinIdx, SlotIdx, AppendUserNotes);
+      begin
+        FAllCommandsOverwritingCFG.Add('0');
+        SendCmdToCompareWindowByIndex(FIFOContent, i, CmpWinIdx, SlotIdx, AppendUserNotes, IsOverwritingCFG);
+        if IsOverwritingCFG then
+          FAllCommandsOverwritingCFG.Strings[FAllCommandsOverwritingCFG.Count - 1] := '1';
+      end;
     end;
   finally
     FIFOContent.Free;
@@ -912,6 +1043,53 @@ procedure TfrmSimulatedMem.tmrReadFIFOTimer(Sender: TObject);
 begin
   ReadFromFIFO;
 end;
+
+
+{$IFDEF TestBuild}
+  procedure TfrmSimulatedMem.IdHTTPServer1CommandGet(AContext: TIdContext;
+    ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+  var
+    Cmd: string;
+  begin
+    Cmd := ARequestInfo.Document;
+    ARequestInfo.Params.LineBreak := #13#10;
+
+    AResponseInfo.ContentType := 'text/plain'; // 'text/html';  default type
+
+    if Cmd = '/' + 'FlashSim' then
+    begin
+      FFIFO.Put(ARequestInfo.Params.Values['Cmd']);
+      AResponseInfo.ContentText := 'Command sent.';
+      ReadFromFIFOThreaded;
+    end;
+  end;
+
+
+  procedure TfrmSimulatedMem.chkTestServerChange(Sender: TObject);
+  begin
+    try
+      IdHTTPServer1.Active := chkTestServer.Checked;
+      Application.ProcessMessages;
+
+      if IdHTTPServer1.Active then
+      begin
+        chkTestServer.Hint := 'Listening on port ' + IntToStr(IdHTTPServer1.DefaultPort) + #13#10 + 'Command example:  http://127.0.0.1:11358/FlashSim?Cmd=Write_Word=1D000000ABCDEF01';
+        chkTestServer.Tag := 0;
+      end
+      else
+        if chkTestServer.Tag = 0 then  //no exception
+          chkTestServer.Hint := 'Server module is inactive.';
+    except
+      on E: Exception do
+      begin
+        chkTestServer.Tag := 1; //exception
+        chkTestServer.Hint := 'Can''t listen on port ' + IntToStr(IdHTTPServer1.DefaultPort) + #13#10 + E.Message;
+        Application.ProcessMessages;
+        chkTestServer.Checked := False;
+      end;
+    end;
+  end;
+{$ENDIF}
 
 
 procedure TfrmSimulatedMem.tmrStartupTimer(Sender: TObject);

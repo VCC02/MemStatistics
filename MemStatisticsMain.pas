@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2025 VCC
     creation date: 2013
     initial release date: 17 Sep 2023
 
@@ -238,6 +238,7 @@ var
  - Find a way to hide RAM section in cmp window. It should display sections, based on VisibleOnCompare flag.
  [] - There are many GetIndexOfSectionFromDataAddress and GetIndexOfSectionFromRawIndex calls in various handlers of the two tables.
    Their results should be cached in OnBeforePaint handler and used in the others.
+   If it makes sense, the number of sections should be limited to 255 and stored as byte when loading the hex file (as a cache).
  - Check if the compare VST can be loaded faster (on PIC32MZ), when EBI and SQI are visible
  - In TMemTable.Paint, the for loops should use the entries from TDevInfoEditArr, because the sections can be swapped. So far, only the colors are properly used.
    Maybe the old arrays have to be discarded. An alternative would be to have a DisplayPosition field, because TMemTable uses indexed sections.
@@ -271,11 +272,12 @@ var
  - load custom lst, instead of loading from main on cmp window
  - bug - the cmp window doesn't want to load lst info from main, until used by SimMem window
  - the SimMem window should highlight commands which will end up erasing or writing out of bounds memory
- - memory sections should have a flag, configurable from settings window, to highlight if they are erased/written by commands on SimWindow. The CFG sections should be set to True.
+ [in work] - memory sections should have a flag, configurable from settings window, to highlight if they are erased/written by commands on SimWindow. The CFG sections should be set to True.
  - the .lst loader should read comments, because they contain names for most routines
 
  - The cmp window should be able to display standard bootloader routines as asm entries, despite the fact that they are not present in lst file (e.g. various jmp instructions).
    Maybe some of them can display explanations in user column.
+   Should be implemented at least for commands used to overwrite memory, which don't come from a hex file, but from bootloader (host app).
 }
 
 
@@ -872,8 +874,8 @@ end;
 
 
 procedure TfrmMemStatisticsMain.btnNewCompareWindowClick(Sender: TObject);
-const
-  CExcluedSectionName = 'RAM';
+//const
+//  CExcluedSectionName = 'RAM';
 var
   frmMemStatCompare: TfrmMemStatCompare;
   TempAllSections: TSectionArr;
