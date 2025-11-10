@@ -366,8 +366,8 @@ type
     function GetSlotCount: Integer;
     procedure LoadExternalHex(ASlotIdex: Integer; AFromMainWindow: Boolean = False);
 
-    procedure EraseMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; out AIsOverwritingCFG: Boolean; AUserNote: string = '');  //A chunk is usually the same size as an erase page size. However, this class doesn't have to know such details.
-    procedure WriteMemory(ASlotIdex: Integer; AStartAddress: Cardinal; var AData: array of Byte; out AIsOverwritingCFG: Boolean; AUserNote: string = '');
+    procedure EraseMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; out AIsOverwritingCFG, AIsOutOfRange: Boolean; AUserNote: string = '');  //A chunk is usually the same size as an erase page size. However, this class doesn't have to know such details.
+    procedure WriteMemory(ASlotIdex: Integer; AStartAddress: Cardinal; var AData: array of Byte; out AIsOverwritingCFG, AIsOutOfRange: Boolean; AUserNote: string = '');
     procedure ClearMemoryHighlighting;
     procedure HighlightMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; AScrollIntoView: Boolean);   //A chunk can be the same size as an erase page size or a write row size.
     procedure HighlightSlotAsConnected(ASlotIdex: Integer);
@@ -3239,11 +3239,13 @@ begin
 end;
 
 
-function FlashOperationIsOverwritingCFG(ADeviceInfo: TDeviceInfo; ACfgSectionIndex: Integer; CfgRange: TDefSectionAddrRange; AEntryAddress: Int64): Boolean;
+function FlashOperationIsOverwritingCFG(ADeviceInfo: TDeviceInfo; ACfgSectionIndex: Integer; AEntryAddress: Int64): Boolean;
 var
   j: Integer;
+  CfgRange: TDefSectionAddrRange;
 begin
   Result := False;
+
   for j := 0 to ADeviceInfo.GetAddressRangesCountFromSection(ACfgSectionIndex) - 1 do
   begin
     CfgRange := ADeviceInfo.GetAddressRangesByIndex(ACfgSectionIndex, j);
@@ -3256,19 +3258,45 @@ begin
 end;
 
 
+function FlashOperationIsOutOfRange(ADeviceInfo: TDeviceInfo; AEntryAddress: Int64): Boolean;
+var
+  j: Integer;
+  Range: TDefSectionAddrRange;
+  SectionIndex: Integer;
+begin
+  Result := True;
+
+  for SectionIndex := 0 to ADeviceInfo.GetDeviceSectionCount - 1 do
+  begin
+    for j := 0 to ADeviceInfo.GetAddressRangesCountFromSection(SectionIndex) - 1 do
+    begin
+      Range := ADeviceInfo.GetAddressRangesByIndex(SectionIndex, j);
+      if InRange(AEntryAddress, Range.MinAddr, Range.MaxAddr) then
+      begin
+        Result := False;
+        Break;
+      end;
+    end;
+
+    if not Result then
+      Break;
+  end;
+end;
+
+
 {Simulated memory via COM port connection}
-procedure TfrmMemStatCompare.EraseMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; out AIsOverwritingCFG: Boolean; AUserNote: string = '');  //A chunk is usually the same size as an erase page size. However, this class doesn't have to know such details.
+procedure TfrmMemStatCompare.EraseMemoryChunk(ASlotIdex: Integer; AStartAddress, ASize: Cardinal; out AIsOverwritingCFG, AIsOutOfRange: Boolean; AUserNote: string = '');  //A chunk is usually the same size as an erase page size. However, this class doesn't have to know such details.
 var
   MaxAddress, EntryAddress: Int64;
   i: Integer;
   TempShiftAmount, TempPointerSize: Byte;
   CurrentNote: string;
   CfgSectionIndex: Integer;
-  CfgRange: TDefSectionAddrRange;
 begin
   MaxAddress := Int64(AStartAddress) + Int64(ASize);
   UpdateDevBitness(FDeviceInfo.DeviceBitness, TempShiftAmount, TempPointerSize);
   AIsOverwritingCFG := False;
+  AIsOutOfRange := False;
 
   CfgSectionIndex := FDeviceInfo.GetIndexOfDeviceSectionByDefName('CFGREG');  //This field is user-configurable, but there is no other way to identify it.
 
@@ -3288,7 +3316,7 @@ begin
         FAllSlots[ASlotIdex]^.FullHEX[i].HDataStr := IntToHex(FAllSlots[ASlotIdex]^.FullHEX[i].HData, TempPointerSize shl 1);
 
         if CfgSectionIndex > -1 then
-          AIsOverwritingCFG := FlashOperationIsOverwritingCFG(FDeviceInfo, CfgSectionIndex, CfgRange, EntryAddress);
+          AIsOverwritingCFG := FlashOperationIsOverwritingCFG(FDeviceInfo, CfgSectionIndex, EntryAddress);
 
         if AUserNote > '' then
         begin
@@ -3303,8 +3331,18 @@ begin
           FUserNotesModified := True;
         end; //AUserNote > ''
       end;  //address in range
+    end; //for
 
-    end;    
+    EntryAddress := AStartAddress;
+    repeat
+      if not AIsOutOfRange then
+        AIsOutOfRange := FlashOperationIsOutOfRange(DeviceInfo, EntryAddress);
+
+      if AIsOutOfRange then
+        Break;
+
+      Inc(EntryAddress, 1 shl FDeviceInfo.DevShiftAmount);    //TBD
+    until EntryAddress >= MaxAddress;
   finally
     vstSlotCmp.EndUpdate;
   end;
@@ -3313,14 +3351,13 @@ begin
 end;
 
 
-procedure TfrmMemStatCompare.WriteMemory(ASlotIdex: Integer; AStartAddress: Cardinal; var AData: array of Byte; out AIsOverwritingCFG: Boolean; AUserNote: string = '');
+procedure TfrmMemStatCompare.WriteMemory(ASlotIdex: Integer; AStartAddress: Cardinal; var AData: array of Byte; out AIsOverwritingCFG, AIsOutOfRange: Boolean; AUserNote: string = '');
 var
   MaxAddress, EntryAddress: Int64;
   i, ChunkOffset: Integer;
   TempShiftAmount, TempPointerSize: Byte;
   CurrentNote: string;
   CfgSectionIndex: Integer;
-  CfgRange: TDefSectionAddrRange;
   StartAddress64, DataLen64: Int64;
   DataLen: Integer;
   TempData, TempNewData: DWord;
@@ -3331,6 +3368,7 @@ begin
   MaxAddress := StartAddress64 + DataLen64;
   UpdateDevBitness(FDeviceInfo.DeviceBitness, TempShiftAmount, TempPointerSize);
   AIsOverwritingCFG := False;
+  AIsOutOfRange := False;
 
   CfgSectionIndex := FDeviceInfo.GetIndexOfDeviceSectionByDefName('CFGREG');  //This field is user-configurable, but there is no other way to identify it.
 
@@ -3358,7 +3396,7 @@ begin
         FAllSlots[ASlotIdex]^.FullHEX[i].HDataStr := IntToHex(FAllSlots[ASlotIdex]^.FullHEX[i].HData, TempPointerSize shl 1);
 
         if CfgSectionIndex > -1 then
-          AIsOverwritingCFG := FlashOperationIsOverwritingCFG(FDeviceInfo, CfgSectionIndex, CfgRange, EntryAddress);
+          AIsOverwritingCFG := FlashOperationIsOverwritingCFG(FDeviceInfo, CfgSectionIndex, EntryAddress);
 
         if AUserNote > '' then
         begin
@@ -3373,8 +3411,18 @@ begin
           FUserNotesModified := True;
         end;
       end;  //address in range
+    end; //for
 
-    end;
+    EntryAddress := AStartAddress;
+    repeat
+      if not AIsOutOfRange then
+        AIsOutOfRange := FlashOperationIsOutOfRange(DeviceInfo, EntryAddress);
+
+      if AIsOutOfRange then
+        Break;
+
+      Inc(EntryAddress, 1 shl FDeviceInfo.DevShiftAmount);    //TBD
+    until EntryAddress >= MaxAddress;
   finally
     vstSlotCmp.EndUpdate;
   end;

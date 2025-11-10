@@ -271,7 +271,7 @@ var
  - display erase page and write page selection (Addr [Hex] column) on cmp window, based on received device info
  - load custom lst, instead of loading from main on cmp window
  - bug - the cmp window doesn't want to load lst info from main, until used by SimMem window
- - the SimMem window should highlight commands which will end up erasing or writing out of bounds memory
+ [done] - the SimMem window should highlight commands which will end up erasing or writing out of bounds memory
  [in work] - memory sections should have a flag, configurable from settings window, to highlight if they are erased/written by commands on SimWindow. The CFG sections should be set to True.
  - the .lst loader should read comments, because they contain names for most routines
 

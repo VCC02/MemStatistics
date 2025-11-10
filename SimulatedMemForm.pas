@@ -36,9 +36,8 @@ uses
   {$ELSE}
     Windows,
   {$ENDIF}
-  SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, PollingFIFO, ExtCtrls, VirtualTrees, ComCtrls, ImgList,
-  SimpleCOMUI
+  SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls,
+  PollingFIFO, ExtCtrls, VirtualTrees, ComCtrls, ImgList, Menus, SimpleCOMUI
 
   {$IFDEF TestBuild}
     , IdHTTPServer, IdCustomHTTPServer, IdContext, IdSync
@@ -122,10 +121,14 @@ type
     FFIFO: TPollingFIFO;
     FConnHandle: THandle;
     FCOMName: string;
+
     FAllCommands: TStringList;
     FAllCommandsOverwritingCFG: TStringList;
+    FAllCommandsIsOutOfRange: TStringList;
+
     vstMemCommands: TVirtualStringTree;
     frSimpleCOMUI: TfrSimpleCOMUI;
+    FpmVST: TPopupMenu;
 
     {$IFDEF TestBuild}
       chkTestServer: TCheckBox;
@@ -143,11 +146,13 @@ type
     procedure FillInListOfAvailableCmpWindows;
 
     procedure ReadFromFIFO;
-    procedure SendCmdToCompareWindowByIndex(ACommandsToSend: TStringList; ACmdIdx, ACmpWinIdx, ASlotIdx: Integer; AAppendUserNotes: Boolean; out AIsOverwritingCFG: Boolean);
+    procedure SendCmdToCompareWindowByIndex(ACommandsToSend: TStringList; ACmdIdx, ACmpWinIdx, ASlotIdx: Integer; AAppendUserNotes: Boolean; out AIsOverwritingCFG, AIsOutOfRange: Boolean);
     procedure HighlightCmdToCompareWindowByIndex(ACommandsToHighlight: TStringList; ACmdIdx, ACmpWinIdx, ASlotIdx: Integer);
     procedure SendAllCmdsToCompareWindow;
     procedure SendSelectedCmdsToCompareWindow;
     procedure SearchCmd(ASearchText: string);
+    procedure CopySelectedLinesToClipboard(APrefix: string = '');
+    procedure GenerateFlashCommandFromSelectedLinesThenCopyToClipboard;
 
     procedure HandleOnConnectionToCOM;
     procedure HandleOnDisconnectionFromCOM;
@@ -160,6 +165,9 @@ type
 
       procedure ReadFromFIFOThreaded;
     {$ENDIF}
+
+    procedure HandleOnCopySelectedLinesToClipboardClick(Sender: TObject);
+    procedure HandleOnGenerateFlashCommandFromSelectedLinesThenCopyToClipboard(Sender: TObject);
   public
     { Public declarations }
     procedure UpdateAvailableCmpWindowSelection;
@@ -296,6 +304,18 @@ begin
 end;
 
 
+procedure TfrmSimulatedMem.HandleOnCopySelectedLinesToClipboardClick(Sender: TObject);
+begin
+  CopySelectedLinesToClipboard;
+end;
+
+
+procedure TfrmSimulatedMem.HandleOnGenerateFlashCommandFromSelectedLinesThenCopyToClipboard(Sender: TObject);
+begin
+  GenerateFlashCommandFromSelectedLinesThenCopyToClipboard;
+end;
+
+
 procedure TfrmSimulatedMem.btnDisplayCompareWindowClick(Sender: TObject);
 begin
   if ListOfFrmMemStatCompare.Count = 0 then
@@ -338,7 +358,7 @@ begin
 end;
 
 
-procedure TfrmSimulatedMem.SendCmdToCompareWindowByIndex(ACommandsToSend: TStringList; ACmdIdx, ACmpWinIdx, ASlotIdx: Integer; AAppendUserNotes: Boolean; out AIsOverwritingCFG: Boolean);
+procedure TfrmSimulatedMem.SendCmdToCompareWindowByIndex(ACommandsToSend: TStringList; ACmdIdx, ACmpWinIdx, ASlotIdx: Integer; AAppendUserNotes: Boolean; out AIsOverwritingCFG, AIsOutOfRange: Boolean);
 var
   j, k: Integer;
   TempData, s, AddressStr, UserNote: string;
@@ -346,6 +366,7 @@ var
   DataToWrite: array of Byte;
 begin
   AIsOverwritingCFG := False;
+  AIsOutOfRange := False;
   s := ACommandsToSend.Strings[ACmdIdx];
 
   if Pos(CDevCmd_Pointer_Size_EQ, s) = 1 then
@@ -415,7 +436,7 @@ begin
       else
         UserNote := '';
 
-      ListOfFrmMemStatCompare[ACmpWinIdx].WriteMemory(ASlotIdx, Address, DataToWrite, AIsOverwritingCFG, UserNote);
+      ListOfFrmMemStatCompare[ACmpWinIdx].WriteMemory(ASlotIdx, Address, DataToWrite, AIsOverwritingCFG, AIsOutOfRange, UserNote);
       Exit;
     end;
 
@@ -449,7 +470,7 @@ begin
       else
         UserNote := '';
 
-      ListOfFrmMemStatCompare[ACmpWinIdx].WriteMemory(ASlotIdx, Address, DataToWrite, AIsOverwritingCFG, UserNote);
+      ListOfFrmMemStatCompare[ACmpWinIdx].WriteMemory(ASlotIdx, Address, DataToWrite, AIsOverwritingCFG, AIsOutOfRange, UserNote);
       Exit;
     end;
 
@@ -468,7 +489,7 @@ begin
       else
         UserNote := '';
 
-      ListOfFrmMemStatCompare[ACmpWinIdx].EraseMemoryChunk(ASlotIdx, Address, FDeviceFlashInfo.Erase_Size, AIsOverwritingCFG, UserNote);
+      ListOfFrmMemStatCompare[ACmpWinIdx].EraseMemoryChunk(ASlotIdx, Address, FDeviceFlashInfo.Erase_Size, AIsOverwritingCFG, AIsOutOfRange, UserNote);
       Exit;
     end;
   end;
@@ -571,7 +592,7 @@ var
   i: Integer;
   CmpWinIdx, SlotIdx: Integer;
   AppendUserNotes: Boolean;
-  IsOverwritingCFG: Boolean;
+  IsOverwritingCFG, IsOutOfRange: Boolean;
 begin
   CmpWinIdx := cmbCompareWindow.ItemIndex;
   SlotIdx := cmbSlots.ItemIndex;
@@ -579,8 +600,9 @@ begin
 
   for i := 0 to FAllCommands.Count - 1 do
   begin
-    SendCmdToCompareWindowByIndex(FAllCommands, i, CmpWinIdx, SlotIdx, AppendUserNotes, IsOverwritingCFG);
+    SendCmdToCompareWindowByIndex(FAllCommands, i, CmpWinIdx, SlotIdx, AppendUserNotes, IsOverwritingCFG, IsOutOfRange);
     FAllCommandsOverwritingCFG.Strings[i] := IntToStr(Ord(IsOverwritingCFG));
+    FAllCommandsIsOutOfRange.Strings[i] := IntToStr(Ord(IsOutOfRange));
   end;
 end;
 
@@ -590,7 +612,7 @@ var
   Node: PVirtualNode;
   CmpWinIdx, SlotIdx: Integer;
   AppendUserNotes: Boolean;
-  IsOverwritingCFG: Boolean;
+  IsOverwritingCFG, IsOutOfRange: Boolean;
 begin
   Node := vstMemCommands.GetFirstSelected;
   if Node = nil then
@@ -603,8 +625,9 @@ begin
   repeat
     if vstMemCommands.Selected[Node] then
     begin
-      SendCmdToCompareWindowByIndex(FAllCommands, Node^.Index, CmpWinIdx, SlotIdx, AppendUserNotes, IsOverwritingCFG);
+      SendCmdToCompareWindowByIndex(FAllCommands, Node^.Index, CmpWinIdx, SlotIdx, AppendUserNotes, IsOverwritingCFG, IsOutOfRange);
       FAllCommandsOverwritingCFG.Strings[Node^.Index] := IntToStr(Ord(IsOverwritingCFG));
+      FAllCommandsIsOutOfRange.Strings[Node^.Index] := IntToStr(Ord(IsOutOfRange));
     end;
 
     Node := Node^.NextSibling;
@@ -628,6 +651,8 @@ procedure TfrmSimulatedMem.btnClearListOfCommandsClick(Sender: TObject);
 begin
   FAllCommands.Clear;
   FAllCommandsOverwritingCFG.Clear;
+  FAllCommandsIsOutOfRange.Clear;
+
   vstMemCommands.RootNodeCount := 0;
   vstMemCommands.Repaint;
 end;
@@ -774,7 +799,10 @@ end;
 procedure TfrmSimulatedMem.CreateRemainingComponents;
 var
   NewColum: TVirtualTreeColumn;
+  MenuItem: TMenuItem;
 begin
+  FpmVST := TPopupMenu.Create(Self);
+
   vstMemCommands := TVirtualStringTree.Create(Self);
   vstMemCommands.Parent := Self;
 
@@ -797,6 +825,7 @@ begin
   vstMemCommands.Header.Font.Style := [];
   vstMemCommands.Header.Options := vstMemCommands.Header.Options + [hoVisible];
   vstMemCommands.ParentShowHint := False;
+  vstMemCommands.PopupMenu := FpmVST;
   vstMemCommands.ShowHint := True;
   vstMemCommands.StateImages := imglstCmds;
   vstMemCommands.TabOrder := 8;
@@ -844,6 +873,16 @@ begin
     IdHTTPServer1.DefaultPort := 11358;
     IdHTTPServer1.OnCommandGet := IdHTTPServer1CommandGet;
   {$ENDIF}
+
+  MenuItem := TMenuItem.Create(Self);
+  MenuItem.Caption := 'Copy selected lines to clipboard';
+  MenuItem.OnClick := HandleOnCopySelectedLinesToClipboardClick;
+  FpmVST.Items.Add(MenuItem);
+
+  MenuItem := TMenuItem.Create(Self);
+  MenuItem.Caption := 'Generate flash commands from selected lines, then copy to clipboard';
+  MenuItem.OnClick := HandleOnGenerateFlashCommandFromSelectedLinesThenCopyToClipboard;
+  FpmVST.Items.Add(MenuItem);
 end;
 
 
@@ -854,6 +893,8 @@ begin
   FFIFO := TPollingFIFO.Create;
   FAllCommands := TStringList.Create;
   FAllCommandsOverwritingCFG := TStringList.Create;
+  FAllCommandsIsOutOfRange := TStringList.Create;
+
   FCOMName := '';
   FTh := nil;
 
@@ -867,6 +908,7 @@ begin
   FreeAndNil(FFIFO);
   FreeAndNil(FAllCommands);
   FreeAndNil(FAllCommandsOverwritingCFG);
+  FreeAndNil(FAllCommandsIsOutOfRange);
 
   try
     SaveSettingsToIni;
@@ -888,6 +930,44 @@ begin
 end;
 
 
+procedure TfrmSimulatedMem.CopySelectedLinesToClipboard(APrefix: string = '');
+var
+  s: string;
+  Node: PVirtualNode;
+begin
+  Node := vstMemCommands.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  s := '';
+  repeat
+    if vstMemCommands.Selected[Node] then
+      s := s + APrefix + FAllCommands.Strings[Node^.Index] + #13#10;
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+
+  if s > '' then
+    Delete(s, Length(s) - 1, 2);
+
+  Clipboard.AsText := s;
+end;
+
+
+procedure TfrmSimulatedMem.GenerateFlashCommandFromSelectedLinesThenCopyToClipboard;
+var
+  HttpPort: string;
+begin
+  {$IFDEF TestBuild}
+    HttpPort := IntToStr(IdHTTPServer1.DefaultPort);
+  {$ELSE}
+    HttpPort := '11358';
+  {$ENDIF}
+
+  CopySelectedLinesToClipboard('http://127.0.0.1:' + HttpPort + '/FlashSim?Cmd=');
+end;
+
+
 procedure TfrmSimulatedMem.vstMemCommandsGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
@@ -898,6 +978,9 @@ begin
       CellText := IntToStr(Node^.Index);
       if FAllCommandsOverwritingCFG.Strings[Node^.Index] = '1' then
         CellText := CellText + '  (Overwriting CFG)';
+
+      if FAllCommandsIsOutOfRange.Strings[Node^.Index] = '1' then
+        CellText := CellText + '  (Out of range)';
     end;
 
     1: CellText := '"' + FAllCommands.Strings[Node^.Index] + '"';
@@ -916,7 +999,8 @@ begin
     ImageIndex := 0;
     s := FAllCommands.Strings[Node^.Index];
 
-    if FAllCommandsOverwritingCFG.Strings[Node^.Index] <> '1' then
+    if (FAllCommandsOverwritingCFG.Strings[Node^.Index] <> '1') and
+       (FAllCommandsIsOutOfRange.Strings[Node^.Index] <> '1') then
     begin
       if Pos(CDevCmd_Erase + '=', s) = 1 then
         ImageIndex := 1
@@ -945,28 +1029,10 @@ end;
 
 procedure TfrmSimulatedMem.vstMemCommandsKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
-var
-  s: string;
-  Node: PVirtualNode;
 begin
   if ssCtrl in Shift then
     if Key = Ord('C') then
-    begin
-      s := '';
-
-      Node := vstMemCommands.GetFirstSelected;
-      if Node = nil then
-        Exit;
-
-      repeat
-        if vstMemCommands.Selected[Node] then
-          s := FAllCommands.Strings[Node^.Index];
-
-        Node := Node^.NextSibling;
-      until Node = nil;
-
-      Clipboard.AsText := s;
-    end;
+      CopySelectedLinesToClipboard;
 end;
 
 
@@ -1003,7 +1069,7 @@ var
   i: Integer;
   CmpWinIdx, SlotIdx: Integer;
   AppendUserNotes: Boolean;
-  IsOverwritingCFG: Boolean;
+  IsOverwritingCFG, IsOutOfRange: Boolean;
 begin
   if FFIFO.GetLength = 0 then
     Exit;
@@ -1028,9 +1094,14 @@ begin
       for i := 0 to FIFOContent.Count - 1 do
       begin
         FAllCommandsOverwritingCFG.Add('0');
-        SendCmdToCompareWindowByIndex(FIFOContent, i, CmpWinIdx, SlotIdx, AppendUserNotes, IsOverwritingCFG);
+        FAllCommandsIsOutOfRange.Add('0');
+        SendCmdToCompareWindowByIndex(FIFOContent, i, CmpWinIdx, SlotIdx, AppendUserNotes, IsOverwritingCFG, IsOutOfRange);
+
         if IsOverwritingCFG then
           FAllCommandsOverwritingCFG.Strings[FAllCommandsOverwritingCFG.Count - 1] := '1';
+
+        if IsOutOfRange then
+          FAllCommandsIsOutOfRange.Strings[FAllCommandsIsOutOfRange.Count - 1] := '1';
       end;
     end;
   finally
