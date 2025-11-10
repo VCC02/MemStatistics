@@ -175,8 +175,6 @@ type
     property FIFO: TPollingFIFO read FFIFO; //thread safe
     property ConnHandle: THandle read FConnHandle;
     property COMName: string read FCOMName;
-
-
   end;
 
 var
@@ -972,18 +970,25 @@ procedure TfrmSimulatedMem.vstMemCommandsGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
 begin
-  case Column of
-    0:
-    begin
-      CellText := IntToStr(Node^.Index);
-      if FAllCommandsOverwritingCFG.Strings[Node^.Index] = '1' then
-        CellText := CellText + '  (Overwriting CFG)';
+  try
+    if Integer(Node^.Index) > FAllCommands.Count - 1 then
+      Exit;
 
-      if FAllCommandsIsOutOfRange.Strings[Node^.Index] = '1' then
-        CellText := CellText + '  (Out of range)';
+    case Column of
+      0:
+      begin
+        CellText := IntToStr(Node^.Index);
+        if FAllCommandsOverwritingCFG.Strings[Node^.Index] = '1' then
+          CellText := CellText + '  (Overwriting CFG)';
+
+        if FAllCommandsIsOutOfRange.Strings[Node^.Index] = '1' then
+          CellText := CellText + '  (Out of range)';
+      end;
+
+      1: CellText := '"' + FAllCommands.Strings[Node^.Index] + '"';
     end;
-
-    1: CellText := '"' + FAllCommands.Strings[Node^.Index] + '"';
+  except
+    CellText := 'bug';
   end;
 end;
 
@@ -994,35 +999,41 @@ procedure TfrmSimulatedMem.vstMemCommandsGetImageIndex(Sender: TBaseVirtualTree;
 var
   s: string;
 begin
-  if Column = 1 then
-  begin
-    ImageIndex := 0;
-    s := FAllCommands.Strings[Node^.Index];
+  try
+    if Integer(Node^.Index) > FAllCommands.Count - 1 then
+      Exit;
 
-    if (FAllCommandsOverwritingCFG.Strings[Node^.Index] <> '1') and
-       (FAllCommandsIsOutOfRange.Strings[Node^.Index] <> '1') then
+    if Column = 1 then
     begin
-      if Pos(CDevCmd_Erase + '=', s) = 1 then
-        ImageIndex := 1
-      else
-        if Pos(CDevCmd_Write_Word + '=', s) = 1 then
-          ImageIndex := 2
+      ImageIndex := 0;
+      s := FAllCommands.Strings[Node^.Index];
+
+      if (FAllCommandsOverwritingCFG.Strings[Node^.Index] <> '1') and
+         (FAllCommandsIsOutOfRange.Strings[Node^.Index] <> '1') then
+      begin
+        if Pos(CDevCmd_Erase + '=', s) = 1 then
+          ImageIndex := 1
         else
-          if Pos(CDevCmd_Write_Row + '=', s) = 1 then
-            ImageIndex := 3;
-    end
-    else
-    begin
-      ImageIndex := 4;
-      if Pos(CDevCmd_Erase + '=', s) = 1 then
-        ImageIndex := 5
+          if Pos(CDevCmd_Write_Word + '=', s) = 1 then
+            ImageIndex := 2
+          else
+            if Pos(CDevCmd_Write_Row + '=', s) = 1 then
+              ImageIndex := 3;
+      end
       else
-        if Pos(CDevCmd_Write_Word + '=', s) = 1 then
-          ImageIndex := 6
+      begin
+        ImageIndex := 4;
+        if Pos(CDevCmd_Erase + '=', s) = 1 then
+          ImageIndex := 5
         else
-          if Pos(CDevCmd_Write_Row + '=', s) = 1 then
-            ImageIndex := 7;
+          if Pos(CDevCmd_Write_Word + '=', s) = 1 then
+            ImageIndex := 6
+          else
+            if Pos(CDevCmd_Write_Row + '=', s) = 1 then
+              ImageIndex := 7;
+      end;
     end;
+  except
   end;
 end;
 
@@ -1062,7 +1073,6 @@ begin
 end;
 
 
-
 procedure TfrmSimulatedMem.ReadFromFIFO;
 var
   FIFOContent: TStringList;
@@ -1079,10 +1089,6 @@ begin
     FFIFO.PopAll(FIFOContent);
     FAllCommands.AddStrings(FIFOContent);
 
-    vstMemCommands.BeginUpdate;
-    vstMemCommands.RootNodeCount := FAllCommands.Count;
-    vstMemCommands.EndUpdate;
-
     lblAllReceivedCommands.Caption := 'All received commands (' + IntToStr(FAllCommands.Count) + '):';
 
     if chkAutoSendCommandsToCmpWindow.Checked then
@@ -1093,20 +1099,26 @@ begin
 
       for i := 0 to FIFOContent.Count - 1 do
       begin
+        SendCmdToCompareWindowByIndex(FIFOContent, i, CmpWinIdx, SlotIdx, AppendUserNotes, IsOverwritingCFG, IsOutOfRange);
+        FAllCommandsOverwritingCFG.Add(IntToStr(Ord(IsOverwritingCFG)));
+        FAllCommandsIsOutOfRange.Add(IntToStr(Ord(IsOutOfRange)));
+      end;
+    end
+    else
+    begin
+      for i := 0 to FIFOContent.Count - 1 do
+      begin
         FAllCommandsOverwritingCFG.Add('0');
         FAllCommandsIsOutOfRange.Add('0');
-        SendCmdToCompareWindowByIndex(FIFOContent, i, CmpWinIdx, SlotIdx, AppendUserNotes, IsOverwritingCFG, IsOutOfRange);
-
-        if IsOverwritingCFG then
-          FAllCommandsOverwritingCFG.Strings[FAllCommandsOverwritingCFG.Count - 1] := '1';
-
-        if IsOutOfRange then
-          FAllCommandsIsOutOfRange.Strings[FAllCommandsIsOutOfRange.Count - 1] := '1';
       end;
     end;
   finally
     FIFOContent.Free;
   end;
+
+  vstMemCommands.BeginUpdate;
+  vstMemCommands.RootNodeCount := FAllCommands.Count;
+  vstMemCommands.EndUpdate;
 end;
 
 
