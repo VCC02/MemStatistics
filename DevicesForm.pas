@@ -217,7 +217,11 @@ begin
   vstDevices.Height := 226;
   vstDevices.Hint := 'Double click to select and exit. Press Esc to leave unchanged.';
   vstDevices.Anchors := [akLeft, akTop, akRight, akBottom];
-  vstDevices.Colors.UnfocusedColor := clMedGray;
+
+  {$IFDEF FPC}
+    vstDevices.Colors.UnfocusedColor := clMedGray;
+  {$ENDIF}  
+
   vstDevices.Colors.UnfocusedSelectionColor := clGradientInactiveCaption;
   vstDevices.Header.AutoSizeIndex := 0;
   vstDevices.Header.DefaultHeight := 17;

@@ -865,7 +865,12 @@ begin
     chkTestServer.Top := chkAutoScrollToSelectedCommands.Top;
     chkTestServer.Caption := 'Test server';
     chkTestServer.ShowHint := True;
-    chkTestServer.OnChange := chkTestServerChange;
+
+    {$IFDEF FPC}
+      chkTestServer.OnChange := chkTestServerChange;
+    {$ELSE}
+      chkTestServer.OnClick := chkTestServerChange;
+    {$ENDIF}  
 
     IdHTTPServer1 := TIdHTTPServer.Create(Self);
     IdHTTPServer1.DefaultPort := 11358;

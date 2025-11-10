@@ -15,7 +15,8 @@ uses
   ClickerZoomPreviewForm in '..\MiscUtils\ClickerZoomPreviewForm.pas' {frmClickerZoomPreview},
   SimulatedMemForm in 'SimulatedMemForm.pas' {frmSimulatedMem},
   PollingFIFO in '..\MiscUtils\PollingFIFO.pas',
-  SimpleCOM in '..\MiscUtils\SimpleCOM.pas';
+  SimpleCOM in '..\MiscUtils\SimpleCOM.pas',
+  SimpleCOMUI in '..\MiscUtils\SimpleCOMUI.pas' {frSimpleCOMUI: TFrame};
 
 {$R *.res}
 

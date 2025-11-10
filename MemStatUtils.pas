@@ -612,8 +612,9 @@ procedure AddTrailingSlash(var s: string); overload;
 const
   CSlash = {$IFDEF UNIX} '/' {$ELSE} '\' {$ENDIF};     //to be tested on Delphi XE.# (Linux build). Expected that "UNIX" is defined. Otherwise, something else has to be used.
 begin
-  if s[Length(s)] <> CSlash then
-    s := s + CSlash;
+  if s > '' then
+    if s[Length(s)] <> CSlash then
+      s := s + CSlash;
 end;
 
 
