@@ -16,7 +16,8 @@ uses
   SimulatedMemForm in 'SimulatedMemForm.pas' {frmSimulatedMem},
   PollingFIFO in '..\MiscUtils\PollingFIFO.pas',
   SimpleCOM in '..\MiscUtils\SimpleCOM.pas',
-  SimpleCOMUI in '..\MiscUtils\SimpleCOMUI.pas' {frSimpleCOMUI: TFrame};
+  SimpleCOMUI in '..\MiscUtils\SimpleCOMUI.pas' {frSimpleCOMUI: TFrame},
+  MemStatPlugins in 'Common\MemStatPlugins.pas';
 
 {$R *.res}
 

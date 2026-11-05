@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: 2013
     initial release date: 17 Sep 2023
 
@@ -56,7 +56,6 @@ type
     PageControlEntries: TPageControl;
     TabSheetRoutines: TTabSheet;
     TabSheetRaw: TTabSheet;
-    rdgrpChartContent: TRadioGroup;
     lblVstBackground: TLabel;
     prbUpdateSignalsListRun1: TProgressBar;
     lbeMem: TLabeledEdit;
@@ -85,6 +84,7 @@ type
     pnlHorizontalResize: TPanel;
 
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure tmrStartupTimer(Sender: TObject);
     procedure vstMemTableGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
@@ -108,7 +108,6 @@ type
       Shift: TShiftState);
     procedure vstRawTableKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
-    procedure rdgrpChartContentClick(Sender: TObject);
     procedure vstMemTableCompareNodes(Sender: TBaseVirtualTree; Node1,
       Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
     procedure vstMemTableHeaderClick(Sender: TVTHeader; {$IFDEF FPC} HitInfo: TVTHeaderHitInfo{$ELSE} Column: TColumnIndex;
@@ -159,6 +158,7 @@ type
     FMemTable: TMemTable;
     FMikroComp: TMikroComp;
     FCmdlineLstFile: TFileName;
+    FListOfPlugins: TStringList;
    
     FMemStatOptions: TMemStatOptions;
     FHold: Boolean;
@@ -168,6 +168,9 @@ type
 
     vstMemTable: TVirtualStringTree;
     vstRawTable: TVirtualStringTree;
+    chkDisplayFromRoutines: TCheckBox;
+    chkDisplayFromRawAddresses: TCheckBox;
+    grpChartContent: TGroupBox;
 
     procedure CreateRemainingComponents;
     procedure RepositionSplitter;
@@ -208,6 +211,9 @@ type
     procedure HandleOnCmpWindowDestroy(ACmpWindowHandle: THandle);
     procedure HandleOnGetTableMemContent(var AMemEntries: TMemEntryArr);
     procedure HandleOnGetTableMemContentFromRaw(var AMemEntries: TMemEntryArr);
+
+    procedure chkDisplayFromRawAddressesClick(Sender: TObject);
+    procedure chkDisplayFromRoutinesClick(Sender: TObject);
   public
     { Public declarations }
     procedure CmpFrmOnChangeDevice(Sender: TfrmMemStatCompare);
@@ -360,7 +366,8 @@ begin
 
     MenuItem_BlinkFocusedEntry.Checked := Ini.ReadBool('Table', 'BlinkSelected', True);
 
-    rdgrpChartContent.ItemIndex := Ini.ReadInteger('Table', 'ChartContentSel', rdgrpChartContent.ItemIndex);
+    chkDisplayFromRoutines.Checked := Ini.ReadBool('Table', 'DisplayFromRoutines', True);
+    chkDisplayFromRawAddresses.Checked := Ini.ReadBool('Table', 'DisplayFromRawAddresses', True);
 
     LoadMemSectionsFromIni(Ini);
     LoadColorsFromIni(Ini);
@@ -378,6 +385,9 @@ begin
     vstMemTable.ShowHint := FMemStatOptions.Misc.DisplayTableHints;
     vstRawTable.ShowHint := FMemStatOptions.Misc.DisplayTableHints;    
     SetBlinkTimerState;
+
+    for i := 0 to Ini.ReadInteger('Plugins', 'Count', 0) - 1 do
+      FListOfPlugins.Add(Ini.ReadString('Plugins', 'Plugin_' + IntToStr(i), ''));
   finally
     Ini.Free;
   end;
@@ -490,10 +500,16 @@ begin
     Ini.WriteInteger('mikro', 'DefsFolderPriority', Ord(FMemStatOptions.Misc.DefsFolderPriority));
 
     Ini.WriteBool('Table', 'BlinkSelected', MenuItem_BlinkFocusedEntry.Checked);
-    Ini.WriteInteger('Table', 'ChartContentSel', rdgrpChartContent.ItemIndex);
+    Ini.WriteBool('Table', 'DisplayFromRoutines', chkDisplayFromRoutines.Checked);
+    Ini.WriteBool('Table', 'DisplayFromRawAddresses', chkDisplayFromRawAddresses.Checked);
 
     SaveMemSectionsToIni(Ini);
     SaveColorsToIni(Ini);
+
+    Ini.WriteInteger('Plugins', 'Count', FListOfPlugins.Count);
+    for i := 0 to FListOfPlugins.Count - 1 do
+      Ini.WriteString('Plugins', 'Plugin_' + IntToStr(i), FListOfPlugins.Strings[i]);
+
     Ini.UpdateFile;
   finally
     Ini.Free;
@@ -730,16 +746,6 @@ end;
 procedure TfrmMemStatisticsMain.MikroCompOnAddRawTableEntry(DataToBeAdded: PRoutinesRec);
 begin
   AddRawTableEntry(DataToBeAdded);
-end;
-
-
-procedure TfrmMemStatisticsMain.rdgrpChartContentClick(Sender: TObject);
-begin
-  case rdgrpChartContent.ItemIndex of
-    0: FMemTable.WhatEntriesToDisplay := 1;
-    1: FMemTable.WhatEntriesToDisplay := 2;
-    2: FMemTable.WhatEntriesToDisplay := 3;
-  end;
 end;
 
 
@@ -1180,6 +1186,37 @@ begin
   NewColum.Position := 4;
   NewColum.Width := 250;
   NewColum.Text := 'Content';
+
+  grpChartContent := TGroupBox.Create(Self);
+  grpChartContent.Parent := Self;
+  grpChartContent.Left := 888;
+  grpChartContent.Top := 16;
+  grpChartContent.Width := 120;
+  grpChartContent.Height := 58;
+  grpChartContent.Anchors := [akTop, akRight];
+  grpChartContent.Caption := 'Chart content';
+  grpChartContent.ParentBackground := False;
+  grpChartContent.TabOrder := 14;
+
+  chkDisplayFromRoutines := TCheckBox.Create(Self);
+  chkDisplayFromRoutines.Parent := grpChartContent;
+  chkDisplayFromRoutines.Caption := 'Routines';
+  chkDisplayFromRoutines.Left := 8;
+  chkDisplayFromRoutines.Top := {$IFDEF FPC}0; {$ELSE} 16; {$ENDIF}
+  chkDisplayFromRoutines.Width := 60;
+  chkDisplayFromRoutines.Height := 17;
+  chkDisplayFromRoutines.Checked := True;
+  chkDisplayFromRoutines.OnClick := chkDisplayFromRoutinesClick;
+
+  chkDisplayFromRawAddresses := TCheckBox.Create(Self);
+  chkDisplayFromRawAddresses.Parent := grpChartContent;
+  chkDisplayFromRawAddresses.Caption := 'Raw addresses';
+  chkDisplayFromRawAddresses.Left := 8;
+  chkDisplayFromRawAddresses.Top := {$IFDEF FPC}20; {$ELSE} 36; {$ENDIF}
+  chkDisplayFromRawAddresses.Width := 91;
+  chkDisplayFromRawAddresses.Height := 17;
+  chkDisplayFromRawAddresses.Checked := True;
+  chkDisplayFromRawAddresses.OnClick := chkDisplayFromRawAddressesClick;
 end;
 
 
@@ -1218,6 +1255,7 @@ begin
 
   FCmdlineLstFile := '';
   FHold := False;
+  FListOfPlugins := TStringList.Create;
 
   ListOfFrmMemStatCompare := TfrmMemStatCompareList.Create;
 
@@ -1234,7 +1272,7 @@ begin
       lblListName.Caption := 'List Name: File not found.';
   end
   else
-    rdgrpChartContent.Visible := False;
+    grpChartContent.Visible := False;
 
   lblListName.Hint := ParamStr(1);
 
@@ -1270,6 +1308,24 @@ begin
   vstRawTable.PopupMenu := pmEntries;
 
   Application.HintHidePause := 10000;
+end;
+
+
+procedure TfrmMemStatisticsMain.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(FListOfPlugins);
+end;
+
+
+procedure TfrmMemStatisticsMain.chkDisplayFromRoutinesClick(Sender: TObject);
+begin
+  FMemTable.DisplayFromRoutines := chkDisplayFromRoutines.Checked;
+end;
+
+
+procedure TfrmMemStatisticsMain.chkDisplayFromRawAddressesClick(Sender: TObject);
+begin
+  FMemTable.DisplayFromRawAddresses := chkDisplayFromRawAddresses.Checked;
 end;
 
 
@@ -2824,6 +2880,8 @@ end;
 
 
 procedure TfrmMemStatisticsMain.LoadLST(LstFileFnm: string);
+var
+  AdditionalStatistics: TStringList;
 begin
   if LstFileFnm = ExtractFileName(LstFileFnm) then //this may not work if LstFileFnm starts with './' or '.\'
     LstFileFnm := ExtractFilePath(ParamStr(0)) + LstFileFnm;
@@ -2833,20 +2891,27 @@ begin
   vstMemTable.RootNodeCount := 0;
   vstRawTable.RootNodeCount := 0;
 
-  vstMemTable.BeginUpdate;
-  vstRawTable.BeginUpdate;
+  AdditionalStatistics := TStringList.Create;
   try
-    FMikroComp.LoadLst(LstFileFnm);
+    vstMemTable.BeginUpdate;
+    vstRawTable.BeginUpdate;
+    try
+      FMikroComp.LoadLst(LstFileFnm, FListOfPlugins, AdditionalStatistics);
+    finally
+      vstMemTable.EndUpdate;
+      vstRawTable.EndUpdate;
+    end;
+
+    prbLoading.Position := 0;
+    StatusBar1.Panels.Items[0].Text := 'Loaded';
+
+    FMemTable.Repaint;
+    GenerateTextStatistics; //built-in statistics
+
+    lstFreeMemory.Items.AddStrings(AdditionalStatistics);  //plugin statistics
   finally
-    vstMemTable.EndUpdate;
-    vstRawTable.EndUpdate;
+    AdditionalStatistics.Free;
   end;
-
-  prbLoading.Position := 0;
-  StatusBar1.Panels.Items[0].Text := 'Loaded';
-
-  FMemTable.Repaint;
-  GenerateTextStatistics;
 end;
 
 

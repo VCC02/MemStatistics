@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2026 VCC
     creation date: 2014
     initial release date: 17 Sep 2023
 
@@ -47,6 +47,8 @@ type
     S1, S2: Boolean;
   end;
 
+  TTableDrawingSource = (tdsRoutines, tdsRaw);
+
   TRoutineIndex_VisibilityArr = array of TRoutineIndex_Visibility;
   
   TMemTable = class(TGraphicControl)
@@ -65,7 +67,8 @@ type
     FEntryToFocusOnRaw: Integer;
     FPaintGraphicOnlyOption: Boolean;
     FDisplayFocusedEntry: Boolean;
-    FWhatEntriesToDisplay: Byte;
+    FDisplayFromRoutines: Boolean;
+    FDisplayFromRawAddresses: Boolean;
     FMemStatColorOptions: TMemStatColorOptions;
     FMemStatMiscOptions: TMemStatMiscOptions;
 
@@ -73,15 +76,16 @@ type
 
     procedure ComputeMemScales(YOffset: Cardinal);
     procedure DrawEntry(AddrMin, Addr, Size, YOffset: Cardinal; AddrOffset: Integer; MemScale: Double; x1, x2: Integer; Color: TColor);
-    procedure DrawEntryByIndex(ASrc: Boolean; YOffset: Cardinal; EntryByIndex: Integer; var ARoutineIndex_Visibilities: TRoutineIndex_VisibilityArr; var AAddressOffsets: TAddressOffsetArr; var ColumnXs: TBoundArray; WidthDiv: Integer; var ColColors: TColorArr);
+    procedure DrawEntryByIndex(ASrc: TTableDrawingSource; YOffset: Cardinal; EntryByIndex: Integer; var ARoutineIndex_Visibilities: TRoutineIndex_VisibilityArr; var AAddressOffsets: TAddressOffsetArr; var ColumnXs: TBoundArray; WidthDiv: Integer; var ColColors: TColorArr);
 
-    procedure DrawMem(Src: Boolean; YOffset: Cardinal; var ColumnXs: TBoundArray; AWidthDiv: Integer; var AddressOffsets: TAddressOffsetArr);
-    procedure DrawMemFocusedEntry(Src: Boolean; YOffset: Cardinal; EntryByIndex: Integer; var ColumnXs: TBoundArray; AWidthDiv: Integer; var AddressOffsets: TAddressOffsetArr);
+    procedure DrawMem(ASrc: TTableDrawingSource; YOffset: Cardinal; var ColumnXs: TBoundArray; AWidthDiv: Integer; var AddressOffsets: TAddressOffsetArr);
+    procedure DrawMemFocusedEntry(ASrc: TTableDrawingSource; YOffset: Cardinal; EntryByIndex: Integer; var ColumnXs: TBoundArray; AWidthDiv: Integer; var AddressOffsets: TAddressOffsetArr);
     procedure DrawTableText(YOffset: Cardinal; var AddressOffsets: TAddressOffsetArr; var ColumnXs: TBoundArray);
     //procedure DrawTableText(YOffset: Cardinal; Col2Left, Col3Left, Col4Left, Col5Left: Integer);
     procedure SetEntryToFocusOn(Value: Integer);
     procedure SetEntryToFocusOnRaw(Value: Integer);
-    procedure SetWhatEntriesToDisplay(Value: Byte);
+    procedure SetDisplayFromRoutines(Value: Boolean);
+    procedure SetDisplayFromRawAddresses(Value: Boolean);
   protected
     //procedure Paint; override;  //moved to public
 
@@ -127,7 +131,8 @@ type
     property EntryToFocusOn: Integer read FEntryToFocusOn write SetEntryToFocusOn;
     property EntryToFocusOnRaw: Integer read FEntryToFocusOnRaw write SetEntryToFocusOnRaw;
     property DisplayFocusedEntry: Boolean read FDisplayFocusedEntry write FDisplayFocusedEntry;
-    property WhatEntriesToDisplay: Byte read FWhatEntriesToDisplay write SetWhatEntriesToDisplay;
+    property DisplayFromRoutines: Boolean read FDisplayFromRoutines write SetDisplayFromRoutines;
+    property DisplayFromRawAddresses: Boolean read FDisplayFromRawAddresses write SetDisplayFromRawAddresses;
     property NumberOfProcessedRawEntries: Integer read GetNumberOfProcessedRawEntries;
 
     property MemStatColorOptions: TMemStatColorOptions read FMemStatColorOptions write FMemStatColorOptions;
@@ -192,36 +197,39 @@ begin
 end;
 
 
-procedure TMemTable.DrawEntryByIndex(ASrc: Boolean; YOffset: Cardinal; EntryByIndex: Integer; var ARoutineIndex_Visibilities: TRoutineIndex_VisibilityArr; var AAddressOffsets: TAddressOffsetArr; var ColumnXs: TBoundArray; WidthDiv: Integer; var ColColors: TColorArr);
+procedure TMemTable.DrawEntryByIndex(ASrc: TTableDrawingSource; YOffset: Cardinal; EntryByIndex: Integer; var ARoutineIndex_Visibilities: TRoutineIndex_VisibilityArr; var AAddressOffsets: TAddressOffsetArr; var ColumnXs: TBoundArray; WidthDiv: Integer; var ColColors: TColorArr);
 var
   j, x1, x2: Integer;
   Addr, Size: Cardinal;
   FMemScalesGreaterThan0: Boolean;
 begin
-  if not ASrc then
-  begin
-    Addr := FMemContent[EntryByIndex].Address;
-    Size := FMemContent[EntryByIndex].Size;
-
-    for j := 0 to FDeviceInfo.GetDeviceSectionCount - 1 do
+  case ASrc of
+    tdsRoutines:
     begin
-      FMemScalesGreaterThan0 := FMemScales[j] > 0;
-      ARoutineIndex_Visibilities[j].S1 := FMemScalesGreaterThan0 and RoutineIndexIn_MemRange(j, EntryByIndex, AAddressOffsets[j].S1);
-      ARoutineIndex_Visibilities[j].S2 := FMemScalesGreaterThan0 and RoutineIndexIn_MemRange(j, EntryByIndex, AAddressOffsets[j].S2);
-    end;
-  end
-  else
-  begin
-    Addr := FMemContentFromRaw[EntryByIndex].Address;
-    Size := FMemContentFromRaw[EntryByIndex].Size;
+      Addr := FMemContent[EntryByIndex].Address;
+      Size := FMemContent[EntryByIndex].Size;
 
-    for j := 0 to FDeviceInfo.GetDeviceSectionCount - 1 do
-    begin
-      FMemScalesGreaterThan0 := FMemScales[j] > 0;
-      ARoutineIndex_Visibilities[j].S1 := FMemScalesGreaterThan0 and RoutineIndexFromRawIn_MemRange(j, EntryByIndex, AAddressOffsets[j].S1);
-      ARoutineIndex_Visibilities[j].S2 := FMemScalesGreaterThan0 and RoutineIndexFromRawIn_MemRange(j, EntryByIndex, AAddressOffsets[j].S2);
+      for j := 0 to FDeviceInfo.GetDeviceSectionCount - 1 do
+      begin
+        FMemScalesGreaterThan0 := FMemScales[j] > 0;
+        ARoutineIndex_Visibilities[j].S1 := FMemScalesGreaterThan0 and RoutineIndexIn_MemRange(j, EntryByIndex, AAddressOffsets[j].S1);
+        ARoutineIndex_Visibilities[j].S2 := FMemScalesGreaterThan0 and RoutineIndexIn_MemRange(j, EntryByIndex, AAddressOffsets[j].S2);
+      end;
     end;
-  end;
+
+    tdsRaw:
+    begin
+      Addr := FMemContentFromRaw[EntryByIndex].Address;
+      Size := FMemContentFromRaw[EntryByIndex].Size;
+
+      for j := 0 to FDeviceInfo.GetDeviceSectionCount - 1 do
+      begin
+        FMemScalesGreaterThan0 := FMemScales[j] > 0;
+        ARoutineIndex_Visibilities[j].S1 := FMemScalesGreaterThan0 and RoutineIndexFromRawIn_MemRange(j, EntryByIndex, AAddressOffsets[j].S1);
+        ARoutineIndex_Visibilities[j].S2 := FMemScalesGreaterThan0 and RoutineIndexFromRawIn_MemRange(j, EntryByIndex, AAddressOffsets[j].S2);
+      end;
+    end;
+  end; //case
 
   for j := 0 to FDeviceInfo.GetDeviceSectionCount - 1 do
   begin
@@ -246,16 +254,22 @@ begin
 end;  
 
 
-procedure TMemTable.DrawMem(Src: Boolean; YOffset: Cardinal; var ColumnXs: TBoundArray; AWidthDiv: Integer; var AddressOffsets: TAddressOffsetArr);
+procedure TMemTable.DrawMem(ASrc: TTableDrawingSource; YOffset: Cardinal; var ColumnXs: TBoundArray; AWidthDiv: Integer; var AddressOffsets: TAddressOffsetArr);
 var
   i, n: Integer;
   RoutineIndex_Visibilities: TRoutineIndex_VisibilityArr;
   ColColors: TColorArr;
 begin
-  if not Src then
-    n := Length(FMemContent)
-  else
-    n := Length(FMemContentFromRaw);
+  case ASrc of
+    tdsRoutines:
+      n := Length(FMemContent);
+
+    tdsRaw:
+      n := Length(FMemContentFromRaw);
+
+    //else
+    //  n := 0;
+  end;
 
   Inc(YOffset, 4);  //required by entries, reset for text (see below)
 
@@ -276,20 +290,26 @@ begin
     end;
 
   for i := 0 to n - 1 do
-    DrawEntryByIndex(Src, YOffset, i, RoutineIndex_Visibilities, AddressOffsets, ColumnXs, AWidthDiv, ColColors);
+    DrawEntryByIndex(ASrc, YOffset, i, RoutineIndex_Visibilities, AddressOffsets, ColumnXs, AWidthDiv, ColColors);
 end;
 
 
-procedure TMemTable.DrawMemFocusedEntry(Src: Boolean; YOffset: Cardinal; EntryByIndex: Integer; var ColumnXs: TBoundArray; AWidthDiv: Integer; var AddressOffsets: TAddressOffsetArr);
+procedure TMemTable.DrawMemFocusedEntry(ASrc: TTableDrawingSource; YOffset: Cardinal; EntryByIndex: Integer; var ColumnXs: TBoundArray; AWidthDiv: Integer; var AddressOffsets: TAddressOffsetArr);
 var
   n, i: Integer;
   RoutineIndex_Visibilities: TRoutineIndex_VisibilityArr;
   ColColors: TColorArr;
 begin
-  if not Src then
-    n := Length(FMemContent)
-  else
-    n := Length(FMemContentFromRaw);
+  case ASrc of
+    tdsRoutines:
+      n := Length(FMemContent);
+
+    tdsRaw:
+      n := Length(FMemContentFromRaw);
+
+    //else
+    //  n := 0;
+  end;
 
   if n = 0 then
     Exit; 
@@ -330,7 +350,7 @@ begin
   end;
 
   //paints the selected address
-  DrawEntryByIndex(Src, YOffset, EntryByIndex, RoutineIndex_Visibilities, AddressOffsets, ColumnXs, AWidthDiv, ColColors);
+  DrawEntryByIndex(ASrc, YOffset, EntryByIndex, RoutineIndex_Visibilities, AddressOffsets, ColumnXs, AWidthDiv, ColColors);
 end;
 
 
@@ -407,11 +427,21 @@ begin
 end;
 
 
-procedure TMemTable.SetWhatEntriesToDisplay(Value: Byte);
+procedure TMemTable.SetDisplayFromRoutines(Value: Boolean);
 begin
-  if FWhatEntriesToDisplay <> Value then
+  if FDisplayFromRoutines <> Value then
   begin
-    FWhatEntriesToDisplay := Value;
+    FDisplayFromRoutines := Value;
+    Paint;
+  end;
+end;
+
+
+procedure TMemTable.SetDisplayFromRawAddresses(Value: Boolean);
+begin
+  if FDisplayFromRawAddresses <> Value then
+  begin
+    FDisplayFromRawAddresses := Value;
     Paint;
   end;
 end;
@@ -482,17 +512,17 @@ begin
       ComputeMemScales(YOffset);
       FDeviceInfo.GetAddressOffsets(AddressOffsets);
 
-      if FWhatEntriesToDisplay and 1 = 1 then  //at least routines
-        DrawMem(False, YOffset, ColumnXs, WidthDiv, AddressOffsets);
+      if FDisplayFromRoutines  then  //at least routines
+        DrawMem(tdsRoutines, YOffset, ColumnXs, WidthDiv, AddressOffsets);
 
-      if FWhatEntriesToDisplay and 2 = 2 then  //at least raw addresses
-        DrawMem(True, YOffset, ColumnXs, WidthDiv, AddressOffsets);
+      if FDisplayFromRawAddresses then  //at least raw addresses
+        DrawMem(tdsRaw, YOffset, ColumnXs, WidthDiv, AddressOffsets);
 
-      if FWhatEntriesToDisplay and 1 = 1 then  //at least routines
-        DrawMemFocusedEntry(False, YOffset, FEntryToFocusOn, ColumnXs, WidthDiv, AddressOffsets);
+      if FDisplayFromRoutines  then  //at least routines
+        DrawMemFocusedEntry(tdsRoutines, YOffset, FEntryToFocusOn, ColumnXs, WidthDiv, AddressOffsets);
 
-      if FWhatEntriesToDisplay and 2 = 2 then  //at least raw addresses
-        DrawMemFocusedEntry(True, YOffset, FEntryToFocusOnRaw, ColumnXs, WidthDiv, AddressOffsets);
+      if FDisplayFromRawAddresses then  //at least raw addresses
+        DrawMemFocusedEntry(tdsRaw, YOffset, FEntryToFocusOnRaw, ColumnXs, WidthDiv, AddressOffsets);
 
       DrawTableText(YOffset, AddressOffsets, ColumnXs);  
     finally
@@ -526,7 +556,8 @@ begin
   FEntryToFocusOnRaw := 0;
   FPaintGraphicOnlyOption := False;
   FDisplayFocusedEntry := False;
-  FWhatEntriesToDisplay := 3;
+  FDisplayFromRoutines := True;
+  FDisplayFromRawAddresses := True;
 
   FOnGetVisibleColumnCount := nil;
   FOnGetColumnVisibility := nil;
@@ -758,5 +789,6 @@ begin
     end;
   end;
 end;
+
 
 end.

@@ -1119,6 +1119,10 @@ object frmSettings: TfrmSettings
         OnMouseUp = chkVisibleOnTableMouseUp
       end
     end
+    object TabSheetPlugins: TTabSheet
+      Caption = 'Plugins'
+      ImageIndex = 3
+    end
   end
   object ColorDialog1: TColorDialog
     Left = 536

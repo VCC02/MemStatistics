@@ -1178,6 +1178,9 @@ object frmSettings: TfrmSettings
         Visible = False
       end
     end
+    object TabSheetPlugins: TTabSheet
+      Caption = 'Plugins'
+    end
   end
   object ColorDialog1: TColorDialog
     Color = clBlack

@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2026 VCC
     creation date: 2013
     initial release date: 17 Sep 2023
 
@@ -54,6 +54,7 @@ type
     btnCancel: TButton;
     lblDevWarning: TLabel;
     pagctrlSettings: TPageControl;
+    TabSheetPlugins: TTabSheet;
     TabSheetMiscColors: TTabSheet;
     pagctrlColors: TPageControl;
     TabSheetChartMemCmpColors: TTabSheet;
