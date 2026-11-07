@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2026 VCC
     creation date: 2014
     initial release date: 17 Sep 2023
 
@@ -187,6 +187,7 @@ type
     Colors: TMemStatColorOptions;
     Misc: TMemStatMiscOptions;
     DevInfoEditArr: TDevInfoEditArr;
+    ListOfPlugins: TStringList;
   end;
 
 

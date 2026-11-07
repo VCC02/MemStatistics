@@ -1,6 +1,6 @@
 {
     Copyright (C) 2026 VCC
-    creation date: 2026
+    creation date: 05 Nov 2026
     initial release date: 05 Nov 2026
 
     author: VCC
@@ -34,6 +34,10 @@ uses
   Classes, SysUtils;
 
 type
+  {$IFnDEF FPC}
+    DWord = Cardinal;
+  {$ENDIF}
+
   TMemEntryAPI = record
     Address: Cardinal;
     Size: Cardinal; //in Bytes
@@ -42,9 +46,23 @@ type
     Index: Cardinal; //reserved for future use
   end;
 
-  {$IFnDEF FPC}
-    DWord = Cardinal;
-  {$ENDIF}
+  TGetRawMemContentCallback = function(AIndex: Integer): Cardinal;
+  TGetMemContentAddressCallback = function(AIndex: Integer): Cardinal;
+  TGetMemContentSizeCallback = function(AIndex: Integer): Cardinal;
+  TAddressInMemRangeCallback = function(ASectionIndex: Integer; AAddress, AddrOffset: Int64): Boolean;
+  //ToDo: callback for section info: name, translation info, address offsets
+
+  TMemTableInfo = record
+    SectionCount, MemContentLength, RawMemContentLength: Integer;
+    DeviceName: Pointer;  //used to identify if it's PIC32 or PIC24/dsPIC
+    DeviceNameLength: Cardinal;
+
+    GetRawMemContentCallback: TGetRawMemContentCallback;
+    GetMemContentAddressCallback: TGetMemContentAddressCallback;
+    GetMemContentSizeCallback: TGetMemContentSizeCallback;
+    AddressInMemRangeCallback: TAddressInMemRangeCallback;
+  end;
+
 
   TGetMemEntryCallback = procedure(AEntry: TMemEntryAPI); cdecl;
   TGetPluginStatisticsCallback = procedure(AText: Pointer; ATextLen: DWord); cdecl; //AText is expected to be a CRLF or LF - separated string
@@ -52,8 +70,8 @@ type
   TLoadLstFile = procedure(AFileName: Pointer; AFileNameLen: DWord); cdecl;
   TLoadHexFile = procedure(AFileName: Pointer; AFileNameLen: DWord); cdecl;
   TGetMemEntryCount = function: DWord; cdecl;
-  TGetMemEntry = procedure(ACallback: TGetMemEntryCallback; AEntryIndex: DWord); cdecl;  //AEntryIndex can go from 0 to GetMemEntryCount - 1
-  TGetStatistics = procedure(ACallback: TGetPluginStatisticsCallback); cdecl;
+  TGetMemEntry = procedure(AResultCallback: TGetMemEntryCallback; AEntryIndex: DWord); cdecl;  //AEntryIndex can go from 0 to GetMemEntryCount - 1
+  TGetStatistics = procedure(AResultCallback: TGetPluginStatisticsCallback; AMemTableInfo: TMemTableInfo); cdecl;
 
 implementation
 

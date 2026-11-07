@@ -49,11 +49,18 @@ type
   { TfrmSettings }
 
   TfrmSettings = class(TForm)
+    bitbtnUpdatePlugin: TBitBtn;
+    btnAddPlugin: TButton;
+    btnDeletePlugin: TButton;
+    btnBrowsePlugin: TButton;
     ColorDialog1: TColorDialog;
     btnOK: TButton;
     btnCancel: TButton;
+    lbePluginPath: TLabeledEdit;
     lblDevWarning: TLabel;
     pagctrlSettings: TPageControl;
+    spdbtnMoveDownPlugin: TSpeedButton;
+    spdbtnMoveUpPlugin: TSpeedButton;
     TabSheetPlugins: TTabSheet;
     TabSheetMiscColors: TTabSheet;
     pagctrlColors: TPageControl;
@@ -152,16 +159,26 @@ type
     btnBrowseDefsFolder: TButton;
     rdgrpDefinitionFilePriority: TRadioGroup;
     chkShowDefsFolderOnMainWindow: TCheckBox;
+    tmrUpdatePlugin: TTimer;
+    procedure bitbtnUpdatePluginClick(Sender: TObject);
+    procedure btnAddPluginClick(Sender: TObject);
+    procedure btnBrowsePluginClick(Sender: TObject);
+    procedure btnDeletePluginClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure GenericColorPanelDblClick(Sender: TObject);
     procedure colboxGenericChange(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure lbePluginPathChange(Sender: TObject);
     procedure rdgrpColorTypeClick(Sender: TObject);
     procedure btnAddClick(Sender: TObject);
     procedure btnUpdateClick(Sender: TObject);
     procedure btnDeleteClick(Sender: TObject);
+    procedure spdbtnMoveDownPluginClick(Sender: TObject);
+    procedure spdbtnMoveUpPluginClick(Sender: TObject);
+    procedure tmrUpdatePluginTimer(Sender: TObject);
     procedure vstMemSectionsGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
@@ -216,25 +233,37 @@ type
       Shift: TShiftState);
     procedure chkShowDefsFolderOnMainWindowMouseUp(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure vstPluginsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
+    procedure vstPluginsKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState
+      );
+    procedure vstPluginsMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     { Private declarations }
     FDevInfoEditArr: TDevInfoEditArr;
     FModified: Boolean;
     FUpdateIndicationDir: Boolean; //used on glowing the Update button text
     FPrevSelectedNode: PVirtualNode;
+    FPrevSelectedNodePlugin: PVirtualNode;
+    FListOfPlugins: TStringList;
 
     vstMemSections: TVirtualStringTree;
+    vstPlugins: TVirtualStringTree;
 
     procedure SetModified(Value: Boolean);
 
     procedure UpdateSelectedMemorySectionFromControls;
     procedure SetControlsFromSelectedMemorySection;
+    procedure SetPluginPathFromSelectedPlugin;
     procedure UpdateColorBoxesFromPanels;
     procedure SwapSections(Idx1, Idx2: Integer);
     procedure CreateRemainingComponents;
 
     procedure DisplayModifiedOnUpdateButton;
     procedure ResetUpdateColor;
+    procedure DisplayModifiedOnUpdateButtonPlugin;
+    procedure ResetUpdateColorPlugin;
 
     property Modified: Boolean read FModified write SetModified;
   public
@@ -346,6 +375,9 @@ begin
   frmSettings.UpdateColorBoxesFromPanels;
   SetLabelColorsFromPanels;
 
+  frmSettings.FListOfPlugins.Assign(MemStatOptions.ListOfPlugins);
+  frmSettings.vstPlugins.RootNodeCount := frmSettings.FListOfPlugins.Count;
+
   frmSettings.ShowModal;
   if frmSettings.Tag = 1 then
   begin
@@ -419,6 +451,9 @@ begin
       MemStatOptions.Colors.EntryColorTableArr[i] := MemStatOptions.DevInfoEditArr[i].TableEntryColor;
       MemStatOptions.Colors.TextColorTableArr[i] := MemStatOptions.DevInfoEditArr[i].TableTextColor;
     end;
+
+    MemStatOptions.ListOfPlugins.Clear;
+    MemStatOptions.ListOfPlugins.Assign(frmSettings.FListOfPlugins);
   end;
 end;
 
@@ -431,7 +466,10 @@ begin
     btnOK.Enabled := True;
   end
   else
+  begin
     ResetUpdateColor;
+    ResetUpdateColorPlugin;
+  end;
 end;
 
 
@@ -449,6 +487,23 @@ begin
   bitbtnUpdate.Font.Color := clWindowText;
   bitbtnUpdate.Font.Style := [];
   tmrUpdate.Enabled := False;
+end;
+
+
+procedure TfrmSettings.DisplayModifiedOnUpdateButtonPlugin;
+begin
+  bitbtnUpdatePlugin.Font.Color := clRed;
+  bitbtnUpdatePlugin.Font.Style := [fsBold];
+  tmrUpdatePlugin.Tag := 1;
+  tmrUpdatePlugin.Enabled := True;
+end;
+
+
+procedure TfrmSettings.ResetUpdateColorPlugin;
+begin
+  bitbtnUpdatePlugin.Font.Color := clWindowText;
+  bitbtnUpdatePlugin.Font.Style := [];
+  tmrUpdatePlugin.Enabled := False;
 end;
 
 
@@ -646,6 +701,46 @@ begin
 end;
 
 
+procedure TfrmSettings.vstPluginsGetText(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+  var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
+begin
+  try
+    CellText := FListOfPlugins.Strings[Node^.Index];
+  except
+    CellText := 'bug';
+  end;
+end;
+
+
+procedure TfrmSettings.vstPluginsKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstPlugins.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  if FPrevSelectedNodePlugin <> Node then
+    SetPluginPathFromSelectedPlugin;
+end;
+
+
+procedure TfrmSettings.vstPluginsMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstPlugins.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  if FPrevSelectedNodePlugin <> Node then
+    SetPluginPathFromSelectedPlugin;
+end;
+
+
 procedure TfrmSettings.chkVisibleOnCompareKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
@@ -710,6 +805,12 @@ end;
 procedure TfrmSettings.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := caFree;
+end;
+
+
+procedure TfrmSettings.lbePluginPathChange(Sender: TObject);
+begin
+  DisplayModifiedOnUpdateButtonPlugin;
 end;
 
 
@@ -837,6 +938,44 @@ begin
   NewColum.Width := 250;
   NewColum.Text := 'Display even if missing from definition';
   NewColum.Hint := '';
+
+  vstPlugins := TVirtualStringTree.Create(Self);
+  vstPlugins.Parent := TabSheetPlugins;
+
+  vstPlugins.Font.Charset := DEFAULT_CHARSET;
+  vstPlugins.Font.Color := clWindowText;
+  vstPlugins.Font.Height := -11;
+  vstPlugins.Font.Name := 'Tahoma';
+  vstPlugins.Font.Style := [];
+  vstPlugins.Left := 8;
+  vstPlugins.Height := {$IFDEF FPC} 416; {$ELSE} 376; {$ENDIF}
+  vstPlugins.Top := 8;
+  vstPlugins.Width := {$IFDEF FPC} 848; {$ELSE} 740; {$ENDIF}
+  vstPlugins.Anchors := [akTop, akLeft, akRight, akBottom];
+  vstPlugins.Colors.UnfocusedSelectionColor := clInactiveCaption;
+  vstPlugins.DefaultNodeHeight := 36;
+  vstPlugins.Header.AutoSizeIndex := 0;
+  vstPlugins.Header.DefaultHeight := 21;
+  vstPlugins.Header.Font.Charset := DEFAULT_CHARSET;
+  vstPlugins.Header.Font.Color := clWindowText;
+  vstPlugins.Header.Font.Height := -11;
+  vstPlugins.Header.Font.Name := 'Tahoma';
+  vstPlugins.Header.Font.Style := [];
+  vstPlugins.Header.Height := 21;
+  vstPlugins.Header.Options := [hoColumnResize, hoDblClickResize, hoDrag, hoShowHint, hoShowSortGlyphs, hoVisible];
+  vstPlugins.Header.Style := hsFlatButtons;
+  vstPlugins.TabOrder := 0;
+  vstPlugins.TreeOptions.SelectionOptions := [toFullRowSelect];
+  vstPlugins.OnGetText := vstPluginsGetText;
+  vstPlugins.OnKeyUp := vstPluginsKeyUp;
+  vstPlugins.OnMouseUp := vstPluginsMouseUp;
+
+  NewColum := vstPlugins.Header.Columns.Add;
+  NewColum.MinWidth := 550;
+  NewColum.Position := 0;
+  NewColum.Width := 550;
+  NewColum.Text := 'Plugin path';
+  NewColum.Hint := 'Full path to dll/so.';
 end;
 
 
@@ -888,6 +1027,8 @@ begin
   FModified := False;
   FUpdateIndicationDir := True;
   FPrevSelectedNode := nil;
+  FPrevSelectedNodePlugin := nil;
+  FListOfPlugins := TStringList.Create;
 
   lbeDefinitionName.Hint := lbeDefinitionName.Hint + #13#10 + 'Misc info for EBI/SQI on PIC32:' + #13#10 +
                                'MemStatistics uses this name to search for the EBI address range in definition file.'#13#10 +
@@ -921,6 +1062,136 @@ begin
 
   rdgrpDefinitionFilePriority.Hint := 'Which type of file to search for: mlk/json or local device list (ini).' + #13#10 +
                                       'When a device is not found at the first location, it is then searched on the other.';  
+end;
+
+
+procedure TfrmSettings.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(FListOfPlugins);
+end;
+
+
+procedure TfrmSettings.btnBrowsePluginClick(Sender: TObject);
+var
+  OpenDialog: TOpenDialog;
+begin
+  OpenDialog := TOpenDialog.Create(nil);
+  try
+    OpenDialog.InitialDir := ExtractFileDir(ParamStr(0));
+
+    if not OpenDialog.Execute then
+      Exit;
+
+    lbePluginPath.Text := OpenDialog.FileName;
+  finally
+    OpenDialog.Free;
+  end;
+end;
+
+
+procedure TfrmSettings.btnAddPluginClick(Sender: TObject);
+begin
+  if Trim(lbePluginPath.Text) = '' then
+  begin
+    MessageBox(Handle, 'Please enter a valid plugin path.', PChar(Application.Title), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  FListOfPlugins.Add(lbePluginPath.Text);
+  vstPlugins.RootNodeCount := FListOfPlugins.Count;
+  vstPlugins.Selected[vstPlugins.GetLast] := True;
+
+  vstPlugins.Repaint;
+  ResetUpdateColorPlugin;
+  Modified := True;
+end;
+
+
+procedure TfrmSettings.bitbtnUpdatePluginClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstPlugins.GetFirstSelected;
+  if Node = nil then
+  begin
+    MessageBox(Handle, 'Please select a plugin path to be edited.', PChar(Application.Title), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  if Trim(lbePluginPath.Text) = '' then
+  begin
+    MessageBox(Handle, 'Please enter a valid plugin path.', PChar(Application.Title), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  FListOfPlugins.Strings[Node^.Index] := lbePluginPath.Text;
+  vstPlugins.Repaint;
+  ResetUpdateColorPlugin;
+  Modified := True;
+end;
+
+
+procedure TfrmSettings.btnDeletePluginClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  if FListOfPlugins.Count = 0 then
+    Exit;
+
+  Node := vstPlugins.GetFirstSelected;
+  if Node = nil then
+  begin
+    MessageBox(Handle, 'Please select a plugin path to be removed.', PChar(Application.Title), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  if MessageBox(Handle, 'Are you sure you want to remove the selected plugin path from list?', PChar(Application.Title), MB_ICONWARNING + MB_YESNO) = IDNO then
+    Exit;
+
+  vstPlugins.RootNodeCount := FListOfPlugins.Count - 1; //update RootNodeCount before deleting from FListOfPlugins
+  FListOfPlugins.Delete(Node^.Index);
+
+  vstPlugins.Repaint;
+  ResetUpdateColorPlugin;
+  Modified := True;
+end;
+
+
+procedure TfrmSettings.spdbtnMoveUpPluginClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstPlugins.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  if Node^.Index = 0 then
+    Exit;
+
+  FListOfPlugins.Move(Node^.Index, Node^.Index - 1);
+  Node := Node^.PrevSibling;
+  vstPlugins.Selected[Node] := True;
+  vstPlugins.Repaint;
+  Modified := True;
+end;
+
+
+procedure TfrmSettings.spdbtnMoveDownPluginClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstPlugins.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  if Node^.Index = vstPlugins.GetLast.Index then
+    Exit;
+
+  FListOfPlugins.Move(Node^.Index, Node^.Index + 1);
+  Node := Node^.NextSibling;
+  vstPlugins.Selected[Node] := True;
+  vstPlugins.Repaint;
+  Modified := True;
 end;
 
 
@@ -1178,6 +1449,34 @@ begin
 end;
 
 
+procedure TfrmSettings.SetPluginPathFromSelectedPlugin;
+var
+  Node: PVirtualNode;
+begin
+  Node := vstPlugins.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  if (FPrevSelectedNodePlugin <> nil) and (fsBold in bitbtnUpdatePlugin.Font.Style) then
+    if MessageBox(Handle,
+                  PChar('There are changed properties for the selected plugin. ' +
+                        'By selecting another section, you will discard those changes. ' +
+                        'You can click Update to record the changes to the list.' + #13#10#13#10 +
+                        'Go back to previous action/content?'),
+                  PChar(Application.Title),
+                  MB_ICONWARNING + MB_YESNO) = IDYES then
+    begin
+      vstPlugins.Selected[FPrevSelectedNodePlugin] := True;
+      Exit;
+    end;
+
+  FPrevSelectedNodePlugin := Node;
+  lbePluginPath.Text := FListOfPlugins.Strings[Node^.Index];
+
+  ResetUpdateColorPlugin;
+end;
+
+
 procedure SwapStrings(var s1, s2: string);
 var
   ph: string;
@@ -1301,6 +1600,30 @@ begin
   //Adding (clDarkGreen + Tag shl 1) results in a part of clLime
   //combining these two, should result in a slight orange text color
   bitbtnUpdate.Font.Color := (clMaroon + tmrUpdate.Tag {shl 2} * 4) or (clDarkGreen + tmrUpdate.Tag {shl 1} * 2);
+end;
+
+
+procedure TfrmSettings.tmrUpdatePluginTimer(Sender: TObject);
+const
+  clDarkGreen = TColor($004000);    //64 shl 8
+begin
+  if FUpdateIndicationDir then
+  begin
+    tmrUpdate.Tag := tmrUpdate.Tag + 1;
+    if tmrUpdate.Tag > 32 then
+      FUpdateIndicationDir := False;
+  end
+  else
+  begin
+    tmrUpdate.Tag := tmrUpdate.Tag - 1;
+    if tmrUpdate.Tag < -32 then
+      FUpdateIndicationDir := True;
+  end;
+
+  //Adding (clMaroon + Tag shl 2) results in a range of clBlack to clRed
+  //Adding (clDarkGreen + Tag shl 1) results in a part of clLime
+  //combining these two, should result in a slight orange text color
+  bitbtnUpdatePlugin.Font.Color := (clMaroon + tmrUpdate.Tag {shl 2} * 4) or (clDarkGreen + tmrUpdatePlugin.Tag {shl 1} * 2);
 end;
 
 

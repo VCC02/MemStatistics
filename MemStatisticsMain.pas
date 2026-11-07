@@ -821,6 +821,7 @@ var
 begin
   AMemStatOptions := FMemStatOptions;
   AMemStatOptions.Misc.DefsFolder := FMikroComp.DefsFolder;   // FMikroComp.DefsFolder is the main setting.   MemStatOptions.Misc.DefsFolder is used for editor only.
+  AMemStatOptions.ListOfPlugins := FListOfPlugins;
 
   if EditMemStatOptions(AMemStatOptions) then
   begin
@@ -2586,7 +2587,7 @@ begin
   for i := 0 to FMemTable.GetMemContentLength - 1 do
   begin
     Entry := FMemTable.GetMemContent(i).Address;
-    EntryEndAddress := Int64(FMemTable.GetMemContent(i).Address) + Int64(FMemTable.GetMemContent(i).Size) - 1;
+    EntryEndAddress := Int64(Entry) + Int64(FMemTable.GetMemContent(i).Size) - 1;
 
     if FMemTable.AddressIn_MemRange(1, Entry, -$20000000) then //if FMemTable.AddressIn_RAMKSEG0(Entry) then
     begin

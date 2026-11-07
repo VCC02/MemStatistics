@@ -307,6 +307,30 @@ begin
 end;
 
 
+function GetRawMemContentCallback(AIndex: Integer): Cardinal;
+begin
+  Result := TempMikroComp.FMemTable.GetRawMemContent(AIndex);
+end;
+
+
+function GetMemContentAddressCallback(AIndex: Integer): Cardinal;
+begin
+  Result := TempMikroComp.FMemTable.GetMemContent(AIndex).Address;
+end;
+
+
+function GetMemContentSizeCallback(AIndex: Integer): Cardinal;
+begin
+  Result := TempMikroComp.FMemTable.GetMemContent(AIndex).Size;
+end;
+
+
+function AddressInMemRangeCallback(ASectionIndex: Integer; AAddress, AddrOffset: Int64): Boolean;
+begin
+  Result := TempMikroComp.FMemTable.AddressIn_MemRange(ASectionIndex, AAddress, AddrOffset);
+end;
+
+
 procedure TMikroComp.GetInfoFromPlugin(APluginPath, ALstFileFnm: string);
 var
   LoadLstFileProc: TLoadLstFile;
@@ -316,6 +340,7 @@ var
   GetStatisticsProc: TGetStatistics;
   Dll: THandle;
   EntryCount, i: DWord;
+  MemTableInfo: TMemTableInfo;
 begin
   if not FileExists(APluginPath) then
   begin
@@ -369,15 +394,26 @@ begin
 
     LoadLstFileProc(@ALstFileFnm[1], Length(ALstFileFnm));
     EntryCount := GetMemEntryCountProc;
-    if EntryCount = 0 then
-      Exit;
+    if EntryCount > 0 then
+    begin
+      EntryCount := Min(EntryCount, 10000000); //limit the count in case something goes wrong
 
-    EntryCount := Min(EntryCount, 10000000); //limit the count in case something goes wrong
+      for i := 0 to EntryCount - 1 do //EntryCount verified against 0 (above)
+        GetMemEntryProc(GetMemEntryCallback, i);
+    end;
 
-    for i := 0 to EntryCount - 1 do //EntryCount verified against 0 (above)
-      GetMemEntryProc(GetMemEntryCallback, i);
+    MemTableInfo.SectionCount := FMemTable.DeviceInfo.GetDeviceSectionCount;
+    MemTableInfo.MemContentLength := FMemTable.GetMemContentLength;
+    MemTableInfo.RawMemContentLength := FMemTable.GetRawMemContentLength;
+    MemTableInfo.DeviceName := @'P32'[1]; //ToDo
+    MemTableInfo.DeviceNameLength := 3;   //ToDo
 
-    GetStatisticsProc(GetPluginStatisticsCallback);
+    MemTableInfo.GetRawMemContentCallback := GetRawMemContentCallback;
+    MemTableInfo.GetMemContentAddressCallback := GetMemContentAddressCallback;
+    MemTableInfo.GetMemContentSizeCallback := GetMemContentSizeCallback;
+    MemTableInfo.AddressInMemRangeCallback := AddressInMemRangeCallback;
+
+    GetStatisticsProc(GetPluginStatisticsCallback, MemTableInfo);
   finally
     FreeLibrary(Dll);
   end;
@@ -534,7 +570,12 @@ begin
   for i := 0 to AListOfPlugins.Count - 1 do
   begin
     FAdditionalPluginStatistics := ''; //updated by GetInfoFromPlugin, via callback
-    GetInfoFromPlugin(AListOfPlugins.Strings[i], LstFileFnm);
+    try
+      GetInfoFromPlugin(AListOfPlugins.Strings[i], LstFileFnm);
+    except
+      on E: Exception do
+        FAdditionalPluginStatistics := 'Plugin exception: ' + E.Message + #13#10;
+    end;
 
     AdditionalStat := TStringList.Create;
     try
