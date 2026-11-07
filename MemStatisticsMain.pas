@@ -733,7 +733,7 @@ begin
   vstRawTable.RootNodeCount := FMikroComp.LstAddrRaw.Count;
 
   FMemTable.Repaint;
-  GenerateTextStatistics;
+  //GenerateTextStatistics;
 end;
 
 
@@ -2907,7 +2907,7 @@ begin
     StatusBar1.Panels.Items[0].Text := 'Loaded';
 
     FMemTable.Repaint;
-    GenerateTextStatistics; //built-in statistics
+    //GenerateTextStatistics; //built-in statistics
 
     lstFreeMemory.Items.AddStrings(AdditionalStatistics);  //plugin statistics
   finally

@@ -46,11 +46,21 @@ type
     Index: Cardinal; //reserved for future use
   end;
 
-  TGetRawMemContentCallback = function(AIndex: Integer): Cardinal;
-  TGetMemContentAddressCallback = function(AIndex: Integer): Cardinal;
-  TGetMemContentSizeCallback = function(AIndex: Integer): Cardinal;
-  TAddressInMemRangeCallback = function(ASectionIndex: Integer; AAddress, AddrOffset: Int64): Boolean;
-  //ToDo: callback for section info: name, translation info, address offsets
+  TAddressTranslationOperationAPI = (atoNone, atoADD, atoOR);
+
+  TMemoryTranslationInfoAPI = record
+    Operation: TAddressTranslationOperationAPI;
+    Value: DWord;
+  end;
+
+  TGetRawMemContentCallback = function(AIndex: Integer): Cardinal; cdecl;
+  TGetMemContentAddressCallback = function(AIndex: Integer): Cardinal; cdecl;
+  TGetMemContentSizeCallback = function(AIndex: Integer): Cardinal; cdecl;
+  TAddressInMemRangeCallback = function(ASectionIndex: Integer; AAddress, AddrOffset: Int64): Boolean; cdecl;
+  TGetMemTranslationInfoCallback = procedure(ASectionIndex: Integer; var AMemoryTranslationInfo: TMemoryTranslationInfoAPI); cdecl;
+  TGetAddressOffsetsCallback = procedure(ASectionIndex: Integer; var ASeg1, ASeg2: Integer); cdecl;
+  TGetDefSectionNameCallback = procedure(ASectionIndex: Integer; var ASectionName: Pointer; var ASectionNameLength: Cardinal); cdecl;
+  TGetSectionEntryAddressesCallback = procedure(ASectionIndex: Integer; var MinAddrSeg1, MinAddrSeg2, MaxAddrSeg1, MaxAddrSeg2: Cardinal); cdecl;
 
   TMemTableInfo = record
     SectionCount, MemContentLength, RawMemContentLength: Integer;
@@ -61,6 +71,10 @@ type
     GetMemContentAddressCallback: TGetMemContentAddressCallback;
     GetMemContentSizeCallback: TGetMemContentSizeCallback;
     AddressInMemRangeCallback: TAddressInMemRangeCallback;
+    GetMemTranslationInfoCallback: TGetMemTranslationInfoCallback;
+    GetAddressOffsetsCallback: TGetAddressOffsetsCallback;
+    GetDefSectionNameCallback: TGetDefSectionNameCallback; //ROM, RAM, BOOTROM, CFGREG, EBIROM, SQIROM, EEPROM  /  rom, ram, bootrom, cfgreg, ebirom, sqirom, eeprom
+    GetSectionEntryAddressesCallback: TGetSectionEntryAddressesCallback;
   end;
 
 

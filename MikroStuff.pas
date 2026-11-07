@@ -307,27 +307,69 @@ begin
 end;
 
 
-function GetRawMemContentCallback(AIndex: Integer): Cardinal;
+function GetRawMemContentCallback(AIndex: Integer): Cardinal; cdecl;
 begin
   Result := TempMikroComp.FMemTable.GetRawMemContent(AIndex);
 end;
 
 
-function GetMemContentAddressCallback(AIndex: Integer): Cardinal;
+function GetMemContentAddressCallback(AIndex: Integer): Cardinal; cdecl;
 begin
   Result := TempMikroComp.FMemTable.GetMemContent(AIndex).Address;
 end;
 
 
-function GetMemContentSizeCallback(AIndex: Integer): Cardinal;
+function GetMemContentSizeCallback(AIndex: Integer): Cardinal; cdecl;
 begin
   Result := TempMikroComp.FMemTable.GetMemContent(AIndex).Size;
 end;
 
 
-function AddressInMemRangeCallback(ASectionIndex: Integer; AAddress, AddrOffset: Int64): Boolean;
+function AddressInMemRangeCallback(ASectionIndex: Integer; AAddress, AddrOffset: Int64): Boolean; cdecl;
 begin
   Result := TempMikroComp.FMemTable.AddressIn_MemRange(ASectionIndex, AAddress, AddrOffset);
+end;
+
+
+procedure GetMemTranslationInfoCallback(ASectionIndex: Integer; var AMemoryTranslationInfo: TMemoryTranslationInfoAPI); cdecl;
+var
+  TempMemoryTranslationInfo: TMemoryTranslationInfo;
+begin
+  TempMemoryTranslationInfo := TempMikroComp.FMemTable.DeviceInfo.MemoryTranslationInfo[ASectionIndex];
+  AMemoryTranslationInfo.Value := TempMemoryTranslationInfo.Value;
+  AMemoryTranslationInfo.Operation := TAddressTranslationOperationAPI(TempMemoryTranslationInfo.Operation);
+end;
+
+
+procedure GetAddressOffsetsCallback(ASectionIndex: Integer; var ASeg1, ASeg2: Integer); cdecl;
+var
+  AddressOffsets: TAddressOffset;
+begin
+  AddressOffsets := TempMikroComp.FMemTable.DeviceInfo.GetAddressOffsetByIndex(ASectionIndex);
+  ASeg1 := AddressOffsets.S1;
+  ASeg2 := AddressOffsets.S2;
+end;
+
+
+procedure GetDefSectionNameCallback(ASectionIndex: Integer; var ASectionName: Pointer; var ASectionNameLength: Cardinal); cdecl;
+var
+  TempSectionName: string;
+begin
+  TempSectionName := TempMikroComp.FMemTable.DeviceInfo.GetDeviceDefSectionNameByIndex(ASectionIndex);
+  ASectionName := @TempSectionName[1];
+  ASectionNameLength := Length(TempSectionName);
+end;
+
+
+procedure GetSectionEntryAddressesCallback(ASectionIndex: Integer; var MinAddrSeg1, MinAddrSeg2, MaxAddrSeg1, MaxAddrSeg2: Cardinal); cdecl;
+var
+  DefSectionAddrRange: TDefSectionAddrRange;
+begin
+  DefSectionAddrRange := TempMikroComp.FMemTable.DeviceInfo.GetAddressRangesByIndex(ASectionIndex, 0);
+  MinAddrSeg1 := DefSectionAddrRange.MinAddr;   //ToDo
+  MinAddrSeg2 := MinAddrSeg1; //+ correction    //ToDo
+  MaxAddrSeg1 := DefSectionAddrRange.MaxAddr;   //ToDo
+  MaxAddrSeg2 := MaxAddrSeg1; //+ correction    //ToDo
 end;
 
 
@@ -341,6 +383,7 @@ var
   Dll: THandle;
   EntryCount, i: DWord;
   MemTableInfo: TMemTableInfo;
+  DevName: string;
 begin
   if not FileExists(APluginPath) then
   begin
@@ -402,16 +445,22 @@ begin
         GetMemEntryProc(GetMemEntryCallback, i);
     end;
 
+    DevName := Copy(ParamStr(2), 1, 20);
+
     MemTableInfo.SectionCount := FMemTable.DeviceInfo.GetDeviceSectionCount;
     MemTableInfo.MemContentLength := FMemTable.GetMemContentLength;
     MemTableInfo.RawMemContentLength := FMemTable.GetRawMemContentLength;
-    MemTableInfo.DeviceName := @'P32'[1]; //ToDo
-    MemTableInfo.DeviceNameLength := 3;   //ToDo
+    MemTableInfo.DeviceName := @DevName[1];
+    MemTableInfo.DeviceNameLength := Length(DevName);
 
     MemTableInfo.GetRawMemContentCallback := GetRawMemContentCallback;
     MemTableInfo.GetMemContentAddressCallback := GetMemContentAddressCallback;
     MemTableInfo.GetMemContentSizeCallback := GetMemContentSizeCallback;
     MemTableInfo.AddressInMemRangeCallback := AddressInMemRangeCallback;
+    MemTableInfo.GetMemTranslationInfoCallback := GetMemTranslationInfoCallback;
+    MemTableInfo.GetAddressOffsetsCallback := GetAddressOffsetsCallback;
+    MemTableInfo.GetDefSectionNameCallback := GetDefSectionNameCallback;
+    MemTableInfo.GetSectionEntryAddressesCallback := GetSectionEntryAddressesCallback;
 
     GetStatisticsProc(GetPluginStatisticsCallback, MemTableInfo);
   finally
