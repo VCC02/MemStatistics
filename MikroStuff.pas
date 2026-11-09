@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2026 VCC
     creation date: 2014
     initial release date: 17 Sep 2023
 
@@ -58,6 +58,7 @@ type
     FMemTable: TMemTable;
     FMainFormHandle: THandle;
     FAppTitle: string;
+    FAdditionalPluginStatistics: string;
 
     FLstFile: TStringList;
     FLstAddr: TStringList;
@@ -68,6 +69,8 @@ type
     FLstAddrRawDec: TStringList;
     FLstDataRaw: TStringList;
 
+    procedure AddPluginEntry(AEntry: TMemEntry);
+    procedure GetInfoFromPlugin(APluginPath, ALstFileFnm: string);
   protected
     FOnBeginLoadingLst: TOnBeginLoadingLst;
     FOnLoadingLstProgressUpdate: TOnLoadingLstProgressUpdate;
@@ -79,7 +82,7 @@ type
     procedure GetDeviceSections(var ADestAllSections: TSectionArr; AListOfExcludedSectionsByDefName: string = '');
     procedure GetMemoryTranslationInfo(var ADest: TMemoryTranslationInfoArr; AListOfExcludedSectionsByDefName: string = '');
     procedure LoadMlk(DeviceName: string);
-    procedure LoadLST(LstFileFnm: string);
+    procedure LoadLST(LstFileFnm: string; AListOfPlugins, AAdditionalStatistics: TStringList);
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
@@ -116,7 +119,11 @@ implementation
 
 
 uses
-  DeviceInfo;
+  DeviceInfo, MemStatPlugins, Math;
+
+
+threadvar
+  TempMikroComp: TMikroComp;
 
 
 constructor TMikroComp.Create(AOwner: TComponent);
@@ -248,20 +255,235 @@ begin
 end;
 
 
-procedure TMikroComp.LoadLST(LstFileFnm: string);        /////////////////////////////////////////////////this parser is PIC32 specific -  make sure it can read PIC16, PIC18, PIC24 and PIC32
+procedure TMikroComp.AddPluginEntry(AEntry: TMemEntry);
+var
+  AddrStr, SizeStr, NameStr: string;
+  vstData: TRoutinesRec;
+begin
+  AddrStr := IntToHex(AEntry.Address, 8);
+  SizeStr := IntToStr(AEntry.Size);
+  NameStr := AEntry.EntryName;
+
+  MemTable.AddEntry(AEntry.Address, AEntry.Size, NameStr);
+
+  FLstAddr.Add(AddrStr);
+  FLstAddrDec.Add(IntToStr(HexToInt(AddrStr)));
+  FLstSize.Add(SizeStr);
+  FLstName.Add(NameStr);
+
+  MemTable.AddEntry(HexToInt(AddrStr), StrToInt(SizeStr), NameStr);
+
+  if Assigned(OnAddMemTableEntry) then
+  begin
+    vstData.EntryNumber := lstAddr.Count - 1;
+    vstData.Address := HexToInt(AddrStr);
+    vstData.Size := StrToInt(SizeStr);
+    vstData.Name := NameStr;
+    OnAddMemTableEntry(@vstData);
+    //AddMemTableEntry(@vstData);
+  end;
+
+  Inc(FMemTableVisibleEntries);
+end;
+
+
+procedure GetMemEntryCallback(AEntry: TMemEntryAPI); cdecl;
+var
+  Entry: TMemEntry;
+begin
+  Entry.Address := AEntry.Address;
+  Entry.Size := AEntry.Size;
+
+  SetLength(Entry.EntryName, Min(AEntry.EntryNameLen, 1000));
+  Move(AEntry.EntryName^, Entry.EntryName[1], Length(Entry.EntryName));
+  TempMikroComp.AddPluginEntry(Entry);
+end;
+
+
+procedure GetPluginStatisticsCallback(AText: Pointer; ATextLen: DWord); cdecl; //AText is expected to be a CRLF or LF - separated string
+begin
+  SetLength(TempMikroComp.FAdditionalPluginStatistics, Min(ATextLen, 10000000));
+  Move(AText^, TempMikroComp.FAdditionalPluginStatistics[1], Length(TempMikroComp.FAdditionalPluginStatistics));
+end;
+
+
+function GetRawMemContentCallback(AIndex: Integer): Cardinal; cdecl;
+begin
+  Result := TempMikroComp.FMemTable.GetRawMemContent(AIndex);
+end;
+
+
+function GetMemContentAddressCallback(AIndex: Integer): Cardinal; cdecl;
+begin
+  Result := TempMikroComp.FMemTable.GetMemContent(AIndex).Address;
+end;
+
+
+function GetMemContentSizeCallback(AIndex: Integer): Cardinal; cdecl;
+begin
+  Result := TempMikroComp.FMemTable.GetMemContent(AIndex).Size;
+end;
+
+
+function AddressInMemRangeCallback(ASectionIndex: Integer; AAddress, AddrOffset: Int64): Boolean; cdecl;
+begin
+  Result := TempMikroComp.FMemTable.AddressIn_MemRange(ASectionIndex, AAddress, AddrOffset);
+end;
+
+
+procedure GetMemTranslationInfoCallback(ASectionIndex: Integer; var AMemoryTranslationInfo: TMemoryTranslationInfoAPI); cdecl;
+var
+  TempMemoryTranslationInfo: TMemoryTranslationInfo;
+begin
+  TempMemoryTranslationInfo := TempMikroComp.FMemTable.DeviceInfo.MemoryTranslationInfo[ASectionIndex];
+  AMemoryTranslationInfo.Value := TempMemoryTranslationInfo.Value;
+  AMemoryTranslationInfo.Operation := TAddressTranslationOperationAPI(TempMemoryTranslationInfo.Operation);
+end;
+
+
+procedure GetAddressOffsetsCallback(ASectionIndex: Integer; var ASeg1, ASeg2: Integer); cdecl;
+var
+  AddressOffsets: TAddressOffset;
+begin
+  AddressOffsets := TempMikroComp.FMemTable.DeviceInfo.GetAddressOffsetByIndex(ASectionIndex);
+  ASeg1 := AddressOffsets.S1;
+  ASeg2 := AddressOffsets.S2;
+end;
+
+
+procedure GetDefSectionNameCallback(ASectionIndex: Integer; var ASectionName: Pointer; var ASectionNameLength: Cardinal); cdecl;
+var
+  TempSectionName: string;
+begin
+  TempSectionName := TempMikroComp.FMemTable.DeviceInfo.GetDeviceDefSectionNameByIndex(ASectionIndex);
+  ASectionName := @TempSectionName[1];
+  ASectionNameLength := Length(TempSectionName);
+end;
+
+
+procedure GetSectionEntryAddressesCallback(ASectionIndex: Integer; var MinAddrSeg1, MinAddrSeg2, MaxAddrSeg1, MaxAddrSeg2: Cardinal); cdecl;
+var
+  DefSectionAddrRange: TDefSectionAddrRange;
+begin
+  DefSectionAddrRange := TempMikroComp.FMemTable.DeviceInfo.GetAddressRangesByIndex(ASectionIndex, 0);
+  MinAddrSeg1 := DefSectionAddrRange.MinAddr;   //ToDo
+  MinAddrSeg2 := MinAddrSeg1; //+ correction    //ToDo
+  MaxAddrSeg1 := DefSectionAddrRange.MaxAddr;   //ToDo
+  MaxAddrSeg2 := MaxAddrSeg1; //+ correction    //ToDo
+end;
+
+
+procedure TMikroComp.GetInfoFromPlugin(APluginPath, ALstFileFnm: string);
+var
+  LoadLstFileProc: TLoadLstFile;
+  LoadHexFileProc: TLoadHexFile;
+  GetMemEntryCountProc: TGetMemEntryCount;
+  GetMemEntryProc: TGetMemEntry;
+  GetStatisticsProc: TGetStatistics;
+  Dll: THandle;
+  EntryCount, i: DWord;
+  MemTableInfo: TMemTableInfo;
+  DevName: string;
+begin
+  if not FileExists(APluginPath) then
+  begin
+    FAdditionalPluginStatistics := FAdditionalPluginStatistics + 'Error: Plugin not found.';
+    Exit;
+  end;
+
+  Dll := LoadLibrary(PChar(APluginPath));
+  try
+    if Dll = 0 then
+    begin
+      FAdditionalPluginStatistics := FAdditionalPluginStatistics + 'Error: Plugin not loaded.';
+      Exit;
+    end;
+
+    LoadLstFileProc := GetProcAddress(Dll, 'LoadLstFile');
+    LoadHexFileProc := GetProcAddress(Dll, 'LoadHexFile');
+    GetMemEntryCountProc := GetProcAddress(Dll, 'GetMemEntryCount');
+    GetMemEntryProc := GetProcAddress(Dll, 'GetMemEntry');
+    GetStatisticsProc := GetProcAddress(Dll, 'GetStatistics');
+
+    if not Assigned(LoadLstFileProc) then
+    begin
+      FAdditionalPluginStatistics := FAdditionalPluginStatistics + 'Error: LoadLstFile proc not found.';
+      Exit;
+    end;
+
+    if not Assigned(LoadHexFileProc) then
+    begin
+      FAdditionalPluginStatistics := FAdditionalPluginStatistics + 'Error: LoadHexFile proc not found.';
+      Exit;
+    end;
+
+    if not Assigned(GetMemEntryCountProc) then
+    begin
+      FAdditionalPluginStatistics := FAdditionalPluginStatistics + 'Error: GetMemEntryCount proc not found.';
+      Exit;
+    end;
+
+    if not Assigned(GetMemEntryProc) then
+    begin
+      FAdditionalPluginStatistics := FAdditionalPluginStatistics + 'Error: GetMemEntry proc not found.';
+      Exit;
+    end;
+
+    if not Assigned(GetStatisticsProc) then
+    begin
+      FAdditionalPluginStatistics := FAdditionalPluginStatistics + 'Error: GetStatistics proc not found.';
+      Exit;
+    end;
+
+    LoadLstFileProc(@ALstFileFnm[1], Length(ALstFileFnm));
+    EntryCount := GetMemEntryCountProc;
+    if EntryCount > 0 then
+    begin
+      EntryCount := Min(EntryCount, 10000000); //limit the count in case something goes wrong
+
+      for i := 0 to EntryCount - 1 do //EntryCount verified against 0 (above)
+        GetMemEntryProc(GetMemEntryCallback, i);
+    end;
+
+    DevName := Copy(ParamStr(2), 1, 20);
+
+    MemTableInfo.SectionCount := FMemTable.DeviceInfo.GetDeviceSectionCount;
+    MemTableInfo.MemContentLength := FMemTable.GetMemContentLength;
+    MemTableInfo.RawMemContentLength := FMemTable.GetRawMemContentLength;
+    MemTableInfo.DeviceName := @DevName[1];
+    MemTableInfo.DeviceNameLength := Length(DevName);
+
+    MemTableInfo.GetRawMemContentCallback := GetRawMemContentCallback;
+    MemTableInfo.GetMemContentAddressCallback := GetMemContentAddressCallback;
+    MemTableInfo.GetMemContentSizeCallback := GetMemContentSizeCallback;
+    MemTableInfo.AddressInMemRangeCallback := AddressInMemRangeCallback;
+    MemTableInfo.GetMemTranslationInfoCallback := GetMemTranslationInfoCallback;
+    MemTableInfo.GetAddressOffsetsCallback := GetAddressOffsetsCallback;
+    MemTableInfo.GetDefSectionNameCallback := GetDefSectionNameCallback;
+    MemTableInfo.GetSectionEntryAddressesCallback := GetSectionEntryAddressesCallback;
+
+    GetStatisticsProc(GetPluginStatisticsCallback, MemTableInfo);
+  finally
+    FreeLibrary(Dll);
+  end;
+end;
+
+
+procedure TMikroComp.LoadLST(LstFileFnm: string; AListOfPlugins, AAdditionalStatistics: TStringList);        /////////////////////////////////////////////////this parser is PIC32 specific -  make sure it can read PIC16, PIC18, PIC24 and PIC32
 const
   CmikroListExporterVersion = ';  LST file generated by mikroListExporter - v.2.0 ';
   CRoutinesHeader = '//** Routines locations **';
 var
   i: Integer;
   s: string;
-  AddrStr, SizeStr, NameStr, DataStr: string;
+  AddrStr, SizeStr, NameStr, DataStr, LatestName: string;
   HeaderFound: Boolean;
   Address, PrevAddress, BlockAddress, Size: Cardinal;
   LastRawBlock: Boolean;
   vstData: TRoutinesRec;
 
   LstFileCount: Integer;
+  AdditionalStat: TStringList;
 begin
   if not FileExists(LstFileFnm) then
   begin
@@ -271,6 +493,7 @@ begin
 
   FLstFile.LoadFromFile(LstFileFnm);
   s := FLstFile.Strings[0];
+  LatestName := '';
 
   MemTable.Clear;
 
@@ -347,6 +570,9 @@ begin
     end
     else //before header - raw addresses (no routine names)
     begin
+      if Pos('0x', s) = 0 then
+        LatestName := s;
+
       if Pos('0x', s) = 1 then
       begin
         AddrStr := Copy(s, 3, 8);
@@ -367,6 +593,7 @@ begin
           vstData.Address := Address;
           vstData.Size := 4;
           vstData.Name := DataStr;
+          vstData.LatestName := LatestName;
           OnAddRawTableEntry(@vstData);
           //AddRawTableEntry(@vstData);
         end;
@@ -375,7 +602,8 @@ begin
         {if Address = $9D01F130 then       //Debug code
           Caption := 'Break';}
 
-        if Address - PrevAddress = 4 then
+        //if Address - PrevAddress = 4 then   //old code //default behavior on Delphi
+        if Int64(Address) - Int64(PrevAddress) = 4 then  //default behavior on FP
           Inc(Size, 4)
         else
         begin  //found a new block, add it to list
@@ -386,9 +614,38 @@ begin
           Size := 4;
         end;
           
-        if Address - PrevAddress > 4 then
+        //if DWord(Address - PrevAddress) > 4 then  //default behavior on Delphi
+        //if Int64(Address) - Int64(PrevAddress) > 4 then  //default on FP, results in bad logic
+        if (Int64(Address) < Int64(PrevAddress)) or (Int64(Address) - Int64(PrevAddress) > 4) then  //fix for both FP and Delphi
+        begin                               //ToDo: verify if the last block is identified
           BlockAddress := Address;
+        end;
       end;
+    end;  //before header
+  end;  //for
+
+  TempMikroComp := Self;
+
+  for i := 0 to AListOfPlugins.Count - 1 do
+  begin
+    FAdditionalPluginStatistics := ''; //updated by GetInfoFromPlugin, via callback
+    try
+      GetInfoFromPlugin(AListOfPlugins.Strings[i], LstFileFnm);
+    except
+      on E: Exception do
+        FAdditionalPluginStatistics := 'Plugin exception: ' + E.Message + #13#10;
+    end;
+
+    AdditionalStat := TStringList.Create;
+    try
+      AdditionalStat.Text := FAdditionalPluginStatistics;
+
+      AAdditionalStatistics.Add('Plugin: ' + AListOfPlugins.Strings[i]);
+      AAdditionalStatistics.AddStrings(AdditionalStat);
+      AAdditionalStatistics.Add('');
+      AAdditionalStatistics.Add('');
+    finally
+      AdditionalStat.Free;
     end;
   end;
 
@@ -583,6 +840,10 @@ begin
     lstHexFile.Free;
     ResultMessages.Free;
   end;
-end;              
+end;
+
+
+initialization
+  TempMikroComp := nil;
 
 end.

@@ -14,6 +14,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   LCLVersion = '8.4'
   OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnPaint = FormPaint
   OnResize = FormResize
   object lblListName: TLabel
@@ -163,7 +164,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Width = 363
     Anchors = [akLeft, akBottom]
     Smooth = True
-    TabOrder = 4
+    TabOrder = 3
   end
   object lbeMem: TLabeledEdit
     Left = 552
@@ -174,7 +175,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     EditLabel.Height = 13
     EditLabel.Width = 36
     EditLabel.Caption = 'Mem'
-    TabOrder = 5
+    TabOrder = 4
     OnChange = lbeMemChange
   end
   object lbeAddrHex: TLabeledEdit
@@ -186,7 +187,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     EditLabel.Height = 13
     EditLabel.Width = 80
     EditLabel.Caption = 'Address [Hex]'
-    TabOrder = 6
+    TabOrder = 5
     OnChange = lbeMemChange
     OnKeyPress = lbeAddrHexKeyPress
   end
@@ -199,7 +200,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     EditLabel.Height = 13
     EditLabel.Width = 85
     EditLabel.Caption = 'Address [Dec]'
-    TabOrder = 7
+    TabOrder = 6
     OnChange = lbeMemChange
     OnKeyPress = lbeAddrDecKeyPress
   end
@@ -212,7 +213,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     EditLabel.Height = 13
     EditLabel.Width = 60
     EditLabel.Caption = 'Size'
-    TabOrder = 8
+    TabOrder = 7
     OnChange = lbeMemChange
     OnKeyPress = lbeSizeKeyPress
   end
@@ -220,12 +221,12 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Left = 837
     Height = 21
     Top = 303
-    Width = 169
+    Width = 99
     Anchors = [akRight, akBottom]
     EditLabel.Height = 13
-    EditLabel.Width = 169
+    EditLabel.Width = 99
     EditLabel.Caption = 'Entry Name'
-    TabOrder = 9
+    TabOrder = 8
     OnChange = lbeMemChange
   end
   object pnlVisibleEntries: TPanel
@@ -239,7 +240,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     ParentBackground = False
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 10
+    TabOrder = 9
   end
   object btnSettings: TButton
     Left = 465
@@ -248,7 +249,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Width = 70
     Anchors = [akTop, akRight]
     Caption = 'Settings...'
-    TabOrder = 11
+    TabOrder = 10
     OnClick = btnSettingsClick
   end
   object btnNewCompareWindow: TButton
@@ -258,7 +259,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Width = 160
     Anchors = [akTop, akRight]
     Caption = 'New Compare Window...'
-    TabOrder = 12
+    TabOrder = 11
     OnClick = btnNewCompareWindowClick
   end
   object pnlSplitter: TPanel
@@ -271,38 +272,11 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Color = 7864319
     ParentBackground = False
     ParentColor = False
-    TabOrder = 13
+    TabOrder = 12
     OnMouseDown = pnlSplitterMouseDown
     OnMouseMove = pnlSplitterMouseMove
     OnMouseUp = pnlSplitterMouseUp
     OnResize = pnlSplitterResize
-  end
-  object rdgrpChartContent: TRadioGroup
-    Left = 825
-    Height = 75
-    Top = 0
-    Width = 188
-    Anchors = [akTop, akRight]
-    AutoFill = True
-    Caption = 'Chart content'
-    ChildSizing.LeftRightSpacing = 6
-    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
-    ChildSizing.EnlargeVertical = crsHomogenousChildResize
-    ChildSizing.ShrinkHorizontal = crsScaleChilds
-    ChildSizing.ShrinkVertical = crsScaleChilds
-    ChildSizing.Layout = cclLeftToRightThenTopToBottom
-    ChildSizing.ControlsPerLine = 1
-    ClientHeight = 57
-    ClientWidth = 184
-    ItemIndex = 2
-    Items.Strings = (
-      'Display only from routines'
-      'Display only from raw addresses'
-      'Display both above'
-    )
-    ParentBackground = False
-    TabOrder = 3
-    OnClick = rdgrpChartContentClick
   end
   object pnlHorizontalResize: TPanel
     Left = 0
@@ -312,8 +286,23 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Anchors = [akLeft, akRight, akBottom]
     BevelOuter = bvNone
     ParentColor = False
-    TabOrder = 14
+    TabOrder = 13
     OnResize = pnlHorizontalResizeResize
+  end
+  object lbePartName: TLabeledEdit
+    Left = 944
+    Height = 21
+    Hint = 'Part of routine name, part of constant name, or part of assignment.'
+    Top = 303
+    Width = 67
+    Anchors = [akRight, akBottom]
+    EditLabel.Height = 13
+    EditLabel.Width = 67
+    EditLabel.Caption = 'Part Name'
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 14
+    OnChange = lbeMemChange
   end
   object tmrStartup: TTimer
     Enabled = False

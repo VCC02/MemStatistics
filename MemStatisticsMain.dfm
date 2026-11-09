@@ -15,6 +15,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnPaint = FormPaint
   OnResize = FormResize
   DesignSize = (
@@ -168,21 +169,6 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
       end
     end
   end
-  object rdgrpChartContent: TRadioGroup
-    Left = 796
-    Top = 0
-    Width = 188
-    Height = 75
-    Anchors = [akTop, akRight]
-    Caption = 'Chart content'
-    ItemIndex = 2
-    Items.Strings = (
-      'Display only from routines'
-      'Display only from raw addresses'
-      'Display both above')
-    TabOrder = 3
-    OnClick = rdgrpChartContentClick
-  end
   object prbUpdateSignalsListRun1: TProgressBar
     Left = 402
     Top = 323
@@ -190,7 +176,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Height = 17
     Anchors = [akLeft, akBottom]
     Smooth = True
-    TabOrder = 4
+    TabOrder = 3
   end
   object lbeMem: TLabeledEdit
     Left = 548
@@ -201,7 +187,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     EditLabel.Width = 22
     EditLabel.Height = 13
     EditLabel.Caption = 'Mem'
-    TabOrder = 5
+    TabOrder = 4
     OnChange = lbeMemChange
   end
   object lbeAddrHex: TLabeledEdit
@@ -213,7 +199,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     EditLabel.Width = 69
     EditLabel.Height = 13
     EditLabel.Caption = 'Address [Hex]'
-    TabOrder = 6
+    TabOrder = 5
     OnChange = lbeMemChange
     OnKeyPress = lbeAddrHexKeyPress
   end
@@ -226,7 +212,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     EditLabel.Width = 68
     EditLabel.Height = 13
     EditLabel.Caption = 'Address [Dec]'
-    TabOrder = 7
+    TabOrder = 6
     OnChange = lbeMemChange
     OnKeyPress = lbeAddrDecKeyPress
   end
@@ -239,20 +225,20 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     EditLabel.Width = 19
     EditLabel.Height = 13
     EditLabel.Caption = 'Size'
-    TabOrder = 8
+    TabOrder = 7
     OnChange = lbeMemChange
     OnKeyPress = lbeSizeKeyPress
   end
   object lbeEntryName: TLabeledEdit
     Left = 799
     Top = 296
-    Width = 178
+    Width = 98
     Height = 21
     Anchors = [akRight, akBottom]
     EditLabel.Width = 56
     EditLabel.Height = 13
     EditLabel.Caption = 'Entry Name'
-    TabOrder = 9
+    TabOrder = 8
     OnChange = lbeMemChange
   end
   object pnlVisibleEntries: TPanel
@@ -265,7 +251,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Caption = 'All visible entries'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 10
+    TabOrder = 9
   end
   object btnSettings: TButton
     Left = 468
@@ -274,7 +260,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Height = 25
     Anchors = [akTop, akRight]
     Caption = 'Settings...'
-    TabOrder = 11
+    TabOrder = 10
     OnClick = btnSettingsClick
   end
   object btnNewCompareWindow: TButton
@@ -284,7 +270,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Height = 25
     Anchors = [akTop, akRight]
     Caption = 'New Compare Window...'
-    TabOrder = 12
+    TabOrder = 11
     OnClick = btnNewCompareWindowClick
   end
   object pnlSplitter: TPanel
@@ -309,9 +295,26 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Height = 4
     Anchors = [akLeft, akRight, akBottom]
     BevelOuter = bvNone
-    TabOrder = 14
+    TabOrder = 12
     Visible = False
     OnResize = pnlHorizontalResizeResize
+  end
+  object lbePartName: TLabeledEdit
+    Left = 903
+    Top = 296
+    Width = 81
+    Height = 21
+    Hint = 
+      'Part of routine name, part of constant name, or part of assignme' +
+      'nt.'
+    Anchors = [akRight, akBottom]
+    EditLabel.Width = 50
+    EditLabel.Height = 13
+    EditLabel.Caption = 'Part Name'
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 14
+    OnChange = lbeMemChange
   end
   object tmrStartup: TTimer
     Enabled = False

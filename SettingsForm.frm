@@ -12,6 +12,7 @@ object frmSettings: TfrmSettings
   LCLVersion = '8.4'
   OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   object btnOK: TButton
     Left = 338
@@ -1168,14 +1169,137 @@ object frmSettings: TfrmSettings
       end
       object lblDevWarning: TLabel
         Left = 0
-        Height = 15
+        Height = 17
         Top = 40
-        Width = 725
+        Width = 804
         Caption = 'Before compiling, please switch to another tab of this page control. There is a bug, which causes the application to hang if left on this tab.'
-        Color = 8224255
+        Color = 202
+        Font.CharSet = ANSI_CHARSET
+        Font.Color = clWhite
+        Font.Height = -13
+        Font.Pitch = fpVariable
+        Font.Quality = fqDraft
         ParentColor = False
+        ParentFont = False
         Transparent = False
         Visible = False
+      end
+    end
+    object TabSheetPlugins: TTabSheet
+      Caption = 'Plugins'
+      ClientHeight = 473
+      ClientWidth = 866
+      object btnAddPlugin: TButton
+        Left = 8
+        Height = 25
+        Top = 445
+        Width = 75
+        Anchors = [akLeft, akBottom]
+        Caption = 'Add'
+        TabOrder = 0
+        OnClick = btnAddPluginClick
+      end
+      object bitbtnUpdatePlugin: TBitBtn
+        Left = 89
+        Height = 25
+        Top = 445
+        Width = 75
+        Anchors = [akLeft, akBottom]
+        Caption = 'Update'
+        TabOrder = 1
+        OnClick = bitbtnUpdatePluginClick
+      end
+      object btnDeletePlugin: TButton
+        Left = 170
+        Height = 25
+        Top = 445
+        Width = 75
+        Anchors = [akLeft, akBottom]
+        Caption = 'Delete...'
+        TabOrder = 2
+        OnClick = btnDeletePluginClick
+      end
+      object spdbtnMoveUpPlugin: TSpeedButton
+        Left = 258
+        Height = 25
+        Hint = 'Move up'
+        Top = 445
+        Width = 23
+        Anchors = [akLeft, akBottom]
+        Font.CharSet = SYMBOL_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -16
+        Font.Name = 'Webdings'
+        Font.Style = [fsBold]
+        Glyph.Data = {
+          56010000424D560100000000000036000000280000000F000000060000000100
+          1800000000002001000000000000000000000000000000000000FFFFFF4CB122
+          4CB1224CB1224CB1224CB1224CB1224CB1224CB1224CB1224CB1224CB1224CB1
+          224CB122FFFFFF000000FFFFFFFFFFFF4CB1224CB1224CB1224CB1224CB1224C
+          B1224CB1224CB1224CB1224CB1224CB122FFFFFFFFFFFF000000FFFFFFFFFFFF
+          FFFFFF4CB1224CB1224CB1224CB1224CB1224CB1224CB1224CB1224CB122FFFF
+          FFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFF4CB1224CB1224CB1224C
+          B1224CB1224CB1224CB122FFFFFFFFFFFFFFFFFFFFFFFF000000FFFFFFFFFFFF
+          FFFFFFFFFFFFFFFFFF4CB1224CB1224CB1224CB1224CB122FFFFFFFFFFFFFFFF
+          FFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF4CB1224C
+          B1224CB122FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000
+        }
+        ShowHint = True
+        ParentFont = False
+        ParentShowHint = False
+        OnClick = spdbtnMoveUpPluginClick
+      end
+      object spdbtnMoveDownPlugin: TSpeedButton
+        Left = 288
+        Height = 25
+        Hint = 'Move down'
+        Top = 445
+        Width = 23
+        Anchors = [akLeft, akBottom]
+        Font.CharSet = SYMBOL_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -16
+        Font.Name = 'Webdings'
+        Font.Style = [fsBold]
+        Glyph.Data = {
+          56010000424D560100000000000036000000280000000F000000060000000100
+          1800000000002001000000000000000000000000000000000000FFFFFFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFF4CB1224CB1224CB122FFFFFFFFFFFFFFFFFFFFFF
+          FFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF4CB1224CB1224C
+          B1224CB1224CB122FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFFFFFFFFFF
+          FFFFFFFFFFFF4CB1224CB1224CB1224CB1224CB1224CB1224CB122FFFFFFFFFF
+          FFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFF4CB1224CB1224CB1224CB1224C
+          B1224CB1224CB1224CB1224CB122FFFFFFFFFFFFFFFFFF000000FFFFFFFFFFFF
+          4CB1224CB1224CB1224CB1224CB1224CB1224CB1224CB1224CB1224CB1224CB1
+          22FFFFFFFFFFFF000000FFFFFF4CB1224CB1224CB1224CB1224CB1224CB1224C
+          B1224CB1224CB1224CB1224CB1224CB1224CB122FFFFFF000000
+        }
+        ShowHint = True
+        ParentFont = False
+        ParentShowHint = False
+        OnClick = spdbtnMoveDownPluginClick
+      end
+      object lbePluginPath: TLabeledEdit
+        Left = 328
+        Height = 23
+        Top = 447
+        Width = 496
+        Anchors = [akLeft, akRight, akBottom]
+        EditLabel.Height = 15
+        EditLabel.Width = 496
+        EditLabel.Caption = 'Plugin path'
+        TabOrder = 3
+        OnChange = lbePluginPathChange
+      end
+      object btnBrowsePlugin: TButton
+        Left = 827
+        Height = 25
+        Top = 445
+        Width = 29
+        Anchors = [akRight, akBottom]
+        Caption = '...'
+        TabOrder = 4
+        OnClick = btnBrowsePluginClick
       end
     end
   end
@@ -1220,6 +1344,13 @@ object frmSettings: TfrmSettings
     Interval = 1
     OnTimer = tmrUpdateTimer
     Left = 104
-    Top = 464
+    Top = 424
+  end
+  object tmrUpdatePlugin: TTimer
+    Enabled = False
+    Interval = 1
+    OnTimer = tmrUpdatePluginTimer
+    Left = 256
+    Top = 424
   end
 end
