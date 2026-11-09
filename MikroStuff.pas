@@ -597,7 +597,8 @@ begin
         {if Address = $9D01F130 then       //Debug code
           Caption := 'Break';}
 
-        if Address - PrevAddress = 4 then
+        //if Address - PrevAddress = 4 then   //old code //default behavior on Delphi
+        if Int64(Address) - Int64(PrevAddress) = 4 then  //default behavior on FP
           Inc(Size, 4)
         else
         begin  //found a new block, add it to list
@@ -608,8 +609,12 @@ begin
           Size := 4;
         end;
           
-        if Address - PrevAddress > 4 then
+        //if DWord(Address - PrevAddress) > 4 then  //default behavior on Delphi
+        //if Int64(Address) - Int64(PrevAddress) > 4 then  //default on FP, results in bad logic
+        if (Int64(Address) < Int64(PrevAddress)) or (Int64(Address) - Int64(PrevAddress) > 4) then  //fix for both FP and Delphi
+        begin                               //ToDo: verify if the last block is identified
           BlockAddress := Address;
+        end;
       end;
     end;  //before header
   end;  //for

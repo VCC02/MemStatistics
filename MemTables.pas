@@ -73,6 +73,7 @@ type
     FMemStatMiscOptions: TMemStatMiscOptions;
 
     FDeviceInfo: TDeviceInfo;
+    FOldYOffset: Cardinal;
 
     procedure ComputeMemScales(YOffset: Cardinal);
     procedure DrawEntry(AddrMin, Addr, Size, YOffset: Cardinal; AddrOffset: Integer; MemScale: Double; x1, x2: Integer; Color: TColor);
@@ -217,7 +218,7 @@ begin
       end;
     end;
 
-    tdsRaw:
+    else//tdsRaw:
     begin
       Addr := FMemContentFromRaw[EntryByIndex].Address;
       Size := FMemContentFromRaw[EntryByIndex].Size;
@@ -264,7 +265,7 @@ begin
     tdsRoutines:
       n := Length(FMemContent);
 
-    tdsRaw:
+    else //tdsRaw:
       n := Length(FMemContentFromRaw);
 
     //else
@@ -304,7 +305,7 @@ begin
     tdsRoutines:
       n := Length(FMemContent);
 
-    tdsRaw:
+    else //tdsRaw:
       n := Length(FMemContentFromRaw);
 
     //else
@@ -312,7 +313,7 @@ begin
   end;
 
   if n = 0 then
-    Exit; 
+    Exit;
 
   Inc(YOffset, 4);  //required by entries, reset for text (see below)
 
@@ -509,7 +510,12 @@ begin
         Canvas.TextOut(10 + ColumnXs[i], 1, FDeviceInfo.GetDeviceDisplaySectionLongNameByIndex(i)); 
       end;
 
-      ComputeMemScales(YOffset);
+      if (YOffset <> FOldYOffset) and (FDeviceInfo.GetDeviceSectionCount > 0) then
+      begin
+        FOldYOffset := YOffset;
+        ComputeMemScales(YOffset);
+      end;
+
       FDeviceInfo.GetAddressOffsets(AddressOffsets);
 
       if FDisplayFromRoutines  then  //at least routines
@@ -518,7 +524,7 @@ begin
       if FDisplayFromRawAddresses then  //at least raw addresses
         DrawMem(tdsRaw, YOffset, ColumnXs, WidthDiv, AddressOffsets);
 
-      if FDisplayFromRoutines  then  //at least routines
+      if FDisplayFromRoutines then  //at least routines
         DrawMemFocusedEntry(tdsRoutines, YOffset, FEntryToFocusOn, ColumnXs, WidthDiv, AddressOffsets);
 
       if FDisplayFromRawAddresses then  //at least raw addresses
@@ -561,6 +567,8 @@ begin
 
   FOnGetVisibleColumnCount := nil;
   FOnGetColumnVisibility := nil;
+
+  FOldYOffset := 0;  //to avoid computing on every Paint call, but to allow reacting to changing the font size
 end;
 
 
