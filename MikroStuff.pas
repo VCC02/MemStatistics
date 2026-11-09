@@ -476,7 +476,7 @@ const
 var
   i: Integer;
   s: string;
-  AddrStr, SizeStr, NameStr, DataStr: string;
+  AddrStr, SizeStr, NameStr, DataStr, LatestName: string;
   HeaderFound: Boolean;
   Address, PrevAddress, BlockAddress, Size: Cardinal;
   LastRawBlock: Boolean;
@@ -493,6 +493,7 @@ begin
 
   FLstFile.LoadFromFile(LstFileFnm);
   s := FLstFile.Strings[0];
+  LatestName := '';
 
   MemTable.Clear;
 
@@ -569,6 +570,9 @@ begin
     end
     else //before header - raw addresses (no routine names)
     begin
+      if Pos('0x', s) = 0 then
+        LatestName := s;
+
       if Pos('0x', s) = 1 then
       begin
         AddrStr := Copy(s, 3, 8);
@@ -589,6 +593,7 @@ begin
           vstData.Address := Address;
           vstData.Size := 4;
           vstData.Name := DataStr;
+          vstData.LatestName := LatestName;
           OnAddRawTableEntry(@vstData);
           //AddRawTableEntry(@vstData);
         end;

@@ -232,7 +232,7 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
   object lbeEntryName: TLabeledEdit
     Left = 799
     Top = 296
-    Width = 178
+    Width = 98
     Height = 21
     Anchors = [akRight, akBottom]
     EditLabel.Width = 56
@@ -298,6 +298,23 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     TabOrder = 12
     Visible = False
     OnResize = pnlHorizontalResizeResize
+  end
+  object lbePartName: TLabeledEdit
+    Left = 903
+    Top = 296
+    Width = 81
+    Height = 21
+    Hint = 
+      'Part of routine name, part of constant name, or part of assignme' +
+      'nt.'
+    Anchors = [akRight, akBottom]
+    EditLabel.Width = 50
+    EditLabel.Height = 13
+    EditLabel.Caption = 'Part Name'
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 14
+    OnChange = lbeMemChange
   end
   object tmrStartup: TTimer
     Enabled = False

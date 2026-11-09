@@ -221,10 +221,10 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     Left = 837
     Height = 21
     Top = 303
-    Width = 169
+    Width = 99
     Anchors = [akRight, akBottom]
     EditLabel.Height = 13
-    EditLabel.Width = 169
+    EditLabel.Width = 99
     EditLabel.Caption = 'Entry Name'
     TabOrder = 8
     OnChange = lbeMemChange
@@ -288,6 +288,21 @@ object frmMemStatisticsMain: TfrmMemStatisticsMain
     ParentColor = False
     TabOrder = 13
     OnResize = pnlHorizontalResizeResize
+  end
+  object lbePartName: TLabeledEdit
+    Left = 944
+    Height = 21
+    Hint = 'Part of routine name, part of constant name, or part of assignment.'
+    Top = 303
+    Width = 67
+    Anchors = [akRight, akBottom]
+    EditLabel.Height = 13
+    EditLabel.Width = 67
+    EditLabel.Caption = 'Part Name'
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 14
+    OnChange = lbeMemChange
   end
   object tmrStartup: TTimer
     Enabled = False

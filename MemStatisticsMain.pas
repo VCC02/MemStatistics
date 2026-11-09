@@ -45,6 +45,7 @@ type
   { TfrmMemStatisticsMain }
 
   TfrmMemStatisticsMain = class(TForm)
+    lbePartName: TLabeledEdit;
     lblListName: TLabel;
     lblChipName: TLabel;
     lblVstBackgroundRaw: TLabel;
@@ -91,7 +92,8 @@ type
     procedure vstMemTableBeforeCellPaint(Sender: TBaseVirtualTree;
       TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
-    procedure vstMemTableClick(Sender: TObject);
+    procedure vstMemTableMouseUp(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure tmrBlinkGraphicFocusTimer(Sender: TObject);
     procedure vstMemTableKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -101,7 +103,8 @@ type
     procedure vstRawTableBeforeCellPaint(Sender: TBaseVirtualTree;
       TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
-    procedure vstRawTableClick(Sender: TObject);
+    procedure vstRawTableMouseUp(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure vstRawTableGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: {$IFDEF FPC}string{$ELSE}WideString{$ENDIF});
     procedure vstRawTableKeyDown(Sender: TObject; var Key: Word;
@@ -177,7 +180,6 @@ type
     procedure SetMemTableHeightFromDefsFolder;
 
     function FastTabReplace(s: string): string;
-    procedure GenerateTextStatistics;
     procedure ApplyDeviceSettings;
 
     procedure SetFocusedEntryBySelectedNode;
@@ -233,7 +235,7 @@ type
     procedure AddMemTableEntry(DataToBeAdded: PRoutinesRec);
     procedure AddRawTableEntry(DataToBeAdded: PRoutinesRec);
     procedure SearchInMemTable(Mem, EntryName, AddressHex, AddressDec, Size: string);
-    procedure SearchInRawTable(Mem, EntryName, AddressHex, AddressDec: string);
+    procedure SearchInRawTable(Mem, EntryName, AddressHex, AddressDec, PartOf: string);
   end;
 
 var
@@ -279,7 +281,7 @@ var
  - bug - the cmp window doesn't want to load lst info from main, until used by SimMem window
  [done] - the SimMem window should highlight commands which will end up erasing or writing out of bounds memory
  [in work] - memory sections should have a flag, configurable from settings window, to highlight if they are erased/written by commands on SimWindow. The CFG sections should be set to True.
- - the .lst loader should read comments, because they contain names for most routines
+ [done] - the .lst loader should read comments, because they contain names for most routines
 
  - The cmp window should be able to display standard bootloader routines as asm entries, despite the fact that they are not present in lst file (e.g. various jmp instructions).
    Maybe some of them can display explanations in user column.
@@ -733,7 +735,6 @@ begin
   vstRawTable.RootNodeCount := FMikroComp.LstAddrRaw.Count;
 
   FMemTable.Repaint;
-  //GenerateTextStatistics;
 end;
 
 
@@ -1071,7 +1072,7 @@ begin
   vstMemTable.TreeOptions.PaintOptions := [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines];
   vstMemTable.TreeOptions.SelectionOptions := [toFullRowSelect, toRightClickSelect];
   vstMemTable.OnBeforeCellPaint := vstMemTableBeforeCellPaint;
-  vstMemTable.OnClick := vstMemTableClick;
+  vstMemTable.OnMouseUp := vstMemTableMouseUp;
   vstMemTable.OnCompareNodes := vstMemTableCompareNodes;
   vstMemTable.OnFreeNode := vstMemTableFreeNode;
   vstMemTable.OnGetText := vstMemTableGetText;
@@ -1149,7 +1150,7 @@ begin
   vstRawTable.TreeOptions.PaintOptions := [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines];
   vstRawTable.TreeOptions.SelectionOptions := [toFullRowSelect, toRightClickSelect];
   vstRawTable.OnBeforeCellPaint := vstRawTableBeforeCellPaint;
-  vstRawTable.OnClick := vstRawTableClick;
+  vstRawTable.OnMouseUp := vstRawTableMouseUp;
   vstRawTable.OnCompareNodes := vstRawTableCompareNodes;
   vstRawTable.OnFreeNode := vstRawTableFreeNode;
   vstRawTable.OnGetText := vstRawTableGetText;
@@ -1187,6 +1188,12 @@ begin
   NewColum.Position := 4;
   NewColum.Width := 250;
   NewColum.Text := 'Content';
+
+  NewColum := vstRawTable.Header.Columns.Add;
+  NewColum.MinWidth := 500;
+  NewColum.Position := 5;
+  NewColum.Width := 500;
+  NewColum.Text := 'Part of';
 
   grpChartContent := TGroupBox.Create(Self);
   grpChartContent.Parent := Self;
@@ -1349,7 +1356,7 @@ end;
 procedure TfrmMemStatisticsMain.lbeAddrDecKeyPress(Sender: TObject;
   var Key: Char);
 begin
-  if not (Key in ['0'..'9', #8]) then
+  if not (Key in ['0'..'9', #8, 'c', 'C', 'x', 'X', 'v', 'V']) then
     Key := #0;
 end;
 
@@ -1357,7 +1364,7 @@ end;
 procedure TfrmMemStatisticsMain.lbeAddrHexKeyPress(Sender: TObject;
   var Key: Char);
 begin
-  if not (Key in ['0'..'9', 'a'..'f', 'A'..'F', #8]) then
+  if not (Key in ['0'..'9', 'a'..'f', 'A'..'F', #8, 'x', 'X', 'v', 'V']) then
     Key := #0;
 end;
 
@@ -1365,14 +1372,14 @@ end;
 procedure TfrmMemStatisticsMain.lbeMemChange(Sender: TObject);
 begin
   SearchInMemTable(lbeMem.Text, lbeEntryName.Text, lbeAddrHex.Text, lbeAddrDec.Text, lbeSize.Text);
-  SearchInRawTable(lbeMem.Text, lbeEntryName.Text, lbeAddrHex.Text, lbeAddrDec.Text);
+  SearchInRawTable(lbeMem.Text, lbeEntryName.Text, lbeAddrHex.Text, lbeAddrDec.Text, lbePartName.Text);
 end;
 
 
 procedure TfrmMemStatisticsMain.lbeSizeKeyPress(Sender: TObject;
   var Key: Char);
 begin
-  if not (Key in ['0'..'9', #8]) then
+  if not (Key in ['0'..'9', #8, 'c', 'C', 'x', 'X', 'v', 'V']) then
     Key := #0;
 end;
 
@@ -1551,7 +1558,7 @@ begin
 end;
 
 
-procedure TfrmMemStatisticsMain.vstMemTableClick(Sender: TObject);
+procedure TfrmMemStatisticsMain.vstMemTableMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   SetFocusedEntryBySelectedNode;
 end;
@@ -1815,7 +1822,7 @@ begin
 end;
 
 
-procedure TfrmMemStatisticsMain.vstRawTableClick(Sender: TObject);
+procedure TfrmMemStatisticsMain.vstRawTableMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   SetFocusedEntryFromRawBySelectedNode;
 end;
@@ -1848,6 +1855,7 @@ begin
 
     2, 3: Result := CompareValue(Data1.Address, Data2.Address);
     4: Result := CompareStr(Data1.Name, Data2.Name);
+    5: Result := CompareStr(Data1.LatestName, Data2.LatestName);
   end; //case
 end;
 
@@ -1907,6 +1915,8 @@ begin
       3: CellText := IntToStr(Data.Address);
       
       4: CellText := FastTabReplace(Data.Name);
+
+      5: CellText := Data.LatestName;
     end;
   except
     CellText := 'exception';
@@ -2165,14 +2175,14 @@ begin
 end;
 
 
-procedure TfrmMemStatisticsMain.SearchInRawTable(Mem, EntryName, AddressHex, AddressDec: string);  //AddressHex has no '$' or '0x'
+procedure TfrmMemStatisticsMain.SearchInRawTable(Mem, EntryName, AddressHex, AddressDec, PartOf: string);  //AddressHex has no '$' or '0x'
 var
   Node: PVirtualNode;
   VisibleOnVSTResult: Boolean;   
-  VisibleFrom_Mem, VisibleFrom_EntryName, VisibleFrom_AddressHex, VisibleFrom_AddressDec: Boolean;
+  VisibleFrom_Mem, VisibleFrom_EntryName, VisibleFrom_AddressHex, VisibleFrom_AddressDec, VisibleFrom_PartOf: Boolean;
   LastNode: PVirtualNode;
 
-  Mem_Empty, EntryName_Empty, AddressHex_Empty, AddressDec_Empty: Boolean;
+  Mem_Empty, EntryName_Empty, AddressHex_Empty, AddressDec_Empty, PartOf_Empty: Boolean;
   n, SectionIndex: Integer;
   Data: PRoutinesRec;
   CellText: string;
@@ -2183,6 +2193,8 @@ begin
   Node := vstRawTable.GetFirst;
   if not Assigned(Node) then
     Exit;
+
+  PartOf := UpperCase(PartOf);
 
   vstRawTable.BeginUpdate;
   try
@@ -2209,8 +2221,9 @@ begin
         EntryName_Empty := EntryName = '';
         AddressHex_Empty := AddressHex = '';
         AddressDec_Empty := AddressDec = '';
+        PartOf_Empty := PartOf = '';
 
-        if Mem_Empty and EntryName_Empty and AddressHex_Empty and AddressDec_Empty then
+        if Mem_Empty and EntryName_Empty and AddressHex_Empty and AddressDec_Empty and PartOf_Empty then
           VisibleOnVSTResult := True
         else
         begin
@@ -2246,7 +2259,12 @@ begin
           else
             VisibleFrom_AddressDec := Pos(AddressDec, IntToStr(Data.Address)) > 0;
 
-          VisibleOnVSTResult := VisibleFrom_Mem and VisibleFrom_EntryName and VisibleFrom_AddressHex and VisibleFrom_AddressDec;
+          if PartOf_Empty then
+            VisibleFrom_PartOf := True
+          else
+            VisibleFrom_PartOf := Pos(PartOf, UpperCase(Data.LatestName)) > 0;
+
+          VisibleOnVSTResult := VisibleFrom_Mem and VisibleFrom_EntryName and VisibleFrom_AddressHex and VisibleFrom_AddressDec and VisibleFrom_PartOf;
         end;
 
         vstRawTable.IsVisible[Node] := VisibleOnVSTResult;
@@ -2339,537 +2357,12 @@ begin
   lbeAddrHex.Text := '';
   lbeAddrDec.Text := '';
   lbeSize.Text := '';
+  lbePartName.Text := '';
   lbeEntryName.Text := ''; //call the search proc
 
   FMikroComp.AllowSearch := True;
   SearchInMemTable(lbeMem.Text, lbeEntryName.Text, lbeAddrHex.Text, lbeAddrDec.Text, lbeSize.Text);
-  SearchInRawTable(lbeMem.Text, lbeEntryName.Text, lbeAddrHex.Text, lbeAddrDec.Text);
-end;
-
-
-procedure TfrmMemStatisticsMain.GenerateTextStatistics;
-var
-  i: Integer;
-  PFM_MinEntryAddr_KSEG0: Cardinal;
-  PFM_MaxEntryAddr_KSEG0: Cardinal;
-  PFM_MinEntryAddr_KSEG1: Cardinal;
-  PFM_MaxEntryAddr_KSEG1: Cardinal;
-
-  PFM_MinEntryAddrFound_KSEG0: Boolean;
-  PFM_MaxEntryAddrFound_KSEG0: Boolean;
-  PFM_MinEntryAddrFound_KSEG1: Boolean;
-  PFM_MaxEntryAddrFound_KSEG1: Boolean;
-
-  RAM_MinEntryAddr_KSEG0: Cardinal;
-  RAM_MaxEntryAddr_KSEG0: Cardinal;
-  RAM_MinEntryAddr_KSEG1: Cardinal;
-  RAM_MaxEntryAddr_KSEG1: Cardinal;
-
-  RAM_MinEntryAddrFound_KSEG0: Boolean;
-  RAM_MaxEntryAddrFound_KSEG0: Boolean;
-  RAM_MinEntryAddrFound_KSEG1: Boolean;
-  RAM_MaxEntryAddrFound_KSEG1: Boolean;
-
-  BFM_MinEntryAddr_KSEG0: Cardinal;
-  BFM_MaxEntryAddr_KSEG0: Cardinal;
-  BFM_MinEntryAddr_KSEG1: Cardinal;
-  BFM_MaxEntryAddr_KSEG1: Cardinal;
-
-  BFM_MinEntryAddrFound_KSEG0: Boolean;
-  BFM_MaxEntryAddrFound_KSEG0: Boolean;
-  BFM_MinEntryAddrFound_KSEG1: Boolean;
-  BFM_MaxEntryAddrFound_KSEG1: Boolean;
-
-  EBI_MinEntryAddr_KSEG2: Cardinal;
-  EBI_MaxEntryAddr_KSEG2: Cardinal;
-  EBI_MinEntryAddr_KSEG3: Cardinal;
-  EBI_MaxEntryAddr_KSEG3: Cardinal;
-
-  EBI_MinEntryAddrFound_KSEG2: Boolean;
-  EBI_MaxEntryAddrFound_KSEG2: Boolean;
-  EBI_MinEntryAddrFound_KSEG3: Boolean;
-  EBI_MaxEntryAddrFound_KSEG3: Boolean;
-
-  SQI_MinEntryAddr_KSEG2: Cardinal;
-  SQI_MaxEntryAddr_KSEG2: Cardinal;
-  SQI_MinEntryAddr_KSEG3: Cardinal;
-  SQI_MaxEntryAddr_KSEG3: Cardinal;
-
-  SQI_MinEntryAddrFound_KSEG2: Boolean;
-  SQI_MaxEntryAddrFound_KSEG2: Boolean;
-  SQI_MinEntryAddrFound_KSEG3: Boolean;
-  SQI_MaxEntryAddrFound_KSEG3: Boolean;
-
-  Entry: Cardinal;
-  EntryEndAddress: Cardinal;
-begin
-  lstFreeMemory.Clear;
-  //'x free words from 9D01FFFF to first used word'
-
-  PFM_MinEntryAddr_KSEG0 := $FFFFFFFF;
-  PFM_MinEntryAddr_KSEG1 := $FFFFFFFF;
-  PFM_MaxEntryAddr_KSEG0 := 0;
-  PFM_MaxEntryAddr_KSEG1 := 0;
-
-  PFM_MinEntryAddrFound_KSEG0 := False;
-  PFM_MaxEntryAddrFound_KSEG0 := False;
-  PFM_MinEntryAddrFound_KSEG1 := False;
-  PFM_MaxEntryAddrFound_KSEG1 := False;
-
-  RAM_MinEntryAddr_KSEG0 := $FFFFFFFF;
-  RAM_MinEntryAddr_KSEG1 := $FFFFFFFF;
-  RAM_MaxEntryAddr_KSEG0 := 0;
-  RAM_MaxEntryAddr_KSEG1 := 0;
-
-  RAM_MinEntryAddrFound_KSEG0 := False;
-  RAM_MaxEntryAddrFound_KSEG0 := False;
-  RAM_MinEntryAddrFound_KSEG1 := False;
-  RAM_MaxEntryAddrFound_KSEG1 := False;
-
-  BFM_MinEntryAddr_KSEG0 := $FFFFFFFF;
-  BFM_MinEntryAddr_KSEG1 := $FFFFFFFF;
-  BFM_MaxEntryAddr_KSEG0 := 0;
-  BFM_MaxEntryAddr_KSEG1 := 0;
-
-  BFM_MinEntryAddrFound_KSEG0 := False;
-  BFM_MaxEntryAddrFound_KSEG0 := False;
-  BFM_MinEntryAddrFound_KSEG1 := False;
-  BFM_MaxEntryAddrFound_KSEG1 := False;
-
-  EBI_MinEntryAddr_KSEG2 := $FFFFFFFF;
-  EBI_MinEntryAddr_KSEG3 := $FFFFFFFF;
-  EBI_MaxEntryAddr_KSEG2 := 0;
-  EBI_MaxEntryAddr_KSEG3 := 0;
-
-  EBI_MinEntryAddrFound_KSEG2 := False;
-  EBI_MaxEntryAddrFound_KSEG2 := False;
-  EBI_MinEntryAddrFound_KSEG3 := False;
-  EBI_MaxEntryAddrFound_KSEG3 := False;
-
-  SQI_MinEntryAddr_KSEG2 := $FFFFFFFF;
-  SQI_MinEntryAddr_KSEG3 := $FFFFFFFF;
-  SQI_MaxEntryAddr_KSEG2 := 0;
-  SQI_MaxEntryAddr_KSEG3 := 0;
-
-  SQI_MinEntryAddrFound_KSEG2 := False;
-  SQI_MaxEntryAddrFound_KSEG2 := False;
-  SQI_MinEntryAddrFound_KSEG3 := False;
-  SQI_MaxEntryAddrFound_KSEG3 := False;
-  
-  for i := 0 to FMemTable.GetRawMemContentLength - 1 do
-  begin
-    Entry := FMemTable.GetRawMemContent(i);
-
-    if FMemTable.AddressIn_MemRange(0, Entry, 0) then //if FMemTable.AddressIn_ProgramFlashKSEG0(Entry) then
-    begin
-      if PFM_MinEntryAddr_KSEG0 > Entry then
-      begin
-        PFM_MinEntryAddr_KSEG0 := Entry;
-        PFM_MinEntryAddrFound_KSEG0 := True;
-      end;
-
-      if PFM_MaxEntryAddr_KSEG0 < Entry then
-      begin
-        PFM_MaxEntryAddr_KSEG0 := Entry;
-        PFM_MaxEntryAddrFound_KSEG0 := True;
-      end;
-    end;
-
-    if FMemTable.AddressIn_MemRange(0, Entry, $20000000) then //if FMemTable.AddressIn_ProgramFlashKSEG1(Entry) then
-    begin
-      if PFM_MinEntryAddr_KSEG1 > Entry then
-      begin
-        PFM_MinEntryAddr_KSEG1 := Entry;
-        PFM_MinEntryAddrFound_KSEG1 := True;
-      end;
-
-      if PFM_MaxEntryAddr_KSEG1 < Entry then
-      begin
-        PFM_MaxEntryAddr_KSEG1 := Entry;
-        PFM_MaxEntryAddrFound_KSEG1 := True;
-      end;
-    end;
-
-
-    if FMemTable.AddressIn_MemRange(2, Entry, -$20000000) then //if FMemTable.AddressIn_BootFlashKSEG0(Entry) then
-    begin
-      if BFM_MinEntryAddr_KSEG0 > Entry then
-      begin
-        BFM_MinEntryAddr_KSEG0 := Entry;
-        BFM_MinEntryAddrFound_KSEG0 := True;
-      end;
-
-      if BFM_MaxEntryAddr_KSEG0 < Entry then
-      begin
-        BFM_MaxEntryAddr_KSEG0 := Entry;
-        BFM_MaxEntryAddrFound_KSEG0 := True;
-      end;
-    end;
-
-    if FMemTable.AddressIn_MemRange(2, Entry, 0) then //if FMemTable.AddressIn_BootFlashKSEG1(Entry) then
-    begin
-      if BFM_MinEntryAddr_KSEG1 > Entry then
-      begin
-        BFM_MinEntryAddr_KSEG1 := Entry;
-        BFM_MinEntryAddrFound_KSEG1 := True;
-      end;
-
-      if BFM_MaxEntryAddr_KSEG1 < Entry then
-      begin
-        BFM_MaxEntryAddr_KSEG1 := Entry;
-        BFM_MaxEntryAddrFound_KSEG1 := True;
-      end;
-    end;
-
-    if FMemTable.AddressIn_MemRange(4, Entry, 0) then //if FMemTable.AddressIn_EBIKSEG2(Entry) then
-    begin
-      if EBI_MinEntryAddr_KSEG2 > Entry then
-      begin
-        EBI_MinEntryAddr_KSEG2 := Entry;
-        EBI_MinEntryAddrFound_KSEG2 := True;
-      end;
-
-      if EBI_MaxEntryAddr_KSEG2 < Entry then
-      begin
-        EBI_MaxEntryAddr_KSEG2 := Entry;
-        EBI_MaxEntryAddrFound_KSEG2 := True;
-      end;
-    end;
-
-    if FMemTable.AddressIn_MemRange(4, Entry, $20000000) then //if FMemTable.AddressIn_EBIKSEG3(Entry) then
-    begin
-      if EBI_MinEntryAddr_KSEG3 > Entry then
-      begin
-        EBI_MinEntryAddr_KSEG3 := Entry;
-        EBI_MinEntryAddrFound_KSEG3 := True;
-      end;
-
-      if EBI_MaxEntryAddr_KSEG3 < Entry then
-      begin
-        EBI_MaxEntryAddr_KSEG3 := Entry;
-        EBI_MaxEntryAddrFound_KSEG3 := True;
-      end;
-    end;
-
-
-    if FMemTable.AddressIn_MemRange(5, Entry, 0) then //if FMemTable.AddressIn_SQIKSEG2(Entry) then
-    begin
-      if SQI_MinEntryAddr_KSEG2 > Entry then
-      begin
-        SQI_MinEntryAddr_KSEG2 := Entry;
-        SQI_MinEntryAddrFound_KSEG2 := True;
-      end;
-
-      if SQI_MaxEntryAddr_KSEG2 < Entry then
-      begin
-        SQI_MaxEntryAddr_KSEG2 := Entry;
-        SQI_MaxEntryAddrFound_KSEG2 := True;
-      end;
-    end;
-
-    if FMemTable.AddressIn_MemRange(5, Entry, $20000000) then //if FMemTable.AddressIn_SQIKSEG3(Entry) then
-    begin
-      if SQI_MinEntryAddr_KSEG3 > Entry then
-      begin
-        SQI_MinEntryAddr_KSEG3 := Entry;
-        SQI_MinEntryAddrFound_KSEG3 := True;
-      end;
-
-      if SQI_MaxEntryAddr_KSEG3 < Entry then
-      begin
-        SQI_MaxEntryAddr_KSEG3 := Entry;
-        SQI_MaxEntryAddrFound_KSEG3 := True;
-      end;
-    end;
-  end; //for
-
-
-  for i := 0 to FMemTable.GetMemContentLength - 1 do
-  begin
-    Entry := FMemTable.GetMemContent(i).Address;
-    EntryEndAddress := Int64(Entry) + Int64(FMemTable.GetMemContent(i).Size) - 1;
-
-    if FMemTable.AddressIn_MemRange(1, Entry, -$20000000) then //if FMemTable.AddressIn_RAMKSEG0(Entry) then
-    begin
-      if RAM_MinEntryAddr_KSEG0 > Entry then
-      begin
-        RAM_MinEntryAddr_KSEG0 := Entry;
-        RAM_MinEntryAddrFound_KSEG0 := True;
-      end;
-
-      if RAM_MaxEntryAddr_KSEG0 < EntryEndAddress then
-      begin
-        RAM_MaxEntryAddr_KSEG0 := EntryEndAddress;
-        RAM_MaxEntryAddrFound_KSEG0 := True;
-      end;
-    end;
-
-    if FMemTable.AddressIn_MemRange(1, Entry, 0) then //if FMemTable.AddressIn_RAMKSEG1(Entry) then
-    begin
-      if RAM_MinEntryAddr_KSEG1 > Entry then
-      begin
-        RAM_MinEntryAddr_KSEG1 := Entry;
-        RAM_MinEntryAddrFound_KSEG1 := True;
-      end;
-
-      if RAM_MaxEntryAddr_KSEG1 < EntryEndAddress then
-      begin
-        RAM_MaxEntryAddr_KSEG1 := EntryEndAddress;
-        RAM_MaxEntryAddrFound_KSEG1 := True;
-      end;
-    end;
-  end; //for
-
-    
-
-  if PFM_MinEntryAddrFound_KSEG0 then
-    lstFreeMemory.Items.Add('PFM: First KSEG0 entry: 0x' + IntToHex(PFM_MinEntryAddr_KSEG0, 8))
-  else
-    lstFreeMemory.Items.Add('PFM: First KSEG0 entry: not found');
-
-  if PFM_MaxEntryAddrFound_KSEG0 then  
-    lstFreeMemory.Items.Add('PFM: Last KSEG0 entry: 0x' + IntToHex(PFM_MaxEntryAddr_KSEG0, 8))
-  else
-    lstFreeMemory.Items.Add('PFM: Last KSEG0 entry: not found');
-
-  if PFM_MinEntryAddrFound_KSEG1 then
-    lstFreeMemory.Items.Add('PFM: First KSEG1 entry: 0x' + IntToHex(PFM_MinEntryAddr_KSEG1, 8))
-  else
-    lstFreeMemory.Items.Add('PFM: First KSEG1 entry: not found');
-
-  if PFM_MaxEntryAddrFound_KSEG1 then
-    lstFreeMemory.Items.Add('PFM: Last KSEG1 entry: 0x' + IntToHex(PFM_MaxEntryAddr_KSEG1, 8))
-  else
-    lstFreeMemory.Items.Add('PFM: Last KSEG1 entry: not found');
-
-  lstFreeMemory.Items.Add('');
-  
-
-  if RAM_MinEntryAddrFound_KSEG0 then
-    lstFreeMemory.Items.Add('RAM: First KSEG0 entry: 0x' + IntToHex(RAM_MinEntryAddr_KSEG0, 8))
-  else
-    lstFreeMemory.Items.Add('RAM: First KSEG0 entry: not found');
-
-  if RAM_MaxEntryAddrFound_KSEG0 then  
-    lstFreeMemory.Items.Add('RAM: Last KSEG0 entry: 0x' + IntToHex(RAM_MaxEntryAddr_KSEG0, 8))
-  else
-    lstFreeMemory.Items.Add('RAM: Last KSEG0 entry: not found');
-
-  if RAM_MinEntryAddrFound_KSEG1 then
-    lstFreeMemory.Items.Add('RAM: First KSEG1 entry: 0x' + IntToHex(RAM_MinEntryAddr_KSEG1, 8))
-  else
-    lstFreeMemory.Items.Add('RAM: First KSEG1 entry: not found');
-
-  if RAM_MaxEntryAddrFound_KSEG1 then
-    lstFreeMemory.Items.Add('RAM: Last KSEG1 entry: 0x' + IntToHex(RAM_MaxEntryAddr_KSEG1, 8))
-  else
-    lstFreeMemory.Items.Add('RAM: Last KSEG1 entry: not found');
-
-  lstFreeMemory.Items.Add('');
-
-
-  if BFM_MinEntryAddrFound_KSEG0 then
-    lstFreeMemory.Items.Add('BFM: First KSEG0 entry: 0x' + IntToHex(BFM_MinEntryAddr_KSEG0, 8))
-  else
-    lstFreeMemory.Items.Add('BFM: First KSEG0 entry: not found');
-
-  if BFM_MaxEntryAddrFound_KSEG0 then  
-    lstFreeMemory.Items.Add('BFM: Last KSEG0 entry: 0x' + IntToHex(BFM_MaxEntryAddr_KSEG0, 8))
-  else
-    lstFreeMemory.Items.Add('BFM: Last KSEG0 entry: not found');
-
-  if BFM_MinEntryAddrFound_KSEG1 then
-    lstFreeMemory.Items.Add('BFM: First KSEG1 entry: 0x' + IntToHex(BFM_MinEntryAddr_KSEG1, 8))
-  else
-    lstFreeMemory.Items.Add('BFM: First KSEG1 entry: not found');
-
-  if BFM_MaxEntryAddrFound_KSEG1 then
-    lstFreeMemory.Items.Add('BFM: Last KSEG1 entry: 0x' + IntToHex(BFM_MaxEntryAddr_KSEG1, 8))
-  else
-    lstFreeMemory.Items.Add('BFM: Last KSEG1 entry: not found');
-
-  lstFreeMemory.Items.Add('');
-
-
-  if EBI_MinEntryAddrFound_KSEG2 then
-    lstFreeMemory.Items.Add('EBI: First KSEG2 entry: 0x' + IntToHex(EBI_MinEntryAddr_KSEG2, 8))
-  else
-    lstFreeMemory.Items.Add('EBI: First KSEG2 entry: not found');
-
-  if EBI_MaxEntryAddrFound_KSEG2 then
-    lstFreeMemory.Items.Add('EBI: Last KSEG2 entry: 0x' + IntToHex(EBI_MaxEntryAddr_KSEG2, 8))
-  else
-    lstFreeMemory.Items.Add('EBI: Last KSEG2 entry: not found');
-
-  if EBI_MinEntryAddrFound_KSEG3 then
-    lstFreeMemory.Items.Add('EBI: First KSEG3 entry: 0x' + IntToHex(EBI_MinEntryAddr_KSEG3, 8))
-  else
-    lstFreeMemory.Items.Add('EBI: First KSEG3 entry: not found');
-
-  if EBI_MaxEntryAddrFound_KSEG3 then
-    lstFreeMemory.Items.Add('EBI: Last KSEG3 entry: 0x' + IntToHex(EBI_MaxEntryAddr_KSEG3, 8))
-  else
-    lstFreeMemory.Items.Add('EBI: Last KSEG3 entry: not found');  
-
-  lstFreeMemory.Items.Add('');
-
-
-  if SQI_MinEntryAddrFound_KSEG2 then
-    lstFreeMemory.Items.Add('SQI: First KSEG2 entry: 0x' + IntToHex(SQI_MinEntryAddr_KSEG2, 8))
-  else
-    lstFreeMemory.Items.Add('SQI: First KSEG2 entry: not found');
-
-  if SQI_MaxEntryAddrFound_KSEG2 then
-    lstFreeMemory.Items.Add('SQI: Last KSEG2 entry: 0x' + IntToHex(SQI_MaxEntryAddr_KSEG2, 8))
-  else
-    lstFreeMemory.Items.Add('SQI: Last KSEG2 entry: not found');
-
-  if SQI_MinEntryAddrFound_KSEG3 then
-    lstFreeMemory.Items.Add('SQI: First KSEG3 entry: 0x' + IntToHex(SQI_MinEntryAddr_KSEG3, 8))
-  else
-    lstFreeMemory.Items.Add('SQI: First KSEG3 entry: not found');
-
-  if SQI_MaxEntryAddrFound_KSEG3 then
-    lstFreeMemory.Items.Add('SQI: Last KSEG3 entry: 0x' + IntToHex(SQI_MaxEntryAddr_KSEG3, 8))
-  else
-    lstFreeMemory.Items.Add('SQI: Last KSEG3 entry: not found');    
-
-  lstFreeMemory.Items.Add('');
-  lstFreeMemory.Items.Add('');
-  lstFreeMemory.Items.Add('Free words from beginning of memory to first used word or');
-  lstFreeMemory.Items.Add('free words from last used word to the end of memory:');
-  lstFreeMemory.Items.Add('');
-
-//  if PFM_MinEntryAddrFound_KSEG0 then
-//    lstFreeMemory.Items.Add('PFM KSEG0: ' + IntToStr((PFM_MinEntryAddr_KSEG0 - FMemTable.ProgramFlashAddrMin) shr 2) + ' free words from 0x' + IntToHex(FMemTable.ProgramFlashAddrMin, 8) + ' to first used entry.')
-//  else
-//    lstFreeMemory.Items.Add('PFM KSEG0: No KSEG0 entry found. Can''t compute free words.');
-//
-//  if PFM_MaxEntryAddrFound_KSEG0 then
-//    lstFreeMemory.Items.Add('PFM KSEG0: ' + IntToStr((FMemTable.ProgramFlashAddrMax + 1 - PFM_MaxEntryAddr_KSEG0) shr 2) + ' free words from 0x' + IntToHex(PFM_MaxEntryAddr_KSEG0 + 4, 8) + ' to end of PFM KSEG0.')
-//  else
-//    lstFreeMemory.Items.Add('PFM KSEG0: No KSEG0 entry found. Can''t compute free words.');
-//
-//
-//  if PFM_MinEntryAddrFound_KSEG1 then
-//    lstFreeMemory.Items.Add('PFM KSEG1: ' + IntToStr((PFM_MinEntryAddr_KSEG1 - $20000000 - FMemTable.ProgramFlashAddrMin) shr 2) + ' free words from 0x' + IntToHex(FMemTable.ProgramFlashAddrMin + $20000000, 8) + ' to first used entry.')
-//  else
-//    lstFreeMemory.Items.Add('PFM KSEG1: No KSEG1 entry found. Can''t compute free words.');                    
-//
-//  if PFM_MaxEntryAddrFound_KSEG1 then
-//    lstFreeMemory.Items.Add('PFM KSEG1: ' + IntToStr((FMemTable.ProgramFlashAddrMax + $20000000 + 1 - PFM_MaxEntryAddr_KSEG1) shr 2) + ' free words from 0x' + IntToHex(PFM_MaxEntryAddr_KSEG1 + 4, 8) + ' to end of PFM KSEG1.')
-//  else
-//    lstFreeMemory.Items.Add('PFM KSEG1: No KSEG1 entry found. Can''t compute free words.');
-//
-//
-//    
-//  lstFreeMemory.Items.Add('');
-//
-//  if RAM_MinEntryAddrFound_KSEG0 then
-//    lstFreeMemory.Items.Add('RAM KSEG0: ' + IntToStr((RAM_MinEntryAddr_KSEG0 + $20000000 - FMemTable.RAMAddrMin) shr 2) + ' free words from 0x' + IntToHex(FMemTable.RAMAddrMin - $20000000, 8) + ' to first used entry.')
-//  else
-//    lstFreeMemory.Items.Add('RAM KSEG0: No KSEG0 entry found. Can''t compute free words.');
-//
-//  if RAM_MaxEntryAddrFound_KSEG0 then
-//    lstFreeMemory.Items.Add('RAM KSEG0: ' + IntToStr((FMemTable.RAMAddrMax - $20000000 + 1 - RAM_MaxEntryAddr_KSEG0) shr 2) + ' free words from 0x' + IntToHex(RAM_MaxEntryAddr_KSEG0 + 4, 8) + ' to end of RAM KSEG0.')
-//  else
-//    lstFreeMemory.Items.Add('RAM KSEG0: No KSEG0 entry found. Can''t compute free words.');
-//
-//
-//  if RAM_MinEntryAddrFound_KSEG1 then
-//    lstFreeMemory.Items.Add('RAM KSEG1: ' + IntToStr((RAM_MinEntryAddr_KSEG1 - FMemTable.RAMAddrMin) shr 2) + ' free words from 0x' + IntToHex(FMemTable.RAMAddrMin, 8) + ' to first used entry.')
-//  else
-//    lstFreeMemory.Items.Add('RAM KSEG1: No KSEG1 entry found. Can''t compute free words.');                    
-//
-//  if RAM_MaxEntryAddrFound_KSEG1 then
-//    lstFreeMemory.Items.Add('RAM KSEG1: ' + IntToStr((FMemTable.RAMAddrMax + 1 - RAM_MaxEntryAddr_KSEG1) shr 2) + ' free words from 0x' + IntToHex(RAM_MaxEntryAddr_KSEG1 + 4, 8) + ' to end of RAM KSEG1.')
-//  else
-//    lstFreeMemory.Items.Add('RAM KSEG1: No KSEG1 entry found. Can''t compute free words.');
-//
-//  
-//    
-//  lstFreeMemory.Items.Add('');
-//
-//  if BFM_MinEntryAddrFound_KSEG0 then
-//    lstFreeMemory.Items.Add('BFM KSEG0: ' + IntToStr((BFM_MinEntryAddr_KSEG0 + $20000000 - FMemTable.BootFlashAddrMin) shr 2) + ' free words from 0x' + IntToHex(FMemTable.BootFlashAddrMin - $20000000, 8) + ' to first used entry.')
-//  else
-//    lstFreeMemory.Items.Add('BFM KSEG0: No KSEG0 entry found. Can''t compute free words.');
-//
-//  if BFM_MaxEntryAddrFound_KSEG0 then
-//    lstFreeMemory.Items.Add('BFM KSEG0: ' + IntToStr((FMemTable.BootFlashAddrMax - $20000000 + 1 - BFM_MaxEntryAddr_KSEG0) shr 2) + ' free words from 0x' + IntToHex(BFM_MaxEntryAddr_KSEG0 + 4, 8) + ' to end of BFM KSEG0.')
-//  else
-//    lstFreeMemory.Items.Add('BFM KSEG0: No KSEG0 entry found. Can''t compute free words.');
-//
-//
-//  if BFM_MinEntryAddrFound_KSEG1 then
-//    lstFreeMemory.Items.Add('BFM KSEG1: ' + IntToStr((BFM_MinEntryAddr_KSEG1 - FMemTable.BootFlashAddrMin) shr 2) + ' free words from 0x' + IntToHex(FMemTable.BootFlashAddrMin, 8) + ' to first used entry.')
-//  else
-//    lstFreeMemory.Items.Add('BFM KSEG1: No KSEG1 entry found. Can''t compute free words.');
-//
-//  if BFM_MaxEntryAddrFound_KSEG1 then
-//    lstFreeMemory.Items.Add('BFM KSEG1: ' + IntToStr((FMemTable.BootFlashAddrMax + 1 - BFM_MaxEntryAddr_KSEG1) shr 2) + ' free words from 0x' + IntToHex(BFM_MaxEntryAddr_KSEG1 + 4, 8) + ' to end of BFM KSEG1.')
-//  else
-//    lstFreeMemory.Items.Add('BFM KSEG1: No KSEG1 entry found. Can''t compute free words.');
-//
-//
-//  lstFreeMemory.Items.Add('');
-//
-//  if EBI_MinEntryAddrFound_KSEG2 then
-//    lstFreeMemory.Items.Add('EBI KSEG2: ' + IntToStr((EBI_MinEntryAddr_KSEG2 - FMemTable.EBIAddrMin) shr 2) + ' free words from 0x' + IntToHex(FMemTable.EBIAddrMin, 8) + ' to first used entry.')
-//  else
-//    lstFreeMemory.Items.Add('EBI KSEG2: No KSEG2 entry found. Can''t compute free words.');
-//
-//  if EBI_MaxEntryAddrFound_KSEG2 then
-//    lstFreeMemory.Items.Add('EBI KSEG2: ' + IntToStr((FMemTable.EBIAddrMax + 1 - EBI_MaxEntryAddr_KSEG2) shr 2) + ' free words from 0x' + IntToHex(EBI_MaxEntryAddr_KSEG2 + 4, 8) + ' to end of EBI KSEG2.')
-//  else
-//    lstFreeMemory.Items.Add('EBI KSEG2: No KSEG2 entry found. Can''t compute free words.');
-//
-//
-//  if EBI_MinEntryAddrFound_KSEG3 then
-//    lstFreeMemory.Items.Add('EBI KSEG3: ' + IntToStr((EBI_MinEntryAddr_KSEG3 - $20000000 - FMemTable.EBIAddrMin) shr 2) + ' free words from 0x' + IntToHex(FMemTable.EBIAddrMin + $20000000, 8) + ' to first used entry.')
-//  else
-//    lstFreeMemory.Items.Add('EBI KSEG3: No KSEG3 entry found. Can''t compute free words.');
-//
-//  if EBI_MaxEntryAddrFound_KSEG3 then
-//    lstFreeMemory.Items.Add('EBI KSEG3: ' + IntToStr((FMemTable.EBIAddrMax + $20000000 + 1 - EBI_MaxEntryAddr_KSEG2) shr 2) + ' free words from 0x' + IntToHex(EBI_MaxEntryAddr_KSEG3 + 4, 8) + ' to end of EBI KSEG3.')
-//  else
-//    lstFreeMemory.Items.Add('EBI KSEG3: No KSEG3 entry found. Can''t compute free words.');
-//
-//
-//
-//  lstFreeMemory.Items.Add('');
-//
-//  if SQI_MinEntryAddrFound_KSEG2 then
-//    lstFreeMemory.Items.Add('SQI KSEG2: ' + IntToStr((SQI_MinEntryAddr_KSEG2 - FMemTable.SQIAddrMin) shr 2) + ' free words from 0x' + IntToHex(FMemTable.SQIAddrMin, 8) + ' to first used entry.')
-//  else
-//    lstFreeMemory.Items.Add('SQI KSEG2: No KSEG2 entry found. Can''t compute free words.');
-//
-//  if SQI_MaxEntryAddrFound_KSEG2 then
-//    lstFreeMemory.Items.Add('SQI KSEG2: ' + IntToStr((FMemTable.SQIAddrMax + 1 - SQI_MaxEntryAddr_KSEG2) shr 2) + ' free words from 0x' + IntToHex(SQI_MaxEntryAddr_KSEG2 + 4, 8) + ' to end of SQI KSEG2.')
-//  else
-//    lstFreeMemory.Items.Add('SQI KSEG2: No KSEG2 entry found. Can''t compute free words.');
-//
-//
-//  if SQI_MinEntryAddrFound_KSEG3 then
-//    lstFreeMemory.Items.Add('SQI KSEG3: ' + IntToStr((SQI_MinEntryAddr_KSEG3 - $20000000 - FMemTable.SQIAddrMin) shr 2) + ' free words from 0x' + IntToHex(FMemTable.SQIAddrMin + $20000000, 8) + ' to first used entry.')
-//  else
-//    lstFreeMemory.Items.Add('SQI KSEG3: No KSEG3 entry found. Can''t compute free words.');
-//
-//  if SQI_MaxEntryAddrFound_KSEG3 then
-//    lstFreeMemory.Items.Add('SQI KSEG3: ' + IntToStr((FMemTable.SQIAddrMax + $20000000 + 1 - SQI_MaxEntryAddr_KSEG2) shr 2) + ' free words from 0x' + IntToHex(SQI_MaxEntryAddr_KSEG3 + 4, 8) + ' to end of SQI KSEG3.')
-//  else
-//    lstFreeMemory.Items.Add('SQI KSEG3: No KSEG3 entry found. Can''t compute free words.');
-//
-//  lstFreeMemory.Items.Add('');
-//  lstFreeMemory.Items.Add('');
-//  lstFreeMemory.Items.Add('Note 1: Free words from KSEG0 can''t be added up to free words from KSEG1.');
-//  lstFreeMemory.Items.Add('             They belong to the same memoy, there are just different address schemes !');
-//
-//  lstFreeMemory.Items.Add('');
-//  lstFreeMemory.Items.Add('Note 2: The mentioned intervals of free words include their endpoints.');
-//
-//  lstFreeMemory.Items.Add('');
-//  lstFreeMemory.Items.Add('Note 3: PFM, BFM, EBI and SQI entries are read from "raw" table. RAM entries are read from "routines" table.');
+  SearchInRawTable(lbeMem.Text, lbeEntryName.Text, lbeAddrHex.Text, lbeAddrDec.Text, lbePartName.Text);
 end;
 
 
@@ -2907,7 +2400,6 @@ begin
     StatusBar1.Panels.Items[0].Text := 'Loaded';
 
     FMemTable.Repaint;
-    //GenerateTextStatistics; //built-in statistics
 
     lstFreeMemory.Items.AddStrings(AdditionalStatistics);  //plugin statistics
   finally

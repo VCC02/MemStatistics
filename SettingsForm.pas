@@ -948,7 +948,7 @@ begin
   vstPlugins.Font.Name := 'Tahoma';
   vstPlugins.Font.Style := [];
   vstPlugins.Left := 8;
-  vstPlugins.Height := {$IFDEF FPC} 416; {$ELSE} 376; {$ENDIF}
+  vstPlugins.Height := {$IFDEF FPC} {$IFDEF UNIX} 406; {$ELSE} 416; {$ENDIF} {$ELSE} 376; {$ENDIF}
   vstPlugins.Top := 8;
   vstPlugins.Width := {$IFDEF FPC} 848; {$ELSE} 740; {$ENDIF}
   vstPlugins.Anchors := [akTop, akLeft, akRight, akBottom];

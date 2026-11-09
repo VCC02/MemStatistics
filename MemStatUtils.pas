@@ -59,6 +59,7 @@ type
     Address: Cardinal;
     Size: Cardinal;
     Name: string;
+    LatestName: string; //routine or constant name
   end;
 
   THexEntry = record
